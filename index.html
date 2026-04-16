@@ -854,121 +854,131 @@ function loadDemoData() {
 const SUPABASE_URL  = 'https://jnptmjkjicidrxlykvdl.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpucHRtamtqaWNpZHJ4bHlrdmRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMDAzODEsImV4cCI6MjA5MTY3NjM4MX0.gOzBXcM4_JqoWsYt88yXo66';
 
-const DEMO_MODE = false; // Supabase configuré
-
-// Helper REST générique
-async function sbFetch(path, opts = {}) {
-  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
-    headers: {
-      'apikey':        SUPABASE_ANON,
-      'Authorization': 'Bearer ' + SUPABASE_ANON,
-      'Content-Type':  'application/json',
-      'Prefer':        opts.prefer || 'return=representation',
-      ...opts.headers
-    },
-    method: opts.method || 'GET',
-    body:   opts.body ? JSON.stringify(opts.body) : undefined,
-  });
+// ── REST helper ────────────────────────────────────────────────
+async function sbFetch(path, method = 'GET', body = null, extraHeaders = {}) {
+  const headers = {
+    'apikey':        SUPABASE_ANON,
+    'Authorization': 'Bearer ' + SUPABASE_ANON,
+    'Content-Type':  'application/json',
+    ...extraHeaders,
+  };
+  const opts = { method, headers };
+  if (body !== null) opts.body = JSON.stringify(body);
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, opts);
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error('Supabase error ' + res.status + ': ' + err);
+    const txt = await res.text();
+    throw new Error('Supabase ' + res.status + ' on ' + path + ': ' + txt);
   }
-  const text = await res.text();
-  return text ? JSON.parse(text) : null;
+  const txt = await res.text();
+  return txt ? JSON.parse(txt) : [];
 }
 
-// Photo upload via Supabase Storage
+// ── CRUD ───────────────────────────────────────────────────────
+async function dbSelect(table, filter = '') {
+  return sbFetch(table + '?select=*' + (filter ? '&' + filter : ''));
+}
+
+async function dbUpsert(table, row) {
+  return sbFetch(table + '?on_conflict=' + Object.keys(row)[0], 'POST', row, {
+    'Prefer': 'resolution=merge-duplicates,return=minimal',
+  });
+}
+
+async function dbPatch(table, key, val, patch) {
+  return sbFetch(table + '?' + key + '=eq.' + encodeURIComponent(val), 'PATCH', patch, {
+    'Prefer': 'return=minimal',
+  });
+}
+
+async function dbDelete(table, key, val) {
+  return sbFetch(table + '?' + key + '=eq.' + encodeURIComponent(val), 'DELETE', null, {
+    'Prefer': 'return=minimal',
+  });
+}
+
+// ── Schema helpers ─────────────────────────────────────────────
+// Each table stores a JSONB `data` column + a unique text key column
+// epis → ref | controls → ctrl_id | loans → loan_id | batches → batch_id | members → member_id
+const TABLE_KEY = { epis:'ref', controls:'ctrl_id', loans:'loan_id', batches:'batch_id', members:'member_id' };
+
+async function fsSet(table, rowId, obj) {
+  const key = TABLE_KEY[table];
+  const clean = JSON.parse(JSON.stringify(obj)); // strip undefined
+  await dbUpsert(table, { [key]: String(rowId), data: clean });
+}
+
+async function fsUpdate(table, rowId, patch) {
+  const key = TABLE_KEY[table];
+  try {
+    const rows = await dbSelect(table, key + '=eq.' + encodeURIComponent(rowId));
+    if (rows.length > 0) {
+      const merged = { ...rows[0].data, ...patch };
+      await dbUpsert(table, { [key]: String(rowId), data: merged });
+    }
+  } catch(e) { console.warn('fsUpdate:', e.message); }
+}
+
+async function fsDelete(table, rowId) {
+  await dbDelete(table, TABLE_KEY[table], rowId);
+}
+
+// ── Photo upload ───────────────────────────────────────────────
 async function uploadPhotoToStorage(dataUrl, path) {
   if (!dataUrl || dataUrl.startsWith('http')) return dataUrl;
   try {
-    // Convert dataUrl to blob
-    const arr = dataUrl.split(','), mime = arr[0].match(/:(.*?);/)[1];
-    const bstr = atob(arr[1]);
-    const u8 = new Uint8Array(bstr.length);
-    for (let i = 0; i < bstr.length; i++) u8[i] = bstr.charCodeAt(i);
-    const blob = new Blob([u8], { type: mime });
+    const [meta, b64] = dataUrl.split(',');
+    const mime = meta.match(/:(.*?);/)[1];
+    const bin  = atob(b64);
+    const u8   = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
     const res = await fetch(SUPABASE_URL + '/storage/v1/object/epi-photos/' + path, {
       method: 'POST',
-      headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON,
-                 'Content-Type': mime, 'x-upsert': 'true' },
-      body: blob,
+      headers: {
+        'apikey': SUPABASE_ANON,
+        'Authorization': 'Bearer ' + SUPABASE_ANON,
+        'Content-Type': mime,
+        'x-upsert': 'true',
+      },
+      body: new Blob([u8], { type: mime }),
     });
-    if (!res.ok) throw new Error('Upload failed');
+    if (!res.ok) throw new Error('upload ' + res.status);
     return SUPABASE_URL + '/storage/v1/object/public/epi-photos/' + path;
-  } catch(e) { console.warn('Photo upload failed:', e); return dataUrl; }
+  } catch(e) { console.warn('Photo upload failed:', e.message); return dataUrl; }
 }
 
-// CRUD helpers
-async function dbSelect(table, filters = '') {
-  const qs = 'select=*' + (filters ? '&' + filters : '');
-  return await sbFetch(table + '?' + qs);
-}
-async function dbUpsert(table, row) {
-  return await sbFetch(table, { method: 'POST', prefer: 'return=representation',
-    headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' }, body: row });
-}
-async function dbUpdate(table, col, val, data) {
-  return await sbFetch(table + '?' + col + '=eq.' + encodeURIComponent(val),
-    { method: 'PATCH', body: data });
-}
-async function dbDelete(table, col, val) {
-  return await sbFetch(table + '?' + col + '=eq.' + encodeURIComponent(val), { method: 'DELETE', prefer: 'return=minimal' });
-}
-
-// Load all data from Supabase
+// ── Load all data ──────────────────────────────────────────────
 async function loadAllData() {
-  showLoading('Chargement des données…');
+  showLoading('Connexion à Supabase…');
   try {
-    const [dbEpis, dbControls, dbLoans, dbBatches, dbMembers] = await Promise.all([
+    const [rEpis, rControls, rLoans, rBatches, rMembers] = await Promise.all([
       dbSelect('epis'),
       dbSelect('controls', 'order=created_at.desc'),
       dbSelect('loans'),
       dbSelect('batches'),
       dbSelect('members'),
     ]);
-    epis     = (dbEpis     || []).map(r => ({ ...r.data, ref: r.ref }));
-    controls = (dbControls || []).map(r => ({ ...r.data, id: r.ctrl_id }));
-    loans    = (dbLoans    || []).map(r => ({ ...r.data, id: r.loan_id }));
-    batches  = (dbBatches  || []).map(r => ({ ...r.data, id: r.batch_id }));
-    members  = (dbMembers  || []).map(r => ({ ...r.data, id: Number(r.member_id) || r.member_id }));
+    epis     = rEpis.map(r => ({ ...r.data, ref: r.ref }));
+    controls = rControls.map(r => ({ ...r.data, id: r.ctrl_id }));
+    loans    = rLoans.map(r => ({ ...r.data, id: r.loan_id }));
+    batches  = rBatches.map(r => ({ ...r.data, id: r.batch_id }));
+    members  = rMembers.map(r => ({ ...r.data, id: r.member_id }));
     if (members.length === 0) await seedInitialAdmin();
     hideLoading();
   } catch(e) {
     hideLoading();
-    showToast('Erreur chargement : ' + e.message, 'err');
-    console.error(e);
-    // Fallback to demo data
-    loadDemoData();
+    console.error('loadAllData error:', e);
+    showToast('Erreur Supabase : ' + e.message + ' — vérifiez la console', 'err');
+    loadDemoData(); // fallback
   }
 }
 
 async function seedInitialAdmin() {
-  const admin = { id:1, name:'Admin Club', login:'admin', pass:'admin123',
-    role:'admin', perms: ROLE_PERMS.admin, lastAccess: todayStr, email:'' };
+  const admin = {
+    id: '1', name: 'Admin Club', login: 'admin', pass: 'admin123',
+    role: 'admin', perms: ROLE_PERMS.admin, lastAccess: todayStr, email: ''
+  };
   members = [admin];
-  await dbUpsert('members', { member_id: '1', data: admin });
-}
-
-async function fsSet(table, rowId, data) {
-  const colMap = { epis:'ref', controls:'ctrl_id', loans:'loan_id', batches:'batch_id', members:'member_id' };
-  const col = colMap[table] || 'id';
-  await dbUpsert(table, { [col]: String(rowId), data: JSON.parse(JSON.stringify(data)) });
-}
-async function fsUpdate(table, rowId, patch) {
-  const colMap = { epis:'ref', controls:'ctrl_id', loans:'loan_id', batches:'batch_id', members:'member_id' };
-  const col = colMap[table] || 'id';
-  // Fetch current, merge, upsert
-  try {
-    const rows = await dbSelect(table, col + '=eq.' + encodeURIComponent(rowId));
-    if (rows && rows.length > 0) {
-      const merged = { ...rows[0].data, ...patch };
-      await dbUpsert(table, { [col]: String(rowId), data: merged });
-    }
-  } catch(e) { console.warn('fsUpdate error:', e); }
-}
-async function fsDelete(table, rowId) {
-  const colMap = { epis:'ref', controls:'ctrl_id', loans:'loan_id', batches:'batch_id', members:'member_id' };
-  await dbDelete(table, colMap[table] || 'id', rowId);
+  await fsSet('members', '1', admin);
 }
 
 // ==================== AUTH ====================
@@ -976,8 +986,15 @@ function doLogin() {
   const login = document.getElementById('login-user').value.trim();
   const pass  = document.getElementById('login-pass').value;
   const errEl = document.getElementById('login-error');
-  const user  = members.find(m => m.login === login && m.pass === pass);
-  if (!user) { errEl.style.display='block'; errEl.textContent='Identifiant ou mot de passe incorrect.'; return; }
+  if (!login || !pass) { errEl.style.display='block'; errEl.textContent='Renseignez identifiant et mot de passe.'; return; }
+  const user = members.find(m => m.login === login && m.pass === pass);
+  if (!user) {
+    errEl.style.display = 'block';
+    errEl.textContent = members.length === 0
+      ? 'Données pas encore chargées — attendez quelques secondes et réessayez.'
+      : 'Identifiant ou mot de passe incorrect.';
+    return;
+  }
   errEl.style.display = 'none';
   loginSuccess(user);
 }
