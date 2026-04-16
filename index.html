@@ -1,0 +1,2007 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestion des EPI AGORA</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #f0f2f5;
+  --surface: #ffffff;
+  --surface2: #f7f8fa;
+  --surface3: #eef0f3;
+  --border: rgba(0,0,0,0.07);
+  --border2: rgba(0,0,0,0.13);
+  --text: #111827;
+  --text2: #6b7280;
+  --text3: #9ca3af;
+  --accent: #16a34a;
+  --accent-light: #dcfce7;
+  --accent-text: #14532d;
+  --accent-dark: #15803d;
+  --warn: #b45309;
+  --warn-bg: #fef3c7;
+  --danger: #dc2626;
+  --danger-bg: #fee2e2;
+  --rad: 10px;
+  --rad-lg: 14px;
+  --rad-xl: 20px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+  --font: 'DM Sans', system-ui, sans-serif;
+  --font-mono: 'DM Mono', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); font-size: 14px; background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+/* ── LOGIN ── */
+#login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #f0fdf4 0%, #f0f2f5 60%); }
+.login-card { background: var(--surface); border-radius: var(--rad-xl); border: 1px solid var(--border2); padding: 44px 48px; width: 400px; text-align: center; box-shadow: var(--shadow-md); }
+.login-logo { font-size: 44px; margin-bottom: 10px; }
+.login-title { font-size: 24px; font-weight: 700; color: var(--text); margin-bottom: 4px; letter-spacing: -0.3px; }
+.login-sub { font-size: 14px; color: var(--text2); margin-bottom: 32px; }
+.login-form { display: flex; flex-direction: column; gap: 16px; text-align: left; }
+.login-form label { font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 6px; }
+.login-form input { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border2); border-radius: var(--rad); font-size: 15px; font-family: var(--font); background: var(--surface2); color: var(--text); outline: none; transition: border-color 0.15s; }
+.login-form input:focus { border-color: var(--accent); background: #fff; }
+.login-btn { width: 100%; padding: 13px; background: var(--accent); color: #fff; border: none; border-radius: var(--rad); font-size: 15px; font-family: var(--font); font-weight: 600; cursor: pointer; margin-top: 4px; transition: background 0.15s; letter-spacing: 0.01em; }
+.login-btn:hover { background: var(--accent-dark); }
+.login-error { font-size: 13px; color: var(--danger); background: var(--danger-bg); border-radius: 8px; padding: 10px 14px; display: none; border: 1px solid rgba(220,38,38,0.2); }
+
+/* ── APP LAYOUT ── */
+#app { display: none; min-height: 100vh; }
+.layout { display: flex; min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar { width: 232px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto; box-shadow: 1px 0 0 var(--border); }
+.sidebar-header { padding: 22px 20px 18px; border-bottom: 1px solid var(--border); }
+.sidebar-icon { font-size: 30px; margin-bottom: 6px; }
+.sidebar-title { font-size: 16px; font-weight: 700; color: var(--text); letter-spacing: -0.2px; }
+.sidebar-club { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.sidebar-user { padding: 12px 20px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+.sidebar-user-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.sidebar-user-role { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.nav-section { padding: 10px 20px 4px; font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; }
+.nav-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 20px; background: none; border: none; cursor: pointer; font-size: 14px; font-family: var(--font); color: var(--text2); text-align: left; transition: background 0.1s, color 0.1s; border-radius: 0; }
+.nav-btn:hover { background: var(--surface2); color: var(--text); }
+.nav-btn.active { background: var(--accent-light); color: var(--accent-text); font-weight: 600; }
+.nav-btn .nav-icon { width: 18px; text-align: center; font-size: 15px; flex-shrink: 0; }
+.nav-badge { margin-left: auto; background: var(--danger-bg); color: var(--danger); font-size: 11px; padding: 2px 8px; border-radius: 999px; font-weight: 700; }
+.sidebar-footer { margin-top: auto; padding: 16px 20px; border-top: 1px solid var(--border); }
+.logout-btn { font-size: 13px; color: var(--text2); background: none; border: none; cursor: pointer; font-family: var(--font); }
+.logout-btn:hover { color: var(--text); }
+
+/* ── MAIN ── */
+.main-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+.topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; box-shadow: var(--shadow); }
+.topbar-title { font-size: 20px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
+.topbar-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.content { padding: 24px 28px; flex: 1; overflow-y: auto; }
+
+/* ── BUTTONS ── */
+.btn { padding: 9px 18px; border-radius: var(--rad); font-size: 14px; font-family: var(--font); cursor: pointer; border: 1.5px solid var(--border2); background: var(--surface); color: var(--text); transition: all 0.12s; font-weight: 500; line-height: 1.2; }
+.btn:hover { background: var(--surface2); border-color: rgba(0,0,0,0.2); }
+.btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn-primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+.btn-sm { padding: 6px 12px; font-size: 13px; }
+.btn-danger { background: var(--danger-bg); color: var(--danger); border-color: rgba(220,38,38,0.25); }
+.btn-danger:hover { background: #fecaca; }
+.btn-warn { background: var(--warn-bg); color: var(--warn); border-color: rgba(180,83,9,0.25); }
+
+/* ── STATS ── */
+.stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 24px; }
+.stat-card { background: var(--surface); border-radius: var(--rad-lg); padding: 20px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+.stat-label { font-size: 12px; color: var(--text2); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+.stat-value { font-size: 32px; font-weight: 700; letter-spacing: -0.5px; }
+.stat-sub { font-size: 12px; margin-top: 4px; }
+.c-ok { color: var(--accent); }
+.c-warn { color: var(--warn); }
+.c-danger { color: var(--danger); }
+.c-neutral { color: var(--text2); }
+
+/* ── BADGES ── */
+.badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.badge-ok { background: #dcfce7; color: #14532d; }
+.badge-warn { background: var(--warn-bg); color: var(--warn); }
+.badge-danger { background: var(--danger-bg); color: var(--danger); }
+.badge-retired { background: var(--surface2); color: var(--text2); border: 1px solid var(--border2); }
+.badge-lost { background: #ede9fe; color: #5b21b6; border: 1px solid rgba(91,33,182,0.2); }
+.badge-role-admin { background: #ede9fe; color: #4c1d95; }
+.badge-role-referent { background: var(--accent-light); color: var(--accent-text); }
+.badge-role-member { background: var(--surface2); color: var(--text2); }
+
+/* ── TABLES ── */
+.table-wrap { background: var(--surface); border-radius: var(--rad-lg); border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; box-shadow: var(--shadow); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+thead th { padding: 12px 16px; text-align: left; font-size: 11px; font-weight: 700; color: var(--text2); border-bottom: 1px solid var(--border); background: var(--surface2); text-transform: uppercase; letter-spacing: 0.05em; }
+tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--surface2); }
+td { padding: 12px 16px; color: var(--text); vertical-align: middle; }
+td.muted { color: var(--text2); font-size: 13px; }
+
+/* ── FILTERS ── */
+.filter-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+input[type=text], input[type=date], input[type=password], input[type=email], select, textarea { padding: 9px 13px; border: 1.5px solid var(--border2); border-radius: var(--rad); font-size: 14px; font-family: var(--font); background: var(--surface); color: var(--text); outline: none; transition: border-color 0.15s; }
+input:focus, select:focus, textarea:focus { border-color: var(--accent); background: #fff; }
+input[type=text] { min-width: 200px; }
+
+/* ── BULK ACTION BAR ── */
+.bulk-bar { display: none; align-items: center; gap: 12px; padding: 12px 16px; background: var(--accent-light); border-radius: var(--rad-lg); border: 1px solid rgba(22,163,74,0.25); margin-bottom: 14px; }
+.bulk-bar.visible { display: flex; }
+.bulk-bar-text { font-size: 14px; font-weight: 600; color: var(--accent-text); flex: 1; }
+input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
+
+/* ── MODALS ── */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--surface); border-radius: var(--rad-xl); border: 1px solid var(--border2); padding: 28px; width: 580px; max-width: 96vw; max-height: 92vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 4px 16px rgba(0,0,0,0.08); }
+.modal-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; }
+.modal-title { font-size: 18px; font-weight: 700; color: var(--text); letter-spacing: -0.2px; }
+.close-btn { background: var(--surface2); border: 1px solid var(--border2); border-radius: 50%; width: 32px; height: 32px; font-size: 18px; cursor: pointer; color: var(--text2); line-height: 1; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-left: 12px; transition: background 0.12s; }
+.close-btn:hover { background: var(--surface3); color: var(--text); }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+
+/* ── FORMS ── */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group label { font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; }
+.form-group textarea { resize: vertical; }
+.form-full { grid-column: 1 / -1; }
+
+/* ── SECTION HEADERS ── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.section-title { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -0.2px; }
+
+/* ── PAGES ── */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ── ALERTS ── */
+.alert-list { display: flex; flex-direction: column; gap: 12px; }
+.alert-item { display: flex; align-items: flex-start; gap: 16px; background: var(--surface); border-radius: var(--rad-lg); border: 1px solid var(--border); padding: 16px 18px; box-shadow: var(--shadow); }
+.alert-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.alert-icon-danger { background: var(--danger-bg); }
+.alert-icon-warn { background: var(--warn-bg); }
+.alert-body { flex: 1; }
+.alert-title { font-size: 14px; font-weight: 700; color: var(--text); }
+.alert-desc { font-size: 13px; color: var(--text2); margin-top: 3px; line-height: 1.5; }
+
+/* ── QR ── */
+#qr-video-wrap { border-radius: var(--rad); overflow: hidden; background: #000; position: relative; height: 260px; display: flex; align-items: center; justify-content: center; }
+#qr-video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.qr-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+.qr-frame { width: 180px; height: 180px; border: 2.5px solid var(--accent); border-radius: 14px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.45); }
+#qr-result { margin-top: 12px; padding: 12px 14px; background: var(--surface2); border-radius: var(--rad); font-size: 14px; color: var(--text2); min-height: 44px; line-height: 1.5; }
+
+/* ── LIFESPAN ── */
+.lifespan-bar { height: 6px; background: var(--surface3); border-radius: 3px; overflow: hidden; margin-top: 5px; }
+.lifespan-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+
+/* ── MEMBER PERMS ── */
+.perm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.perm-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--surface2); border-radius: var(--rad); font-size: 13px; cursor: pointer; border: 1.5px solid transparent; transition: border-color 0.12s; }
+.perm-item:hover { border-color: var(--border2); }
+.perm-item input[type=checkbox] { width: 15px; height: 15px; }
+
+/* ── PDF OPTIONS ── */
+.pdf-option { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: var(--surface2); border-radius: var(--rad-lg); border: 1.5px solid var(--border); cursor: pointer; transition: all 0.12s; margin-bottom: 10px; }
+.pdf-option:hover { background: var(--accent-light); border-color: rgba(22,163,74,0.3); }
+.pdf-option-icon { font-size: 26px; flex-shrink: 0; }
+.pdf-option-title { font-size: 14px; font-weight: 700; color: var(--text); }
+.pdf-option-desc { font-size: 12px; color: var(--text2); margin-top: 3px; }
+
+/* ── BATCH CARDS ── */
+.batch-card { background: var(--surface); border-radius: var(--rad-lg); border: 1px solid var(--border); margin-bottom: 16px; overflow: hidden; box-shadow: var(--shadow); }
+.batch-header { display: flex; align-items: center; gap: 16px; padding: 16px 20px; cursor: pointer; transition: background 0.1s; }
+.batch-header:hover { background: var(--surface2); }
+.batch-chevron { font-size: 11px; color: var(--text3); transition: transform 0.2s; flex-shrink: 0; }
+.batch-chevron.open { transform: rotate(90deg); }
+.batch-info { flex: 1; }
+.batch-name { font-size: 15px; font-weight: 700; color: var(--text); }
+.batch-meta { font-size: 12px; color: var(--text2); margin-top: 3px; }
+.batch-stats { display: flex; gap: 14px; flex-shrink: 0; }
+.batch-stat { text-align: center; }
+.batch-stat-val { font-size: 18px; font-weight: 700; }
+.batch-stat-lbl { font-size: 11px; color: var(--text2); }
+.batch-body { display: none; border-top: 1px solid var(--border); }
+.batch-body.open { display: block; }
+.batch-actions-row { display: flex; gap: 10px; padding: 12px 20px; background: var(--surface2); align-items: center; }
+.batch-item-row { display: flex; align-items: center; gap: 12px; padding: 10px 20px; border-bottom: 1px solid var(--border); font-size: 14px; transition: background 0.1s; }
+.batch-item-row:last-child { border-bottom: none; }
+.batch-item-row:hover { background: var(--surface2); }
+.batch-item-ref { font-weight: 700; min-width: 88px; color: var(--text); }
+.batch-item-info { flex: 1; color: var(--text2); font-size: 13px; }
+.batch-item-ctrl { display: flex; gap: 8px; align-items: center; }
+
+/* ── PHOTO ── */
+.photo-thumb { width: 68px; height: 68px; border-radius: var(--rad); object-fit: cover; border: 1.5px solid var(--border2); cursor: pointer; transition: opacity 0.12s; }
+.photo-thumb:hover { opacity: 0.85; }
+.photo-placeholder { width: 68px; height: 68px; border-radius: var(--rad); border: 1.5px dashed var(--border2); display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; background: var(--surface2); transition: background 0.12s; }
+.photo-placeholder:hover { background: var(--surface3); }
+#photo-video { width: 100%; border-radius: var(--rad); display: block; }
+.photo-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+
+/* ── CHECK SHEET ── */
+.check-section { margin-bottom: 22px; }
+.check-section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding-bottom: 8px; margin-bottom: 10px; border-bottom: 2px solid; }
+.check-section-title.ok-title { color: var(--accent); border-color: var(--accent); }
+.check-section-title.danger-title { color: var(--danger); border-color: var(--danger); }
+.check-section-title.doc-title { color: var(--text2); border-color: var(--border2); }
+.check-item { display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 14px; color: var(--text); line-height: 1.55; }
+.check-item:last-child { border-bottom: none; }
+.check-bullet { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.check-bullet-ok { background: var(--accent); }
+.check-bullet-danger { background: var(--danger); }
+.doc-link { display: flex; align-items: center; gap: 12px; padding: 11px 14px; background: var(--surface2); border-radius: var(--rad); border: 1px solid var(--border); font-size: 14px; color: var(--accent-text); text-decoration: none; margin-bottom: 8px; transition: background 0.12s; }
+.doc-link:hover { background: var(--accent-light); }
+.doc-link-icon { font-size: 17px; flex-shrink: 0; }
+.check-resume { font-size: 14px; color: var(--text2); background: var(--surface2); border-radius: var(--rad); border-left: 4px solid var(--accent); padding: 12px 16px; margin-bottom: 20px; line-height: 1.65; font-style: italic; }
+.check-norm-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; background: var(--accent-light); border-radius: 999px; font-size: 12px; font-weight: 700; color: var(--accent-text); margin-bottom: 18px; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .two-col { grid-template-columns: 1fr; }
+  .content { padding: 16px; }
+  .topbar { padding: 12px 16px; }
+}
+
+.hidden { display: none !important; }
+.tag { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">🧗</div>
+    <div class="login-title">EPI AGORA</div>
+    <div class="login-sub">Gestion des équipements de protection</div>
+    <div class="login-form">
+      <div>
+        <label>Identifiant</label>
+        <input type="text" id="login-user" placeholder="Votre identifiant" autocomplete="username">
+      </div>
+      <div>
+        <label>Mot de passe</label>
+        <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <div id="login-error" class="login-error">Identifiant ou mot de passe incorrect.</div>
+      <button class="login-btn" onclick="doLogin()">Se connecter</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="layout">
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-icon">🧗</div>
+        <div class="sidebar-title">EPI AGORA</div>
+        <div class="sidebar-club">Gestion des EPI</div>
+      </div>
+      <div class="sidebar-user">
+        <div class="sidebar-user-name" id="sidebar-username">—</div>
+        <div class="sidebar-user-role" id="sidebar-userrole">—</div>
+      </div>
+      <div class="nav-section">Gestion EPI</div>
+      <button class="nav-btn active" onclick="showPage('dashboard',this)" data-perm="view_epi">
+        <span>⊞</span> Tableau de bord
+      </button>
+      <button class="nav-btn" onclick="showPage('inventory',this)" data-perm="view_epi">
+        <span>≡</span> Inventaire
+      </button>
+      <button class="nav-btn" onclick="showPage('controls',this)" data-perm="view_controls">
+        <span>✓</span> Contrôles
+      </button>
+      <button class="nav-btn" onclick="showPage('loans',this)" data-perm="view_loans">
+        <span>↗</span> Prêts
+      </button>
+      <button class="nav-btn" onclick="showPage('alerts',this)" data-perm="view_epi">
+        <span>△</span> Alertes <span class="nav-badge hidden" id="alert-badge">0</span>
+      </button>
+      <button class="nav-btn" onclick="showPage('checks',this)" data-perm="view_epi">
+        <span>📋</span> Fiches de contrôle
+      </button>
+      <button class="nav-btn" onclick="showPage('batches',this)" data-perm="add_epi">
+        <span>⊟</span> Lots d'EPI <span class="nav-badge hidden" id="batch-badge">0</span>
+      </button>
+      <div class="nav-section">Administration</div>
+      <button class="nav-btn" onclick="showPage('members',this)" data-perm="manage_members" id="nav-members">
+        <span>👤</span> Membres
+      </button>
+      <button class="nav-btn" onclick="openPDFModal()" data-perm="export_pdf" id="nav-pdf">
+        <span>↓</span> Export PDF
+      </button>
+      <div class="sidebar-footer">
+        <button class="logout-btn" onclick="doLogout()">← Déconnexion</button>
+      </div>
+    </div>
+
+    <div class="main-area">
+      <div class="topbar">
+        <div class="topbar-title" id="topbar-title">Tableau de bord</div>
+        <div class="topbar-actions" id="topbar-actions">
+          <button class="btn" onclick="openModal('qr')" id="btn-qr-scan" title="Scanner QR code">📷 Scanner QR</button>
+          <button class="btn" onclick="openModal('batch')" id="btn-add-batch" data-perm="add_epi">+ Créer un lot</button>
+          <button class="btn" onclick="openModal('add')" id="btn-add-epi">+ Ajouter EPI</button>
+          <button class="btn btn-primary" onclick="openModal('control')" id="btn-add-ctrl">Enregistrer contrôle</button>
+        </div>
+      </div>
+
+      <div class="content">
+        <!-- DASHBOARD -->
+        <div class="page active" id="page-dashboard">
+          <div class="stats-grid">
+            <div class="stat-card"><div class="stat-label">Total EPI</div><div class="stat-value c-neutral" id="stat-total">0</div><div class="stat-sub c-neutral">en inventaire</div></div>
+            <div class="stat-card"><div class="stat-label">Conformes</div><div class="stat-value c-ok" id="stat-ok">0</div><div class="stat-sub c-ok">à jour</div></div>
+            <div class="stat-card"><div class="stat-label">À contrôler</div><div class="stat-value c-warn" id="stat-warn">0</div><div class="stat-sub c-warn">dans 60 jours</div></div>
+            <div class="stat-card"><div class="stat-label">En alerte</div><div class="stat-value c-danger" id="stat-danger">0</div><div class="stat-sub c-danger">action requise</div></div>
+          </div>
+          <div class="two-col">
+            <div>
+              <div class="section-header"><div class="section-title">Répartition par type</div></div>
+              <div class="table-wrap"><table><thead><tr><th>Type</th><th>Qté</th><th>Durée vie max</th><th>État</th></tr></thead><tbody id="type-summary"></tbody></table></div>
+            </div>
+            <div>
+              <div class="section-header"><div class="section-title">Prochains contrôles</div></div>
+              <div class="table-wrap"><table><thead><tr><th>EPI</th><th>Type</th><th>Date limite</th></tr></thead><tbody id="upcoming-controls"></tbody></table></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- INVENTORY -->
+        <div class="page" id="page-inventory">
+          <div class="filter-row">
+            <input type="text" id="search-input" placeholder="Rechercher…" oninput="renderInventory()">
+            <select id="filter-type" onchange="renderInventory()">
+              <option value="">Tous les types</option>
+              <option>Corde</option><option>Harnais</option><option>Casque</option>
+              <option>Dégaine</option><option>Mousqueton</option><option>Assureur</option>
+              <option>Longe</option><option>Baudrier enfant</option>
+            </select>
+            <select id="filter-status" onchange="renderInventory()">
+              <option value="">Tous les états</option>
+              <option value="ok">Conforme</option><option value="warn">À contrôler</option>
+              <option value="danger">En alerte</option><option value="retired">Réformé</option>
+              <option value="lost">Introuvable</option>
+            </select>
+          </div>
+          <div class="bulk-bar" id="bulk-bar">
+            <span class="bulk-bar-text" id="bulk-bar-text">0 EPI sélectionné(s)</span>
+            <button class="btn btn-sm btn-primary" onclick="openBulkControl()">✓ Contrôle groupé — Tous conformes</button>
+            <button class="btn btn-sm" onclick="openBulkControlCustom()">⚙ Contrôle groupé personnalisé</button>
+            <button class="btn btn-sm" onclick="clearSelection()">✕ Désélectionner tout</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th style="width:40px"><input type="checkbox" id="select-all-chk" onchange="toggleSelectAll(this)" title="Tout sélectionner"></th>
+                <th>Référence</th><th>Type</th><th>Marque / Modèle</th><th>Achat</th><th>Âge / Durée vie</th><th>Dernier contrôle</th><th>Prochain</th><th>État</th><th></th>
+              </tr></thead>
+              <tbody id="inventory-table"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- CONTROLS -->
+        <div class="page" id="page-controls">
+          <div class="filter-row">
+            <input type="text" id="ctrl-search" placeholder="Rechercher…" oninput="renderControls()">
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Référence</th><th>Type</th><th>Contrôleur</th><th>Résultat</th><th>Observations</th></tr></thead>
+              <tbody id="controls-table"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- LOANS -->
+        <div class="page" id="page-loans">
+          <div class="filter-row">
+            <button class="btn btn-primary" onclick="openModal('loan')">+ Nouveau prêt</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Date prêt</th><th>Adhérent</th><th>EPI</th><th>Type</th><th>Retour prévu</th><th>Statut</th><th></th></tr></thead>
+              <tbody id="loans-table"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ALERTS -->
+        <div class="page" id="page-alerts">
+          <div class="alert-list" id="alerts-list"></div>
+        </div>
+
+        <!-- CHECKS -->
+        <div class="page" id="page-checks">
+          <div id="checks-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px"></div>
+        </div>
+
+        <!-- BATCHES -->
+        <div class="page" id="page-batches">
+          <div class="filter-row">
+            <button class="btn btn-primary" onclick="openModal('batch')">+ Créer un lot</button>
+          </div>
+          <div id="batches-list"></div>
+        </div>
+
+        <!-- MEMBERS -->
+        <div class="page" id="page-members">
+          <div class="filter-row">
+            <button class="btn btn-primary" onclick="openModal('member')">+ Nouveau membre</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Nom</th><th>Identifiant</th><th>Rôle</th><th>Permissions</th><th>Dernier accès</th><th></th></tr></thead>
+              <tbody id="members-table"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODALS ===== -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOverlay(event)">
+
+  <!-- ADD EPI -->
+  <div class="modal hidden" id="modal-add">
+    <div class="modal-header"><div class="modal-title">Ajouter un EPI</div><button class="close-btn" onclick="closeModal()">×</button></div>
+    <div class="form-grid">
+      <div class="form-group"><label>Référence *</label><input type="text" id="f-ref" placeholder="ex: CRD-003"></div>
+      <div class="form-group"><label>Type *</label>
+        <select id="f-type" onchange="updateLifespanHint()">
+          <option value="">Choisir…</option><option>Corde</option><option>Harnais</option><option>Casque</option>
+          <option>Dégaine</option><option>Mousqueton</option><option>Assureur</option><option>Longe</option><option>Baudrier enfant</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Marque</label><input type="text" id="f-brand" placeholder="ex: Petzl"></div>
+      <div class="form-group"><label>Modèle</label><input type="text" id="f-model" placeholder="ex: Arial 10.0"></div>
+      <div class="form-group"><label>Date d'achat</label><input type="date" id="f-buy"></div>
+      <div class="form-group"><label>Date de fabrication</label><input type="date" id="f-fab"></div>
+      <div class="form-group"><label>Norme</label><input type="text" id="f-norm" placeholder="ex: EN892"></div>
+      <div class="form-group"><label>N° de lot / série</label><input type="text" id="f-lot"></div>
+      <div class="form-group form-full" id="lifespan-hint-wrap" style="display:none">
+        <div style="font-size:12px;font-family:sans-serif;color:var(--text2);background:var(--surface2);padding:9px 12px;border-radius:8px;border:0.5px solid var(--border);">
+          ⏱ <span id="lifespan-hint"></span>
+        </div>
+      </div>
+      <div class="form-group form-full"><label>Observations</label><textarea id="f-notes" rows="2"></textarea></div>
+      <div class="form-group form-full">
+        <label>Photo(s) de l'EPI</label>
+        <div class="photo-grid" id="f-photos-preview"></div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button type="button" class="btn btn-sm" onclick="openPhotoCapture('epi')">📷 Prendre une photo</button>
+          <label class="btn btn-sm" style="cursor:pointer;margin:0">📁 Importer <input type="file" accept="image/*" multiple style="display:none" onchange="importPhotos(this,'epi')"></label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="addEPI()">Ajouter</button></div>
+  </div>
+
+  <!-- QR SCAN -->
+  <div class="modal hidden" id="modal-qr" style="width:480px">
+    <div class="modal-header"><div class="modal-title">📷 Scanner un QR code EPI</div><button class="close-btn" onclick="closeModal()">×</button></div>
+    <div id="qr-video-wrap">
+      <video id="qr-video" playsinline autoplay muted></video>
+      <div class="qr-overlay"><div class="qr-frame"></div></div>
+    </div>
+    <div id="qr-result">Pointez la caméra vers le QR code de l'EPI…</div>
+    <div style="margin-top:10px;font-size:11px;font-family:sans-serif;color:var(--text2);">Format attendu : <code>EPI:REF:TYPE:MARQUE:MODELE:NORME:LOT</code></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary hidden" id="qr-confirm-btn" onclick="confirmQRAdd()">Ajouter cet EPI</button>
+    </div>
+  </div>
+
+  <!-- CONTROL -->
+  <div class="modal hidden" id="modal-control">
+    <div class="modal-header"><div class="modal-title">Enregistrer un contrôle</div><button class="close-btn" onclick="closeModal()">×</button></div>
+    <div class="form-grid">
+      <div class="form-group"><label>Référence EPI *</label><select id="c-ref"></select></div>
+      <div class="form-group"><label>Date *</label><input type="date" id="c-date"></div>
+      <div class="form-group"><label>Contrôleur *</label><input type="text" id="c-who"></div>
+      <div class="form-group"><label>Résultat</label>
+        <select id="c-result"><option value="ok">Conforme</option><option value="warn">Réserve</option><option value="danger">Non-conforme</option><option value="retired">Réformé</option><option value="lost">Introuvable</option></select>
+      </div>
+      <div class="form-group form-full"><label>Observations</label><textarea id="c-notes" rows="2"></textarea></div>
+    </div>
+    <div class="modal-actions"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="addControl()">Enregistrer</button></div>
+  </div>
+
+  <!-- LOAN -->
+  <div class="modal hidden" id="modal-loan">
+    <div class="modal-header"><div class="modal-title">Nouveau prêt</div><button class="close-btn" onclick="closeModal()">×</button></div>
+    <div class="form-grid">
+      <div class="form-group"><label>Adhérent *</label><input type="text" id="l-member" placeholder="Nom prénom"></div>
+      <div class="form-group"><label>EPI *</label><select id="l-ref"></select></div>
+      <div class="form-group"><label>Date de prêt</label><input type="date" id="l-date"></div>
+      <div class="form-group"><label>Retour prévu</label><input type="date" id="l-return"></div>
+    </div>
+    <div class="modal-actions"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="addLoan()">Créer</button></div>
+  </div>
+
+  <!-- MEMBER -->
+  <div class="modal hidden" id="modal-member">
+    <div class="modal-header"><div class="modal-title" id="member-modal-title">Nouveau membre</div><button class="close-btn" onclick="closeModal()">×</button></div>
+    <div class="form-grid">
+      <div class="form-group"><label>Prénom Nom *</label><input type="text" id="m-name" placeholder="ex: Marie Dupont"></div>
+      <div class="form-group"><label>Identifiant *</label><input type="text" id="m-login" placeholder="ex: marie.dupont"></div>
+      <div class="form-group"><label>Mot de passe *</label><input type="password" id="m-pass" placeholder="••••••••"></div>
+      <div class="form-group"><label>Email (Firebase Auth)</label><input type="email" id="m-email" placeholder="ex: marie@monclub.fr"></div>
+      <div class="form-group"><label>Rôle</label>
+        <select id="m-role" onchange="updateRolePerms()">
+          <option value="admin">Administrateur</option>
+          <option value="referent">Référent EPI</option>
+          <option value="member">Membre</option>
+        </select>
+      </div>
+      <div class="form-group form-full">
+        <label>Permissions spécifiques</label>
+        <div class="perm-grid" style="margin-top:8px;">
+          <label class="perm-item"><input type="checkbox" id="p-view_epi"> Voir l'inventaire</label>
+          <label class="perm-item"><input type="checkbox" id="p-add_epi"> Ajouter un EPI</label>
+          <label class="perm-item"><input type="checkbox" id="p-view_controls"> Voir les contrôles</label>
+          <label class="perm-item"><input type="checkbox" id="p-add_controls"> Enregistrer contrôle</label>
+          <label class="perm-item"><input type="checkbox" id="p-view_loans"> Voir les prêts</label>
+          <label class="perm-item"><input type="checkbox" id="p-manage_loans"> Gérer les prêts</label>
+          <label class="perm-item"><input type="checkbox" id="p-export_pdf"> Exporter PDF</label>
+          <label class="perm-item"><input type="checkbox" id="p-manage_members"> Gérer membres</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" id="member-save-btn" onclick="saveMember()">Créer</button>
+    </div>
+  </div>
+
+  <!-- PDF EXPORT -->
+  <div class="modal hidden" id="modal-pdf">
+    <div class="modal-header"><div class="modal-title">Export PDF</div><button class="close-btn" onclick="closeModal()">×</button></div>
+    <div class="pdf-option" onclick="exportPDF('inventory')">
+      <div class="pdf-option-icon">📋</div>
+      <div><div class="pdf-option-title">Inventaire complet</div><div class="pdf-option-desc">Liste tous les EPI avec état, dates et durée de vie</div></div>
+    </div>
+    <div class="pdf-option" onclick="exportPDF('alerts')">
+      <div class="pdf-option-icon">⚠️</div>
+      <div><div class="pdf-option-title">Rapport d'alertes</div><div class="pdf-option-desc">EPI en alerte ou à contrôler rapidement</div></div>
+    </div>
+    <div class="pdf-option" onclick="exportPDF('controls')">
+      <div class="pdf-option-icon">✅</div>
+      <div><div class="pdf-option-title">Historique des contrôles</div><div class="pdf-option-desc">Journal de toutes les vérifications effectuées</div></div>
+    </div>
+    <div class="pdf-option" onclick="exportPDF('loans')">
+      <div class="pdf-option-icon">📦</div>
+      <div><div class="pdf-option-title">Registre des prêts</div><div class="pdf-option-desc">Prêts en cours et historique des retours</div></div>
+    </div>
+    <div class="pdf-option" onclick="exportPDF('epi_labels')">
+      <div class="pdf-option-icon">🏷️</div>
+      <div><div class="pdf-option-title">Étiquettes EPI (QR codes)</div><div class="pdf-option-desc">Génère une page d'étiquettes avec QR codes à imprimer</div></div>
+    </div>
+  </div>
+
+  <!-- CREATE BATCH -->
+  <div class="modal hidden" id="modal-batch" style="width:620px">
+    <div class="modal-header"><div class="modal-title">Créer un lot d'EPI</div><button class="close-btn" onclick="closeModal()">×</button></div>
+    <div class="form-grid" style="margin-bottom:16px">
+      <div class="form-group"><label>Nom du lot *</label><input type="text" id="b-name" placeholder="ex: Baudriers 2026"></div>
+      <div class="form-group"><label>Type d'EPI *</label>
+        <select id="b-type" onchange="updateBatchLifespanHint()">
+          <option value="">Choisir…</option><option>Corde</option><option>Harnais</option><option>Casque</option>
+          <option>Dégaine</option><option>Mousqueton</option><option>Assureur</option><option>Longe</option><option>Baudrier enfant</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Quantité *</label><input type="text" id="b-qty" placeholder="ex: 10" oninput="updateBatchPreview()"></div>
+      <div class="form-group"><label>Préfixe de référence *</label><input type="text" id="b-prefix" placeholder="ex: BDE" oninput="updateBatchPreview()"></div>
+      <div class="form-group"><label>Marque</label><input type="text" id="b-brand" placeholder="ex: Petzl"></div>
+      <div class="form-group"><label>Modèle</label><input type="text" id="b-model" placeholder="ex: Corax C051AA"></div>
+      <div class="form-group"><label>Date d'achat</label><input type="date" id="b-buy"></div>
+      <div class="form-group"><label>Date de fabrication</label><input type="date" id="b-fab"></div>
+      <div class="form-group"><label>Norme</label><input type="text" id="b-norm"></div>
+      <div class="form-group"><label>N° de lot fournisseur</label><input type="text" id="b-lot"></div>
+      <div class="form-group form-full" id="batch-lifespan-hint-wrap" style="display:none">
+        <div style="font-size:12px;font-family:sans-serif;color:var(--text2);background:var(--surface2);padding:9px 12px;border-radius:8px;border:0.5px solid var(--border);">
+          ⏱ <span id="batch-lifespan-hint"></span>
+        </div>
+      </div>
+      <div class="form-group form-full">
+        <label>Aperçu des références générées</label>
+        <div id="batch-preview" style="font-size:12px;font-family:monospace;color:var(--text2);background:var(--surface2);padding:9px 12px;border-radius:8px;border:0.5px solid var(--border);min-height:32px;margin-top:4px;word-break:break-all">—</div>
+      </div>
+      <div class="form-group form-full">
+        <label>Photo(s) du lot</label>
+        <div class="photo-grid" id="b-photos-preview"></div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button type="button" class="btn btn-sm" onclick="openPhotoCapture('batch')">📷 Prendre une photo</button>
+          <label class="btn btn-sm" style="cursor:pointer;margin:0">📁 Importer <input type="file" accept="image/*" multiple style="display:none" onchange="importPhotos(this,'batch')"></label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="createBatch()">Créer le lot</button></div>
+  </div>
+
+  <!-- BATCH BULK CONTROL -->
+  <div class="modal hidden" id="modal-batch-ctrl" style="width:700px">
+    <div class="modal-header"><div class="modal-title" id="bctrl-title">Contrôle du lot</div><button class="close-btn" onclick="closeModal()">×</button></div>
+    <div style="font-size:13px;font-family:sans-serif;color:var(--text2);margin-bottom:14px" id="bctrl-desc"></div>
+    <div class="form-grid" style="margin-bottom:16px">
+      <div class="form-group"><label>Date du contrôle *</label><input type="date" id="bc-date"></div>
+      <div class="form-group"><label>Contrôleur *</label><input type="text" id="bc-who"></div>
+    </div>
+    <div style="font-size:11px;font-family:sans-serif;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">État individuel de chaque EPI</div>
+    <div style="background:var(--surface2);border-radius:var(--rad);border:0.5px solid var(--border);overflow:hidden;margin-bottom:12px">
+      <div style="display:flex;gap:8px;padding:8px 12px;border-bottom:0.5px solid var(--border);align-items:center">
+        <span style="font-size:11px;font-family:sans-serif;color:var(--text2);flex:1">Tout sélectionner :</span>
+        <button class="btn btn-sm" onclick="setBatchCtrlAll('ok')">✓ Tous conformes</button>
+        <button class="btn btn-sm" onclick="setBatchCtrlAll('warn')">⚠ Tous en réserve</button>
+        <button class="btn btn-sm btn-danger" onclick="setBatchCtrlAll('retired')">✖ Tous réformés</button>
+      </div>
+      <div id="bctrl-items" style="max-height:280px;overflow-y:auto"></div>
+    </div>
+    <div style="font-size:12px;font-family:sans-serif;color:var(--text2);background:var(--accent-light);border-radius:8px;padding:8px 12px;margin-bottom:4px" id="bctrl-summary"></div>
+    <div class="modal-actions"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="saveBatchControl()">Enregistrer le contrôle</button></div>
+  </div>
+
+  <!-- PHOTO CAPTURE -->
+  <div class="modal hidden" id="modal-photo" style="width:500px">
+    <div class="modal-header"><div class="modal-title">📷 Prendre une photo</div><button class="close-btn" onclick="closePhotoCapture()">×</button></div>
+    <div style="position:relative;background:#000;border-radius:var(--rad);overflow:hidden;margin-bottom:12px">
+      <video id="photo-video" playsinline autoplay muted style="height:280px;object-fit:cover"></video>
+      <canvas id="photo-canvas" style="display:none"></canvas>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center;margin-bottom:12px">
+      <button class="btn btn-primary" onclick="snapPhoto()">📸 Capturer</button>
+      <button class="btn" onclick="switchCamera()">🔄 Changer caméra</button>
+    </div>
+    <div id="photo-preview-snap" style="display:none">
+      <div style="font-size:11px;font-family:sans-serif;color:var(--text2);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em">Aperçu</div>
+      <img id="photo-snap-img" style="width:100%;border-radius:var(--rad);border:0.5px solid var(--border2)">
+      <div class="modal-actions" style="margin-top:12px">
+        <button class="btn" onclick="retakePhoto()">↩ Reprendre</button>
+        <button class="btn btn-primary" onclick="confirmPhoto()">✓ Utiliser cette photo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EPI HISTORY -->
+  <div class="modal hidden" id="modal-history" style="width:680px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="hist-title">Historique des contrôles</div>
+        <div style="font-size:12px;font-family:sans-serif;color:var(--text2);margin-top:3px" id="hist-subtitle"></div>
+      </div>
+      <button class="close-btn" onclick="closeModal()">×</button>
+    </div>
+    <div id="hist-photos" style="margin-bottom:14px"></div>
+    <div id="hist-years"></div>
+  </div>
+
+  <!-- BULK CONTROL -->
+  <div class="modal hidden" id="modal-bulk-ctrl" style="width:680px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="bulk-ctrl-title">Contrôle groupé</div>
+        <div style="font-size:13px;color:var(--text2);margin-top:3px" id="bulk-ctrl-desc"></div>
+      </div>
+      <button class="close-btn" onclick="closeModal()">×</button>
+    </div>
+    <div class="form-grid" style="margin-bottom:18px">
+      <div class="form-group"><label>Date du contrôle *</label><input type="date" id="blk-date"></div>
+      <div class="form-group"><label>Contrôleur *</label><input type="text" id="blk-who"></div>
+      <div class="form-group form-full"><label>Observations (optionnel)</label><textarea id="blk-notes" rows="2"></textarea></div>
+    </div>
+    <div id="bulk-items-wrap"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveBulkControl()">✓ Enregistrer le contrôle</button>
+    </div>
+  </div>
+
+  <!-- CHECK SHEET -->
+  <div class="modal hidden" id="modal-check" style="width:680px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="check-title">Fiche de contrôle</div>
+        <div style="font-size:13px;color:var(--text2);margin-top:3px" id="check-subtitle"></div>
+      </div>
+      <button class="close-btn" onclick="closeModal()">×</button>
+    </div>
+    <div id="check-body"></div>
+  </div>
+
+</div>
+
+<script>
+// ==================== SUPABASE INTEGRATION ====================
+// ==================== HELPERS ====================
+const today = new Date();
+const fmt = d => { const x = new Date(d); return x.toISOString().split('T')[0]; };
+const todayStr = fmt(today);
+const addDays = (d,n) => { const r=new Date(d); r.setDate(r.getDate()+n); return r; };
+const addMonths = (d,n) => { const r=new Date(d); r.setMonth(r.getMonth()+n); return r; };
+const diffDays = (a,b) => Math.floor((new Date(a)-new Date(b))/86400000);
+const diffMonths = (a,b) => Math.floor(diffDays(a,b)/30.5);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+
+// ==================== STATIC CONFIG ====================
+const EPI_CONFIG = {
+  'Corde':          { lifeMax: 10, lifeUse: 5,  ctrlMonths: 12, norm: 'EN892' },
+  'Harnais':        { lifeMax: 10, lifeUse: 5,  ctrlMonths: 12, norm: 'EN12277' },
+  'Casque':         { lifeMax: 10, lifeUse: 5,  ctrlMonths: 12, norm: 'EN12492' },
+  'Dégaine':        { lifeMax: 10, lifeUse: 10, ctrlMonths: 12, norm: 'EN566/EN12275' },
+  'Mousqueton':     { lifeMax: 10, lifeUse: 10, ctrlMonths: 12, norm: 'EN12275' },
+  'Assureur':       { lifeMax: 10, lifeUse: 5,  ctrlMonths: 12, norm: 'EN15151' },
+  'Longe':          { lifeMax: 10, lifeUse: 5,  ctrlMonths: 12, norm: 'EN354' },
+  'Baudrier enfant':{ lifeMax: 5,  lifeUse: 3,  ctrlMonths: 6,  norm: 'EN12277' },
+};
+
+const EPI_CHECKS = {
+  'Corde': { icon:'🪢', resume:"Corde dynamique simple, double ou jumelle. Absorbe l'énergie de chute.", points:['Gaine : absence de coupures, effilochages, zones dures ou molles, bouclettes','Âme : pas de zones molles, plates ou torsadées (signe de choc absorbé)','Extrémités : manchons non décollés, marquage lisible, pas de nœuds permanents','Aspect général : pas de contamination chimique (acide, solvant), pas de taches suspectes','Souplesse homogène sur toute la longueur, pas de rigidité localisée','Étiquette centrale lisible (numéro de série, date fabrication, norme)'], retirement:['Chute facteur 2 ou chute importante ayant sollicité fortement la corde','Coupure ou entaille visible dans la gaine ou l'âme','Zone molle, plate ou dure localisée sur l'âme','Diamètre réduit de plus de 20% sur une section','Contamination chimique avérée (acide, hydrocarbures…)','Durée de vie max atteinte (10 ans depuis fabrication, 5 ans d'usage intensif)','Toute corde de plus de 10 ans quelle que soit son utilisation'], docLinks:[{label:'Notice Petzl (cordes)',url:'https://www.petzl.com/fr/Sport/Cordes'},{label:'Notice Mammut',url:'https://www.mammut.com/fr/fr/c/cordes'},{label:'Norme EN 892',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}]},
+  'Harnais': { icon:'🔰', resume:"Harnais d'encordement reliant le grimpeur à la corde via le point ventral ou dorsal.", points:['Sangles : pas de coupures, effilochages, abrasions profondes, zones rigides ou décolorées','Coutures : vérifier les coutures de charge (point ventral, sous-cuisses) — aucun fil coupé','Boucles de réglage : fonctionnement correct, blocage effectif, pas de déformation','Point ventral : pas de déformation, usure ou détérioration de l'anneau ou du rabat','Sous-cuisses et ceinture : élasticité et souplesse normales, rembourrage intact','Étiquette de traçabilité lisible (référence, taille, norme, date)'], retirement:['Chute ayant généré un choc violent (facteur de chute élevé)','Coupure ou entaille dans une sangle, même partielle','Couture de charge endommagée ou décousue','Déformation ou usure marquée du point ventral','Boucle de réglage défaillante','Contamination chimique','Durée de vie max atteinte (10 ans fabrication, 5 ans usage intensif)'], docLinks:[{label:'Notice Petzl (harnais)',url:'https://www.petzl.com/fr/Sport/Harnais'},{label:'Notice Black Diamond',url:'https://www.blackdiamondequipment.com/fr_FR/harnesses'},{label:'Norme EN 12277',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}]},
+  'Casque': { icon:'⛑️', resume:'Casque escalade protégeant la tête contre les chutes de pierres et impacts.', points:['Coque externe : pas de fissures, craquelures, éclats ou déformation visible','Mousse interne (EPS) : pas d'enfoncement, compression ou fissure','Système de réglage : fonctionnement fluide, blocage efficace, pas de pièce cassée','Jugulaire et boucle : sangle intacte, boucle non déformée, fermeture opérationnelle','Réseau de sangles internes : pas de rupture, usure ou décollement','Étiquette intérieure lisible (normes, taille, date de fabrication)'], retirement:['Après tout impact significatif, même sans dommage visible','Fissure ou craquelure visible sur la coque','Déformation ou enfoncement de la mousse interne','Jugulaire ou boucle de fermeture défectueuse','Exposition à des produits chimiques','Durée de vie max atteinte (10 ans fabrication, 5 ans usage intensif)'], docLinks:[{label:'Notice Petzl (casques)',url:'https://www.petzl.com/fr/Sport/Casques'},{label:'Notice Edelrid',url:'https://www.edelrid.com/fr/sport/casques'},{label:'Norme EN 12492',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}]},
+  'Dégaine': { icon:'🔗', resume:'Ensemble de deux mousquetons reliés par une sangle cousue.', points:['Mousquetons : ouverture/fermeture du doigt fluide, doigt revenant seul en position fermée','Mousquetons : absence de criques, fissures, déformation','Sangle cousue : pas de coupures, effilochages, ni traces de choc sur les coutures','Axe et ressort du doigt : pas de jeu excessif, ressort fonctionnel','Marquage lisible : charge de rupture (kN), norme, fabricant'], retirement:['Mousqueton ouvert lors d'une chute','Fissure ou déformation visible sur le corps ou le doigt','Doigt ne revenant pas seul en position fermée','Entaille dans la sangle cousue','Coutures effilochées ou décousues','Durée de vie max atteinte (10 ans)'], docLinks:[{label:'Notice Petzl (dégaines)',url:'https://www.petzl.com/fr/Sport/Degaines'},{label:'Normes EN 566/12275',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}]},
+  'Mousqueton': { icon:'🔒', resume:'Connecteur métallique pour relier différents éléments du système.', points:['Corps : absence de fissures, criques, déformation ou corrosion profonde','Doigt (gate) : ouverture facile, retour automatique en position fermée et verrouillée','Verrouillage : vissage/dévissage correct ou système automatique fonctionnel','Gorge intérieure : absence de rainure d'usure profonde','Marquage lisible : résistance (kN), norme, fabricant'], retirement:['Fissure ou crique visible sur le corps ou le doigt','Déformation visible du corps','Doigt ne revenant pas seul en position fermée','Système de verrouillage défaillant','Rainure d'usure profonde dans la gorge','Durée de vie max atteinte (10 ans)'], docLinks:[{label:'Notice Petzl (mousquetons)',url:'https://www.petzl.com/fr/Sport/Mousquetons'},{label:'Norme EN 12275',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}]},
+  'Assureur': { icon:'🎛️', resume:'Dispositif mécanique pour assurer et/ou descendre en rappel en contrôlant la corde.', points:['Corps : pas de fissures, déformation, usure excessive','Mécanisme assisté : came ou levier fonctionnel, pas de jeu anormal','Ressort interne : vérifier le retour en position de blocage','Gorge(s) de friction : absence de rainure d'usure profonde','Poignée ou levier : retour automatique correct'], retirement:['Mécanisme assisté ne bloquant plus la corde en cas de lâcher','Fissure ou déformation du corps','Usure profonde de la gorge de friction','Ressort ou came interne défaillant','Durée de vie max atteinte (10 ans, 5 ans usage intensif)'], docLinks:[{label:'Notice Petzl Grigri',url:'https://www.petzl.com/fr/Sport/Assureurs-et-descendeurs/GRIGRI'},{label:'Norme EN 15151',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}]},
+  'Longe': { icon:'🧵', resume:'Sangle ou corde cousue reliant le grimpeur à un ancrage.', points:['Sangles : absence de coupures, effilochages, abrasions profondes','Coutures : vérifier les coutures de charge aux extrémités','Absorbeur de choc (si intégré) : non déclenché, protège-absorbeur intact','Absence de nœuds permanents dans la sangle'], retirement:['Absorbeur de choc déclenché','Coupure ou entaille dans la sangle','Couture de charge endommagée','Contamination chimique','Durée de vie max atteinte (10 ans fabrication, 5 ans usage intensif)'], docLinks:[{label:'Notice Petzl (longes)',url:'https://www.petzl.com/fr/Sport/Longes'},{label:'Norme EN 354',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}]},
+  'Baudrier enfant': { icon:'👶', resume:'Harnais adapté aux morphologies enfants avec durée de vie réduite.', points:['Sangles : pas de coupures, effilochages, ni zones rigides ou décolorées','Coutures de charge : vérifier minutieusement les points de jonction','Boucles de réglage : fonctionnement correct et blocage fiable','Ajustement taille : vérifier la compatibilité avec la morphologie actuelle','Point ventral : pas de déformation, usure ni détérioration'], retirement:['Chute ayant généré un choc violent','Coupure ou entaille dans une sangle','Couture de charge endommagée','Boucle de réglage défaillante','Harnais devenu trop petit — ne jamais forcer','Durée de vie max atteinte (5 ans fabrication, 3 ans usage intensif)'], docLinks:[{label:'Notice Petzl harnais enfant',url:'https://www.petzl.com/fr/Sport/Harnais/Enfant'},{label:'Guide FFME sécurité',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}]},
+};
+
+const ROLE_PERMS = {
+  admin:   ['view_epi','add_epi','view_controls','add_controls','view_loans','manage_loans','export_pdf','manage_members'],
+  referent:['view_epi','add_epi','view_controls','add_controls','view_loans','manage_loans','export_pdf'],
+  member:  ['view_epi','view_loans'],
+};
+
+// ==================== IN-MEMORY STORE (synced from Firestore or demo) ====================
+let epis     = [];
+let controls = [];
+let loans    = [];
+let batches  = [];
+let members  = [];
+let currentUser = null;
+let editingMemberId = null;
+let qrStream = null, qrInterval = null, qrParsed = null;
+let nextMemberId = 10, nextBatchNum = 2;
+let photoStream = null, photoTarget = null, photoCameraIndex = 0, photoCameras = [];
+let pendingEpiPhotos = [], pendingBatchPhotos = [];
+let selectedRefs2 = new Set();
+let batchCtrlTarget = null;
+
+// ==================== LOADING OVERLAY ====================
+function showLoading(msg) {
+  let el = document.getElementById('loading-overlay');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'loading-overlay';
+    el.style.cssText = 'position:fixed;inset:0;background:rgba(255,255,255,0.85);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-family:var(--font)';
+    el.innerHTML = '<div style="width:36px;height:36px;border:3px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite"></div><div id="loading-msg" style="font-size:15px;color:var(--text2)"></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>';
+    document.body.appendChild(el);
+  }
+  document.getElementById('loading-msg').textContent = msg || 'Chargement…';
+  el.style.display = 'flex';
+}
+function hideLoading() {
+  const el = document.getElementById('loading-overlay');
+  if (el) el.style.display = 'none';
+}
+function showToast(msg, type='ok') {
+  let el = document.getElementById('toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'toast';
+    el.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9998;font-family:var(--font);font-size:14px;font-weight:600;padding:12px 20px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.12);transition:opacity 0.3s;pointer-events:none';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.background = type==='ok' ? '#dcfce7' : type==='err' ? '#fee2e2' : '#fef3c7';
+  el.style.color = type==='ok' ? '#14532d' : type==='err' ? '#dc2626' : '#b45309';
+  el.style.opacity = '1';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.style.opacity = '0', 2800);
+}
+
+// ==================== DEMO DATA ====================
+function loadDemoData() {
+  members = [
+    { id:1, name:'Admin Club', login:'admin', pass:'admin123', role:'admin', perms:ROLE_PERMS.admin, lastAccess:todayStr, email:'admin@demo.local' },
+    { id:2, name:'Marie Dupont', login:'marie', pass:'marie123', role:'referent', perms:ROLE_PERMS.referent, lastAccess:fmt(addDays(today,-2)), email:'marie@demo.local' },
+    { id:3, name:'Jean Martin', login:'jean', pass:'jean123', role:'member', perms:ROLE_PERMS.member, lastAccess:fmt(addDays(today,-5)), email:'jean@demo.local' },
+  ];
+  epis = [
+    { ref:'CRD-001', type:'Corde', brand:'Petzl', model:'Arial 10.0', buy:'2022-03-15', fab:'2022-01-01', norm:'EN892', lot:'LOT220315', status:'ok', lastCtrl:'2024-09-10', notes:'', photos:[] },
+    { ref:'CRD-002', type:'Corde', brand:'Mammut', model:'Infinity 9.5', buy:'2021-06-20', fab:'2021-04-01', norm:'EN892', lot:'LOT210620', status:'warn', lastCtrl:'2024-03-01', notes:'Légère usure au milieu', photos:[] },
+    { ref:'HRN-001', type:'Harnais', brand:'Petzl', model:'Adjama', buy:'2023-01-10', fab:'2022-12-01', norm:'EN12277', lot:'LOT230110', status:'ok', lastCtrl:'2024-11-20', notes:'', photos:[] },
+    { ref:'HRN-002', type:'Harnais', brand:'Black Diamond', model:'Momentum', buy:'2020-05-05', fab:'2020-03-01', norm:'EN12277', lot:'LOT200505', status:'danger', lastCtrl:'2023-05-05', notes:'Sangle ventrale à remplacer', photos:[] },
+    { ref:'CSQ-001', type:'Casque', brand:'Petzl', model:'Boreo', buy:'2022-11-30', fab:'2022-10-01', norm:'EN12492', lot:'LOT221130', status:'ok', lastCtrl:'2024-10-15', notes:'', photos:[] },
+    { ref:'CSQ-002', type:'Casque', brand:'Edelrid', model:'Shield II', buy:'2019-04-01', fab:'2019-02-01', norm:'EN12492', lot:'LOT190401', status:'retired', lastCtrl:'2024-01-10', notes:'Chute importante — réformé', photos:[] },
+    { ref:'ASS-001', type:'Assureur', brand:'Petzl', model:'Grigri+', buy:'2023-07-01', fab:'2023-05-01', norm:'EN15151', lot:'LOT230701', status:'ok', lastCtrl:'2024-12-01', notes:'', photos:[] },
+    { ref:'LNG-001', type:'Longe', brand:'Beal', model:'Dynaclip', buy:'2021-09-15', fab:'2021-08-01', norm:'EN354', lot:'LOT210915', status:'warn', lastCtrl:'2024-02-20', notes:'Vérifier coutures', photos:[] },
+  ];
+  controls = [
+    { id:'c1', date:'2024-12-01', ref:'ASS-001', who:'Marie Dupont', result:'ok', notes:'Mécanisme parfait' },
+    { id:'c2', date:'2024-11-20', ref:'HRN-001', who:'Jean Martin', result:'ok', notes:'RAS' },
+    { id:'c3', date:'2024-10-15', ref:'CSQ-001', who:'Marie Dupont', result:'ok', notes:'RAS' },
+    { id:'c4', date:'2024-09-10', ref:'CRD-001', who:'Pierre Durand', result:'ok', notes:'Gaine saine' },
+    { id:'c5', date:'2024-03-01', ref:'CRD-002', who:'Jean Martin', result:'warn', notes:'Légère usure centrale' },
+    { id:'c6', date:'2024-02-20', ref:'LNG-001', who:'Marie Dupont', result:'warn', notes:'Surveiller coutures' },
+    { id:'c7', date:'2024-01-10', ref:'CSQ-002', who:'Pierre Durand', result:'retired', notes:'Impact trop important' },
+    { id:'c8', date:'2023-05-05', ref:'HRN-002', who:'Jean Martin', result:'danger', notes:'Sangle ventrale dégradée' },
+  ];
+  loans = [
+    { id:'l1', date:fmt(addDays(today,-3)), member:'Sophie Laurent', ref:'CRD-001', returnDate:fmt(addDays(today,4)), status:'active' },
+    { id:'l2', date:fmt(addDays(today,-10)), member:'Lucas Petit', ref:'CSQ-001', returnDate:fmt(addDays(today,-3)), status:'late' },
+  ];
+  batches = [
+    { id:'LOT-2024-001', name:'Baudriers adultes 2024', type:'Harnais', brand:'Petzl', model:'Corax', buy:'2024-03-01', fab:'2024-01-01', norm:'EN12277', lot:'B240301', created:'2024-03-01', photos:[] },
+  ];
+}
+
+// ==================== SUPABASE CONFIG ====================
+const SUPABASE_URL  = 'https://jnptmjkjicidrxlykvdl.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpucHRtamtqaWNpZHJ4bHlrdmRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMDAzODEsImV4cCI6MjA5MTY3NjM4MX0.gOzBXcM4_JqoWsYt88yXo66';
+
+const DEMO_MODE = false; // Supabase configuré
+
+// Helper REST générique
+async function sbFetch(path, opts = {}) {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+    headers: {
+      'apikey':        SUPABASE_ANON,
+      'Authorization': 'Bearer ' + SUPABASE_ANON,
+      'Content-Type':  'application/json',
+      'Prefer':        opts.prefer || 'return=representation',
+      ...opts.headers
+    },
+    method: opts.method || 'GET',
+    body:   opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error('Supabase error ' + res.status + ': ' + err);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+// Photo upload via Supabase Storage
+async function uploadPhotoToStorage(dataUrl, path) {
+  if (!dataUrl || dataUrl.startsWith('http')) return dataUrl;
+  try {
+    // Convert dataUrl to blob
+    const arr = dataUrl.split(','), mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    const u8 = new Uint8Array(bstr.length);
+    for (let i = 0; i < bstr.length; i++) u8[i] = bstr.charCodeAt(i);
+    const blob = new Blob([u8], { type: mime });
+    const res = await fetch(SUPABASE_URL + '/storage/v1/object/epi-photos/' + path, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON,
+                 'Content-Type': mime, 'x-upsert': 'true' },
+      body: blob,
+    });
+    if (!res.ok) throw new Error('Upload failed');
+    return SUPABASE_URL + '/storage/v1/object/public/epi-photos/' + path;
+  } catch(e) { console.warn('Photo upload failed:', e); return dataUrl; }
+}
+
+// CRUD helpers
+async function dbSelect(table, filters = '') {
+  const qs = 'select=*' + (filters ? '&' + filters : '');
+  return await sbFetch(table + '?' + qs);
+}
+async function dbUpsert(table, row) {
+  return await sbFetch(table, { method: 'POST', prefer: 'return=representation',
+    headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' }, body: row });
+}
+async function dbUpdate(table, col, val, data) {
+  return await sbFetch(table + '?' + col + '=eq.' + encodeURIComponent(val),
+    { method: 'PATCH', body: data });
+}
+async function dbDelete(table, col, val) {
+  return await sbFetch(table + '?' + col + '=eq.' + encodeURIComponent(val), { method: 'DELETE', prefer: 'return=minimal' });
+}
+
+// Load all data from Supabase
+async function loadAllData() {
+  showLoading('Chargement des données…');
+  try {
+    const [dbEpis, dbControls, dbLoans, dbBatches, dbMembers] = await Promise.all([
+      dbSelect('epis'),
+      dbSelect('controls', 'order=created_at.desc'),
+      dbSelect('loans'),
+      dbSelect('batches'),
+      dbSelect('members'),
+    ]);
+    epis     = (dbEpis     || []).map(r => ({ ...r.data, ref: r.ref }));
+    controls = (dbControls || []).map(r => ({ ...r.data, id: r.ctrl_id }));
+    loans    = (dbLoans    || []).map(r => ({ ...r.data, id: r.loan_id }));
+    batches  = (dbBatches  || []).map(r => ({ ...r.data, id: r.batch_id }));
+    members  = (dbMembers  || []).map(r => ({ ...r.data, id: Number(r.member_id) || r.member_id }));
+    if (members.length === 0) await seedInitialAdmin();
+    hideLoading();
+  } catch(e) {
+    hideLoading();
+    showToast('Erreur chargement : ' + e.message, 'err');
+    console.error(e);
+    // Fallback to demo data
+    loadDemoData();
+  }
+}
+
+async function seedInitialAdmin() {
+  const admin = { id:1, name:'Admin Club', login:'admin', pass:'admin123',
+    role:'admin', perms: ROLE_PERMS.admin, lastAccess: todayStr, email:'' };
+  members = [admin];
+  await dbUpsert('members', { member_id: '1', data: admin });
+}
+
+async function fsSet(table, rowId, data) {
+  const colMap = { epis:'ref', controls:'ctrl_id', loans:'loan_id', batches:'batch_id', members:'member_id' };
+  const col = colMap[table] || 'id';
+  await dbUpsert(table, { [col]: String(rowId), data: JSON.parse(JSON.stringify(data)) });
+}
+async function fsUpdate(table, rowId, patch) {
+  const colMap = { epis:'ref', controls:'ctrl_id', loans:'loan_id', batches:'batch_id', members:'member_id' };
+  const col = colMap[table] || 'id';
+  // Fetch current, merge, upsert
+  try {
+    const rows = await dbSelect(table, col + '=eq.' + encodeURIComponent(rowId));
+    if (rows && rows.length > 0) {
+      const merged = { ...rows[0].data, ...patch };
+      await dbUpsert(table, { [col]: String(rowId), data: merged });
+    }
+  } catch(e) { console.warn('fsUpdate error:', e); }
+}
+async function fsDelete(table, rowId) {
+  const colMap = { epis:'ref', controls:'ctrl_id', loans:'loan_id', batches:'batch_id', members:'member_id' };
+  await dbDelete(table, colMap[table] || 'id', rowId);
+}
+
+// ==================== AUTH ====================
+function doLogin() {
+  const login = document.getElementById('login-user').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  const user  = members.find(m => m.login === login && m.pass === pass);
+  if (!user) { errEl.style.display='block'; errEl.textContent='Identifiant ou mot de passe incorrect.'; return; }
+  errEl.style.display = 'none';
+  loginSuccess(user);
+}
+
+function loginSuccess(user) {
+  currentUser = user;
+  fsUpdate('members', String(user.id), { lastAccess: todayStr }).catch(()=>{});
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('sidebar-username').textContent = user.name;
+  document.getElementById('sidebar-userrole').textContent = {admin:'Administrateur',referent:'Référent EPI',member:'Membre'}[user.role];
+  localStorage.setItem('epi_session', JSON.stringify({ login: user.login, pass: user.pass }));
+  applyPermissions();
+  renderDashboard();
+}
+
+function doLogout() {
+  currentUser = null;
+  localStorage.removeItem('epi_session');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-error').style.display = 'none';
+}
+
+function hasPerm(p) { return currentUser && currentUser.perms.includes(p); }
+
+function applyPermissions() {
+  document.querySelectorAll('[data-perm]').forEach(el => {
+    el.classList.toggle('hidden', !hasPerm(el.getAttribute('data-perm')));
+  });
+  ['btn-add-epi','btn-qr-scan','btn-add-batch'].forEach(id => {
+    document.getElementById(id)?.classList.toggle('hidden', !hasPerm('add_epi'));
+  });
+  document.getElementById('btn-add-ctrl')?.classList.toggle('hidden', !hasPerm('add_controls'));
+}
+
+// ==================== NAVIGATION ====================
+function showPage(id, el) {
+  currentPage = id;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+id)?.classList.add('active');
+  if (el) el.classList.add('active');
+  const titles = { dashboard:'Tableau de bord', inventory:'Inventaire EPI', controls:'Historique des contrôles',
+    loans:'Gestion des prêts', alerts:'Alertes', members:'Gestion des membres', batches:'Lots d'EPI', checks:'Fiches de contrôle' };
+  document.getElementById('topbar-title').textContent = titles[id] || id;
+  const renders = { dashboard:renderDashboard, inventory:renderInventory, controls:renderControls,
+    loans:renderLoans, alerts:renderAlerts, members:renderMembers, batches:renderBatches, checks:renderChecks };
+  if (renders[id]) renders[id]();
+}
+
+// ==================== STATUS CALC ====================
+function getNextCtrl(epi) {
+  if (!epi.lastCtrl) return null;
+  const cfg = EPI_CONFIG[epi.type];
+  return fmt(addMonths(new Date(epi.lastCtrl), cfg ? cfg.ctrlMonths : 12));
+}
+function getLifeStatus(epi) {
+  if (epi.status === 'retired' || epi.status === 'lost') return null;
+  const cfg = EPI_CONFIG[epi.type];
+  const fabDate = epi.fab || epi.buy;
+  if (!cfg || !fabDate) return null;
+  const ageYears = diffMonths(todayStr, fabDate) / 12;
+  if (ageYears >= cfg.lifeMax) return 'danger';
+  if (ageYears >= cfg.lifeUse) return 'warn';
+  return null;
+}
+function getStatus(epi) {
+  if (epi.status === 'retired') return 'retired';
+  if (epi.status === 'lost') return 'lost';
+  const life = getLifeStatus(epi);
+  if (life === 'danger') return 'danger';
+  const next = getNextCtrl(epi);
+  if (!next) return 'warn';
+  const d = diffDays(next, todayStr);
+  if (d < 0) return 'danger';
+  if (d < 60) return 'warn';
+  if (life === 'warn') return 'warn';
+  return epi.status === 'danger' ? 'danger' : epi.status === 'warn' ? 'warn' : 'ok';
+}
+function badgeHtml(s) {
+  const map = { ok:'badge-ok', warn:'badge-warn', danger:'badge-danger', retired:'badge-retired', lost:'badge-lost' };
+  const lbl = { ok:'Conforme', warn:'À contrôler', danger:'En alerte', retired:'Réformé', lost:'Introuvable' };
+  return `<span class="badge ${map[s]||'badge-retired'}">${lbl[s]||s}</span>`;
+}
+function lifespanBar(epi) {
+  const cfg = EPI_CONFIG[epi.type];
+  const fabDate = epi.fab || epi.buy;
+  if (!cfg || !fabDate) return '—';
+  const ageM = Math.max(0, diffMonths(todayStr, fabDate));
+  const maxM = cfg.lifeMax * 12;
+  const pct = Math.min(100, Math.round(ageM / maxM * 100));
+  const color = pct >= 100 ? '#dc2626' : pct >= 70 ? '#b45309' : '#16a34a';
+  return `<div style="font-size:12px;color:var(--text2)">${Math.floor(ageM/12)}a ${ageM%12}m / ${cfg.lifeMax}a max</div>
+    <div class="lifespan-bar"><div class="lifespan-fill" style="width:${pct}%;background:${color}"></div></div>`;
+}
+
+// ==================== DASHBOARD ====================
+function renderDashboard() {
+  const active = epis.filter(e => e.status !== 'retired' && e.status !== 'lost');
+  document.getElementById('stat-total').textContent  = active.length;
+  document.getElementById('stat-ok').textContent     = active.filter(e => getStatus(e) === 'ok').length;
+  document.getElementById('stat-warn').textContent   = active.filter(e => getStatus(e) === 'warn').length;
+  document.getElementById('stat-danger').textContent = active.filter(e => getStatus(e) === 'danger').length;
+  const types = {};
+  epis.forEach(e => {
+    if (!types[e.type]) types[e.type] = { total:0, s:'ok' };
+    types[e.type].total++;
+    const s = getStatus(e);
+    if (s === 'danger') types[e.type].s = 'danger';
+    else if (s === 'warn' && types[e.type].s !== 'danger') types[e.type].s = 'warn';
+  });
+  document.getElementById('type-summary').innerHTML = Object.entries(types).map(([t,v]) => {
+    const cfg = EPI_CONFIG[t];
+    return `<tr><td>${t}</td><td>${v.total}</td><td class="muted" style="font-size:12px">${cfg ? cfg.lifeMax+'a max' : '—'}</td><td>${badgeHtml(v.s)}</td></tr>`;
+  }).join('');
+  const upcoming = epis.filter(e => e.status !== 'retired' && e.status !== 'lost' && getNextCtrl(e))
+    .map(e => ({...e, next: getNextCtrl(e)})).sort((a,b) => a.next.localeCompare(b.next)).slice(0,6);
+  document.getElementById('upcoming-controls').innerHTML = upcoming.map(e => {
+    const d = diffDays(e.next, todayStr);
+    return `<tr><td><strong style="font-weight:700">${e.ref}</strong></td><td class="muted">${e.type}</td><td class="${d<0?'c-danger':d<60?'c-warn':'c-ok'}" style="font-size:13px">${e.next}</td></tr>`;
+  }).join('');
+  updateAlertBadge();
+}
+function updateAlertBadge() {
+  const n = epis.filter(e => getStatus(e) === 'danger').length + loans.filter(l => l.status === 'late').length;
+  const b = document.getElementById('alert-badge');
+  if (b) { b.textContent = n; b.classList.toggle('hidden', n === 0); }
+}
+function updateBatchBadge() {
+  const b = document.getElementById('batch-badge');
+  if (b) { b.textContent = batches.length; b.classList.toggle('hidden', batches.length === 0); }
+}
+
+// ==================== INVENTORY ====================
+function renderInventory() {
+  const q  = (document.getElementById('search-input')?.value || '').toLowerCase();
+  const ft = document.getElementById('filter-type')?.value;
+  const fs = document.getElementById('filter-status')?.value;
+  const filtered = epis.filter(e => {
+    if (q && ![e.ref,e.brand,e.model,e.type].join(' ').toLowerCase().includes(q)) return false;
+    if (ft && e.type !== ft) return false;
+    if (fs && getStatus(e) !== fs) return false;
+    return true;
+  });
+  document.getElementById('inventory-table').innerHTML = filtered.map(e => {
+    const batchTag = e.batchId ? `<span style="font-size:11px;font-weight:700;background:var(--surface2);border:1px solid var(--border2);color:var(--text2);padding:2px 8px;border-radius:6px;cursor:pointer;margin-left:6px" onclick="showBatch('${e.batchId}')" title="Voir le lot">${e.batchId}</span>` : '';
+    const canCtrl  = hasPerm('add_controls');
+    const isActive = e.status !== 'retired' && e.status !== 'lost';
+    return `<tr>
+      <td style="width:40px"><input type="checkbox" class="epi-chk" data-ref="${e.ref}" onchange="onEpiCheckChange()" ${!isActive?'disabled style="opacity:0.3"':''}></td>
+      <td><strong style="font-weight:700">${e.ref}</strong>${batchTag}</td>
+      <td>${e.type}</td>
+      <td><div style="display:flex;align-items:center;gap:8px">
+        ${e.photos && e.photos.length ? `<img src="${e.photos[0]}" class="photo-thumb" onclick="openHistory('epi','${e.ref}')">` : `<div class="photo-placeholder" onclick="openHistory('epi','${e.ref}')" title="Historique">📋</div>`}
+        <span>${e.brand} ${e.model}</span>
+      </div></td>
+      <td class="muted">${e.buy}</td>
+      <td style="min-width:120px">${lifespanBar(e)}</td>
+      <td class="muted">${e.lastCtrl||'—'}</td>
+      <td class="muted">${getNextCtrl(e)||'—'}</td>
+      <td>${badgeHtml(getStatus(e))}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm" onclick="openCheckSheet('${e.type}')">📋 Fiche</button>
+        ${canCtrl ? `<button class="btn btn-sm" style="margin-left:4px" onclick="openModalControl('${e.ref}')">Contrôler</button>` : ''}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ==================== CONTROLS ====================
+function renderControls() {
+  const q = (document.getElementById('ctrl-search')?.value || '').toLowerCase();
+  const epiMap = {}; epis.forEach(e => epiMap[e.ref] = e.type);
+  const statusColor = { ok:'var(--accent)', warn:'var(--warn)', danger:'var(--danger)', retired:'var(--text2)', lost:'#5b21b6' };
+  const statusText  = { ok:'✓ Conforme', warn:'⚠ Réserve', danger:'✖ Non-conforme', retired:'— Réformé', lost:'? Introuvable' };
+  const filtered = [...controls].filter(c => !q || [c.ref,c.who].join(' ').toLowerCase().includes(q))
+    .sort((a,b) => (b.date||'').localeCompare(a.date||''));
+  document.getElementById('controls-table').innerHTML = filtered.map(c => `
+    <tr>
+      <td style="font-size:13px">${c.date}</td>
+      <td><strong style="font-weight:700">${c.ref}</strong></td>
+      <td class="muted">${epiMap[c.ref]||'—'}</td>
+      <td>${c.who}</td>
+      <td><span style="font-weight:600;color:${statusColor[c.result]||'var(--text2)'}">${statusText[c.result]||c.result}</span></td>
+      <td class="muted" style="font-size:13px">${c.notes||'—'}</td>
+    </tr>`).join('');
+}
+
+// ==================== LOANS ====================
+function renderLoans() {
+  const epiMap = {}; epis.forEach(e => epiMap[e.ref] = e.type);
+  const slbl = { active:'En cours', returned:'Rendu', late:'En retard' };
+  const scls = { active:'badge-warn', returned:'badge-ok', late:'badge-danger' };
+  const canManage = hasPerm('manage_loans');
+  document.getElementById('loans-table').innerHTML = loans.map((l,i) => `
+    <tr>
+      <td style="font-size:13px">${l.date}</td>
+      <td>${l.member}</td>
+      <td><strong style="font-weight:700">${l.ref}</strong></td>
+      <td class="muted">${epiMap[l.ref]||'—'}</td>
+      <td style="font-size:13px">${l.returnDate}</td>
+      <td><span class="badge ${scls[l.status]}">${slbl[l.status]}</span></td>
+      <td>${canManage && l.status!=='returned' ? `<button class="btn btn-sm" onclick="returnLoan('${l.id||i}')">Rendu</button>` : ''}</td>
+    </tr>`).join('');
+}
+async function returnLoan(idOrIdx) {
+  const loan = typeof idOrIdx === 'string' ? loans.find(l => l.id === idOrIdx) : loans[idOrIdx];
+  if (!loan) return;
+  loan.status = 'returned';
+  await fsUpdate('loans', loan.id || String(idOrIdx), { status:'returned' });
+  renderLoans();
+  updateAlertBadge();
+  showToast('Prêt marqué comme rendu');
+}
+
+// ==================== ALERTS ====================
+function renderAlerts() {
+  const alerts = [];
+  epis.forEach(e => {
+    const s = getStatus(e);
+    const next = getNextCtrl(e);
+    if (s === 'danger' && e.status !== 'retired') {
+      const d = next ? diffDays(next, todayStr) : -999;
+      const lifeS = getLifeStatus(e);
+      let desc = `${e.type} ${e.brand} ${e.model}`;
+      if (lifeS === 'danger') { const cfg = EPI_CONFIG[e.type]; desc += ` — durée max (${cfg?.lifeMax}a) dépassée`; }
+      else if (d < 0) desc += ` — contrôle en retard de ${Math.abs(d)}j`;
+      alerts.push({ type:'danger', icon:'⚠', title:`${e.ref} — action requise`, desc, date:next||'—' });
+    } else if (s === 'warn') {
+      const d = diffDays(next, todayStr);
+      alerts.push({ type:'warn', icon:'○', title:`${e.ref} — contrôle à prévoir`, desc:`${e.type} ${e.brand} ${e.model} — dans ${d}j`, date:next });
+    }
+  });
+  loans.filter(l => l.status==='late').forEach(l => {
+    alerts.push({ type:'danger', icon:'📦', title:`Prêt en retard — ${l.member}`, desc:`${l.ref} — retour prévu le ${l.returnDate}`, date:l.returnDate });
+  });
+  if (!alerts.length) { document.getElementById('alerts-list').innerHTML = `<div style="text-align:center;padding:48px;color:var(--text2)">✓ Aucune alerte active</div>`; return; }
+  document.getElementById('alerts-list').innerHTML = alerts.map(a => `
+    <div class="alert-item">
+      <div class="alert-icon alert-icon-${a.type}">${a.icon}</div>
+      <div class="alert-body"><div class="alert-title">${a.title}</div><div class="alert-desc">${a.desc}</div></div>
+      <div style="font-size:12px;color:var(--text3);flex-shrink:0">${a.date}</div>
+    </div>`).join('');
+}
+
+// ==================== MEMBERS ====================
+function renderMembers() {
+  const rlbl = { admin:'Administrateur', referent:'Référent EPI', member:'Membre' };
+  const rcls = { admin:'badge-role-admin', referent:'badge-role-referent', member:'badge-role-member' };
+  document.getElementById('members-table').innerHTML = members.map(m => {
+    const isMe = m.id === currentUser?.id;
+    return `<tr>
+      <td><strong style="font-weight:700">${m.name}</strong>${isMe?' <span style="font-size:11px;color:var(--text2)">(vous)</span>':''}</td>
+      <td style="font-family:var(--font-mono);font-size:13px">${m.login}</td>
+      <td><span class="badge ${rcls[m.role]}">${rlbl[m.role]}</span></td>
+      <td style="font-size:13px;color:var(--text2)">${m.perms.length} permission${m.perms.length>1?'s':''}</td>
+      <td style="font-size:13px;color:var(--text2)">${m.lastAccess||'—'}</td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-sm" onclick="editMember(${m.id})">Modifier</button>
+        ${!isMe ? `<button class="btn btn-sm btn-danger" onclick="deleteMember(${m.id})">Supprimer</button>` : ''}
+      </td>
+    </tr>`;
+  }).join('');
+}
+function editMember(id) {
+  editingMemberId = id;
+  const m = members.find(x => x.id === id);
+  document.getElementById('member-modal-title').textContent = 'Modifier le membre';
+  document.getElementById('member-save-btn').textContent = 'Enregistrer';
+  document.getElementById('m-name').value = m.name;
+  document.getElementById('m-login').value = m.login;
+  document.getElementById('m-pass').value = '';
+  document.getElementById('m-pass').placeholder = 'Laisser vide pour conserver';
+  document.getElementById('m-email').value = m.email || '';
+  document.getElementById('m-role').value = m.role;
+  ['view_epi','add_epi','view_controls','add_controls','view_loans','manage_loans','export_pdf','manage_members']
+    .forEach(p => { document.getElementById('p-'+p).checked = m.perms.includes(p); });
+  openModal('member');
+}
+async function deleteMember(id) {
+  if (!confirm('Supprimer ce membre ?')) return;
+  members = members.filter(m => m.id !== id);
+  await fsDelete('members', String(id));
+  renderMembers();
+  showToast('Membre supprimé');
+}
+async function saveMember() {
+  const name  = document.getElementById('m-name').value.trim();
+  const login = document.getElementById('m-login').value.trim();
+  const pass  = document.getElementById('m-pass').value;
+  const email = document.getElementById('m-email').value.trim();
+  const role  = document.getElementById('m-role').value;
+  if (!name || !login) { alert('Nom et identifiant obligatoires'); return; }
+  if (!editingMemberId && !pass) { alert('Mot de passe obligatoire'); return; }
+  const allPerms = ['view_epi','add_epi','view_controls','add_controls','view_loans','manage_loans','export_pdf','manage_members'];
+  const perms = allPerms.filter(p => document.getElementById('p-'+p).checked);
+  if (editingMemberId) {
+    const m = members.find(x => x.id === editingMemberId);
+    Object.assign(m, { name, login, role, perms, email });
+    if (pass) m.pass = pass;
+    if (m.id === currentUser?.id) { currentUser = m; applyPermissions(); }
+    await fsSet('members', String(m.id), m);
+  } else {
+    if (members.find(m => m.login === login)) { alert('Identifiant déjà utilisé'); return; }
+    const newId = Date.now();
+    const nm = { id:newId, name, login, pass, email, role, perms, lastAccess:'—' };
+    members.push(nm);
+    await fsSet('members', String(newId), nm);
+  }
+  closeModal();
+  renderMembers();
+  showToast('Membre enregistré');
+}
+function updateRolePerms() {
+  const role = document.getElementById('m-role').value;
+  const p = ROLE_PERMS[role] || [];
+  ['view_epi','add_epi','view_controls','add_controls','view_loans','manage_loans','export_pdf','manage_members']
+    .forEach(perm => { document.getElementById('p-'+perm).checked = p.includes(perm); });
+}
+
+// ==================== MODALS ====================
+const ALL_MODALS = ['modal-add','modal-qr','modal-control','modal-loan','modal-member','modal-pdf',
+  'modal-batch','modal-batch-ctrl','modal-photo','modal-history','modal-check','modal-bulk-ctrl'];
+function showModal(id) {
+  ALL_MODALS.forEach(x => document.getElementById(x)?.classList.add('hidden'));
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById(id)?.classList.remove('hidden');
+}
+function openModal(type) {
+  if (type === 'qr') { showModal('modal-qr'); startQR(); }
+  else if (type === 'add') {
+    showModal('modal-add');
+    ['f-ref','f-brand','f-model','f-norm','f-lot','f-notes'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('f-type').value = '';
+    document.getElementById('f-buy').value = document.getElementById('f-fab').value = '';
+    document.getElementById('lifespan-hint-wrap').style.display = 'none';
+    pendingEpiPhotos = []; renderPhotoPreview('f-photos-preview', [], 'epi');
+  }
+  else if (type === 'control') {
+    showModal('modal-control'); populateEPISelect('c-ref');
+    document.getElementById('c-date').value = todayStr;
+    document.getElementById('c-who').value = currentUser?.name || '';
+    document.getElementById('c-notes').value = ''; document.getElementById('c-result').value = 'ok';
+  }
+  else if (type === 'loan') {
+    showModal('modal-loan'); populateEPISelect('l-ref');
+    document.getElementById('l-member').value = '';
+    document.getElementById('l-date').value = todayStr;
+    document.getElementById('l-return').value = fmt(addDays(today, 7));
+  }
+  else if (type === 'member') {
+    if (!editingMemberId) {
+      document.getElementById('member-modal-title').textContent = 'Nouveau membre';
+      document.getElementById('member-save-btn').textContent = 'Créer';
+      ['m-name','m-login','m-pass','m-email'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('m-pass').placeholder = '••••••••';
+      document.getElementById('m-role').value = 'member'; updateRolePerms();
+    }
+    showModal('modal-member');
+  }
+  else if (type === 'pdf') { showModal('modal-pdf'); }
+  else if (type === 'batch') {
+    showModal('modal-batch');
+    ['b-name','b-brand','b-model','b-norm','b-lot','b-qty','b-prefix'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('b-type').value = '';
+    document.getElementById('b-buy').value = todayStr; document.getElementById('b-fab').value = '';
+    document.getElementById('batch-preview').textContent = '—';
+    document.getElementById('batch-lifespan-hint-wrap').style.display = 'none';
+    pendingBatchPhotos = []; renderPhotoPreview('b-photos-preview', [], 'batch');
+  }
+}
+function openPDFModal() { editingMemberId = null; openModal('pdf'); }
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  stopQR(); closePhotoCapture(); editingMemberId = null;
+}
+function closeModalOverlay(e) { if (e.target === document.getElementById('modal-overlay')) closeModal(); }
+function openModalControl(ref) { openModal('control'); document.getElementById('c-ref').value = ref; }
+function populateEPISelect(selId) {
+  document.getElementById(selId).innerHTML = '<option value="">Choisir…</option>' +
+    epis.filter(e => e.status !== 'retired' && e.status !== 'lost')
+      .map(e => `<option value="${e.ref}">${e.ref} — ${e.type} ${e.brand}</option>`).join('');
+}
+
+// ==================== ADD EPI ====================
+async function addEPI(prefill) {
+  const data = prefill || {};
+  const ref  = (data.ref || document.getElementById('f-ref').value).trim();
+  const type = data.type || document.getElementById('f-type').value;
+  if (!ref || !type) { alert('Référence et type sont obligatoires'); return; }
+  if (epis.find(e => e.ref === ref)) { alert('Référence déjà existante'); return; }
+
+  showLoading('Enregistrement…');
+  let photos = [...pendingEpiPhotos];
+  photos = await Promise.all(photos.map((p, i) => uploadPhotoToStorage(p, `epis/${ref}/photo_${i}.jpg`)));
+  const epi = {
+    ref, type,
+    brand: data.brand || document.getElementById('f-brand').value,
+    model: data.model || document.getElementById('f-model').value,
+    buy: document.getElementById('f-buy').value || todayStr,
+    fab: document.getElementById('f-fab').value || '',
+    norm: data.norm || document.getElementById('f-norm').value,
+    lot: data.lot || document.getElementById('f-lot').value,
+    status: 'ok', lastCtrl: '', notes: document.getElementById('f-notes').value,
+    photos
+  };
+  epis.push(epi);
+  pendingEpiPhotos = [];
+  await fsSet('epis', ref, epi);
+  hideLoading();
+  closeModal();
+  renderInventory(); renderDashboard();
+  showToast('EPI ajouté avec succès');
+}
+
+// ==================== ADD CONTROL ====================
+async function addControl() {
+  const ref    = document.getElementById('c-ref').value;
+  const date   = document.getElementById('c-date').value;
+  const who    = document.getElementById('c-who').value.trim();
+  const result = document.getElementById('c-result').value;
+  if (!ref || !date || !who) { alert('Champs obligatoires manquants'); return; }
+  const ctrl = { id: uid(), date, ref, who, result, notes: document.getElementById('c-notes').value };
+  controls.push(ctrl);
+  const epi = epis.find(e => e.ref === ref);
+  if (epi) { epi.lastCtrl = date; epi.status = result; await fsSet('epis', ref, epi); }
+  await fsSet('controls', ctrl.id, ctrl);
+  closeModal();
+  renderControls(); renderDashboard(); updateAlertBadge();
+  showToast('Contrôle enregistré');
+}
+
+// ==================== ADD LOAN ====================
+async function addLoan() {
+  const member = document.getElementById('l-member').value.trim();
+  const ref    = document.getElementById('l-ref').value;
+  if (!member || !ref) { alert('Adhérent et EPI obligatoires'); return; }
+  const loan = { id: uid(), date: document.getElementById('l-date').value, member, ref,
+    returnDate: document.getElementById('l-return').value, status: 'active' };
+  loans.push(loan);
+  await fsSet('loans', loan.id, loan);
+  closeModal();
+  renderLoans();
+  showToast('Prêt créé');
+}
+
+// ==================== LIFESPAN HINT ====================
+function updateLifespanHint() {
+  const type = document.getElementById('f-type').value;
+  const cfg  = EPI_CONFIG[type];
+  const wrap = document.getElementById('lifespan-hint-wrap');
+  if (cfg) {
+    document.getElementById('lifespan-hint').textContent =
+      `Durée max : ${cfg.lifeMax} ans — Usage intensif : ${cfg.lifeUse} ans — Contrôle tous les ${cfg.ctrlMonths} mois — Norme ${cfg.norm}`;
+    wrap.style.display = 'block';
+    let btn = document.getElementById('lifespan-check-btn');
+    if (!btn) {
+      btn = Object.assign(document.createElement('button'), { id:'lifespan-check-btn', type:'button', className:'btn btn-sm', style:'margin-top:6px', textContent:'📋 Voir la fiche de contrôle' });
+      wrap.querySelector('div').append(document.createElement('br'), btn);
+    }
+    btn.onclick = () => openCheckSheet(type);
+  } else { wrap.style.display = 'none'; }
+}
+
+// ==================== QR CODE ====================
+function startQR() {
+  if (!navigator.mediaDevices?.getUserMedia) { document.getElementById('qr-result').textContent = '⚠ Caméra non disponible.'; return; }
+  navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' } })
+    .then(stream => {
+      qrStream = stream;
+      const video = document.getElementById('qr-video');
+      video.srcObject = stream; video.play();
+      if ('BarcodeDetector' in window) {
+        const bd = new BarcodeDetector({ formats:['qr_code'] });
+        qrInterval = setInterval(async () => {
+          try { const bc = await bd.detect(video); if (bc.length) processQR(bc[0].rawValue); } catch(e) {}
+        }, 400);
+      } else {
+        document.getElementById('qr-result').innerHTML = '📷 Caméra active. BarcodeDetector non supporté — collez le contenu manuellement :<br><input type="text" style="width:100%;margin-top:8px" placeholder="EPI:REF:TYPE:..." oninput="processQR(this.value)">';
+      }
+    }).catch(() => { document.getElementById('qr-result').textContent = '⚠ Accès caméra refusé.'; });
+}
+function stopQR() {
+  if (qrStream) { qrStream.getTracks().forEach(t => t.stop()); qrStream = null; }
+  if (qrInterval) { clearInterval(qrInterval); qrInterval = null; }
+  qrParsed = null;
+  document.getElementById('qr-confirm-btn')?.classList.add('hidden');
+}
+function processQR(raw) {
+  if (!raw?.startsWith('EPI:')) { document.getElementById('qr-result').textContent = '⚠ QR non reconnu.'; return; }
+  const parts = raw.split(':');
+  qrParsed = { ref:parts[1], type:parts[2], brand:parts[3]||'', model:parts[4]||'', norm:parts[5]||'', lot:parts[6]||'' };
+  const exists = epis.find(e => e.ref === qrParsed.ref);
+  if (exists) { document.getElementById('qr-result').innerHTML = `✓ EPI déjà en inventaire : <strong>${exists.ref}</strong>`; document.getElementById('qr-confirm-btn')?.classList.add('hidden'); return; }
+  document.getElementById('qr-result').innerHTML = `✓ Détecté : <strong>${qrParsed.ref}</strong> — ${qrParsed.type} ${qrParsed.brand} ${qrParsed.model}`;
+  document.getElementById('qr-confirm-btn')?.classList.remove('hidden');
+  stopQR();
+}
+function confirmQRAdd() {
+  if (!qrParsed) return;
+  document.getElementById('f-ref').value   = qrParsed.ref;
+  document.getElementById('f-type').value  = EPI_CONFIG[qrParsed.type] ? qrParsed.type : '';
+  document.getElementById('f-brand').value = qrParsed.brand;
+  document.getElementById('f-model').value = qrParsed.model;
+  document.getElementById('f-norm').value  = qrParsed.norm;
+  document.getElementById('f-lot').value   = qrParsed.lot;
+  document.getElementById('f-buy').value   = todayStr;
+  updateLifespanHint();
+  showModal('modal-add');
+}
+
+// ==================== BATCH ====================
+function updateBatchPreview() {
+  const prefix = document.getElementById('b-prefix').value.trim().toUpperCase();
+  const qty    = parseInt(document.getElementById('b-qty').value) || 0;
+  const el     = document.getElementById('batch-preview');
+  if (!prefix || qty < 1) { el.textContent = '—'; return; }
+  const refs = Array.from({length:Math.min(qty,5)}, (_,i) => `${prefix}-${String(i+1).padStart(3,'0')}`);
+  el.textContent = refs.join(', ') + (qty > 5 ? ` … ${prefix}-${String(qty).padStart(3,'0')} (${qty} au total)` : '');
+}
+function updateBatchLifespanHint() {
+  const type = document.getElementById('b-type').value;
+  const cfg  = EPI_CONFIG[type];
+  const wrap = document.getElementById('batch-lifespan-hint-wrap');
+  if (cfg) { document.getElementById('batch-lifespan-hint').textContent = `Durée max : ${cfg.lifeMax} ans — Usage : ${cfg.lifeUse} ans — Contrôle /${cfg.ctrlMonths} mois — Norme ${cfg.norm}`; wrap.style.display = 'block'; }
+  else { wrap.style.display = 'none'; }
+}
+async function createBatch() {
+  const name   = document.getElementById('b-name').value.trim();
+  const type   = document.getElementById('b-type').value;
+  const qty    = parseInt(document.getElementById('b-qty').value);
+  const prefix = document.getElementById('b-prefix').value.trim().toUpperCase();
+  if (!name || !type || !qty || !prefix) { alert('Nom, type, quantité et préfixe obligatoires'); return; }
+  const batchId = `LOT-${new Date().getFullYear()}-${String(nextBatchNum++).padStart(3,'0')}`;
+  const buy = document.getElementById('b-buy').value || todayStr;
+  const fab = document.getElementById('b-fab').value || '';
+  const brand = document.getElementById('b-brand').value;
+  const model = document.getElementById('b-model').value;
+  const norm  = document.getElementById('b-norm').value;
+  const lot   = document.getElementById('b-lot').value;
+  const newRefs = [], conflicts = [];
+  for (let i = 1; i <= qty; i++) {
+    const r = `${prefix}-${String(i).padStart(3,'0')}`;
+    epis.find(e => e.ref === r) ? conflicts.push(r) : newRefs.push(r);
+  }
+  if (conflicts.length && !confirm(`${conflicts.length} référence(s) existent déjà. Continuer sans elles ?`)) return;
+
+  showLoading('Création du lot…');
+  let photos = [...pendingBatchPhotos];
+  photos = await Promise.all(photos.map((p,i) => uploadPhotoToStorage(p, `batches/${batchId}/photo_${i}.jpg`)));
+  const batch = { id:batchId, name, type, brand, model, buy, fab, norm, lot, created:todayStr, photos };
+  batches.push(batch);
+  await fsSet('batches', batchId, batch);
+  for (const ref of newRefs) {
+    const epi = { ref, type, brand, model, buy, fab, norm, lot, status:'ok', lastCtrl:'', notes:'', photos:[], batchId };
+    epis.push(epi);
+    await fsSet('epis', ref, epi);
+  }
+  pendingBatchPhotos = [];
+  hideLoading();
+  closeModal();
+  showPage('batches', document.querySelector('[onclick*="batches"]')); renderBatches(); renderDashboard();
+  showToast(`Lot créé — ${newRefs.length} EPI générés`);
+  setTimeout(() => { if (currentPage === 'batches') toggleBatch(batchId); }, 300);
+}
+
+function renderBatches() {
+  const container = document.getElementById('batches-list');
+  if (!batches.length) { container.innerHTML = `<div style="text-align:center;padding:48px;color:var(--text2)">Aucun lot. Utilisez "+ Créer un lot".</div>`; return; }
+  container.innerHTML = batches.map(b => {
+    const bEpis = epis.filter(e => e.batchId === b.id);
+    const total   = bEpis.length;
+    const ok      = bEpis.filter(e => getStatus(e) === 'ok').length;
+    const warn    = bEpis.filter(e => getStatus(e) === 'warn').length;
+    const danger  = bEpis.filter(e => getStatus(e) === 'danger').length;
+    const retired = bEpis.filter(e => e.status === 'retired').length;
+    const active  = total - retired;
+    const cfg     = EPI_CONFIG[b.type];
+    return `<div class="batch-card" id="bcard-${b.id}">
+      <div class="batch-header" onclick="toggleBatch('${b.id}')">
+        <div class="batch-chevron" id="bchev-${b.id}">▶</div>
+        <div class="batch-info">
+          <div class="batch-name">${b.name}</div>
+          <div class="batch-meta">${b.type} — ${b.brand} ${b.model} — Acheté le ${b.buy}${cfg?' — max '+cfg.lifeMax+'a':''}</div>
+        </div>
+        <div class="batch-stats">
+          <div class="batch-stat"><div class="batch-stat-val c-neutral">${total}</div><div class="batch-stat-lbl">Total</div></div>
+          <div class="batch-stat"><div class="batch-stat-val c-ok">${ok}</div><div class="batch-stat-lbl">OK</div></div>
+          ${warn ? `<div class="batch-stat"><div class="batch-stat-val c-warn">${warn}</div><div class="batch-stat-lbl">Réserve</div></div>` : ''}
+          ${danger ? `<div class="batch-stat"><div class="batch-stat-val c-danger">${danger}</div><div class="batch-stat-lbl">Alerte</div></div>` : ''}
+          ${retired ? `<div class="batch-stat"><div class="batch-stat-val c-neutral">${retired}</div><div class="batch-stat-lbl">Réformés</div></div>` : ''}
+        </div>
+      </div>
+      <div class="batch-body" id="bbody-${b.id}">
+        <div class="batch-actions-row">
+          ${hasPerm('add_controls') ? `<button class="btn btn-sm btn-primary" onclick="openBatchControl('${b.id}')">✓ Contrôle du lot</button>` : ''}
+          <button class="btn btn-sm" onclick="openHistory('batch','${b.id}')">📋 Historique</button>
+          <span style="font-size:13px;color:var(--text2);margin-left:4px">${active} EPI actif${active>1?'s':''}</span>
+        </div>
+        ${b.photos?.length ? `<div class="photo-grid" style="padding:0 20px 10px">${b.photos.map(p=>`<img src="${p}" class="photo-thumb">`).join('')}</div>` : ''}
+        ${bEpis.map(e => {
+          const s = getStatus(e), next = getNextCtrl(e), isRetired = e.status === 'retired';
+          return `<div class="batch-item-row" style="${isRetired?'opacity:0.5':''}">
+            <div class="batch-item-ref">${e.ref}</div>
+            <div class="batch-item-info">${e.brand} ${e.model} — dernier : ${e.lastCtrl||'jamais'} — prochain : ${next||'—'}</div>
+            <div class="batch-item-ctrl">
+              ${badgeHtml(s)}
+              <button class="btn btn-sm" onclick="openHistory('epi','${e.ref}')">📋</button>
+              ${hasPerm('add_epi') && !isRetired ? `<button class="btn btn-sm btn-danger" onclick="detachFromBatch('${e.ref}')">↗ Sortir</button>` : ''}
+            </div>
+          </div>`;
+        }).join('')}
+        ${bEpis.length === 0 ? `<div style="padding:16px 20px;font-size:13px;color:var(--text2)">Aucun EPI dans ce lot.</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+  updateBatchBadge();
+}
+
+function toggleBatch(id) {
+  document.getElementById('bbody-'+id)?.classList.toggle('open');
+  document.getElementById('bchev-'+id)?.classList.toggle('open');
+}
+
+function openBatchControl(batchId) {
+  const batch = batches.find(b => b.id === batchId);
+  const bEpis = epis.filter(e => e.batchId === batchId && e.status !== 'retired');
+  if (!bEpis.length) { alert('Aucun EPI actif dans ce lot'); return; }
+  batchCtrlTarget = { batchId, items: bEpis.map(e => ({ ref:e.ref, result:'ok' })) };
+  document.getElementById('bctrl-title').textContent = `Contrôle du lot — ${batch.name}`;
+  document.getElementById('bctrl-desc').textContent  = `${bEpis.length} EPI — ${batch.type} ${batch.brand} ${batch.model}`;
+  document.getElementById('bc-date').value = todayStr;
+  document.getElementById('bc-who').value  = currentUser?.name || '';
+  renderBatchCtrlItems();
+  showModal('modal-batch-ctrl');
+}
+function renderBatchCtrlItems() {
+  const colors = { ok:'var(--accent)', warn:'var(--warn)', danger:'var(--danger)', retired:'var(--text2)', lost:'#5b21b6' };
+  document.getElementById('bctrl-items').innerHTML = batchCtrlTarget.items.map((item, idx) => {
+    const epi = epis.find(e => e.ref === item.ref);
+    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--border);font-size:14px">
+      <div style="font-weight:700;min-width:88px">${item.ref}</div>
+      <div style="flex:1;color:var(--text2);font-size:13px">${epi?epi.brand+' '+epi.model:''}</div>
+      <select onchange="setBatchItemResult(${idx},this.value)" style="padding:6px 8px;border-radius:8px;border:1px solid var(--border2);font-size:13px;color:var(--accent);font-weight:600;font-family:var(--font)">
+        <option value="ok" ${item.result==='ok'?'selected':''}>✓ Conforme</option>
+        <option value="warn" ${item.result==='warn'?'selected':''}>⚠ Réserve</option>
+        <option value="danger" ${item.result==='danger'?'selected':''}>✖ Non-conforme</option>
+        <option value="retired" ${item.result==='retired'?'selected':''}>— Réformer</option>
+        <option value="lost" ${item.result==='lost'?'selected':''}>? Introuvable</option>
+      </select>
+    </div>`;
+  }).join('');
+  updateBatchCtrlSummary();
+}
+function setBatchItemResult(idx, val) {
+  batchCtrlTarget.items[idx].result = val;
+  const sel = document.querySelectorAll('#bctrl-items select')[idx];
+  if (sel) { const c={ok:'var(--accent)',warn:'var(--warn)',danger:'var(--danger)',retired:'var(--text2)',lost:'#5b21b6'}; sel.style.color=c[val]; }
+  updateBatchCtrlSummary();
+}
+function setBatchCtrlAll(result) { batchCtrlTarget?.items.forEach((_,i) => setBatchItemResult(i, result)); renderBatchCtrlItems(); }
+function updateBatchCtrlSummary() {
+  const counts = {}; batchCtrlTarget?.items.forEach(i => counts[i.result] = (counts[i.result]||0)+1);
+  const lbl = { ok:'conforme', warn:'réserve', danger:'non-conforme', retired:'à réformer', lost:'introuvable' };
+  document.getElementById('bctrl-summary').textContent = 'Résumé : ' +
+    Object.entries(counts).map(([k,v]) => `${v} ${lbl[k]||k}`).join(' · ');
+}
+async function saveBatchControl() {
+  const date = document.getElementById('bc-date').value;
+  const who  = document.getElementById('bc-who').value.trim();
+  if (!date || !who) { alert('Date et contrôleur obligatoires'); return; }
+  showLoading('Enregistrement…');
+  for (const item of batchCtrlTarget.items) {
+    const ctrl = { id:uid(), date, ref:item.ref, who, result:item.result, notes:`Contrôle lot ${batchCtrlTarget.batchId}` };
+    controls.push(ctrl);
+    const epi = epis.find(e => e.ref === item.ref);
+    if (epi) { epi.lastCtrl = date; epi.status = item.result; await fsSet('epis', item.ref, epi); }
+    await fsSet('controls', ctrl.id, ctrl);
+  }
+  hideLoading(); closeModal();
+  renderBatches(); renderDashboard(); updateAlertBadge();
+  showToast(`${batchCtrlTarget.items.length} contrôles enregistrés`);
+}
+async function detachFromBatch(ref) {
+  if (!confirm(`Sortir ${ref} du lot ?`)) return;
+  const epi = epis.find(e => e.ref === ref);
+  if (epi) { delete epi.batchId; await fsUpdate('epis', ref, { batchId: null }); }
+  renderBatches();
+  showToast('EPI sorti du lot');
+}
+function showBatch(batchId) {
+  showPage('batches', document.querySelector('[onclick*="batches"]'));
+  setTimeout(() => {
+    const body = document.getElementById('bbody-'+batchId);
+    if (body && !body.classList.contains('open')) toggleBatch(batchId);
+    document.getElementById('bcard-'+batchId)?.scrollIntoView({ behavior:'smooth', block:'start' });
+  }, 100);
+}
+
+// ==================== PHOTO CAPTURE ====================
+function openPhotoCapture(target) {
+  photoTarget = target; showModal('modal-photo');
+  document.getElementById('photo-preview-snap').style.display = 'none';
+  document.getElementById('photo-video').style.display = 'block';
+  startPhotoCamera();
+}
+async function startPhotoCamera() {
+  if (photoStream) photoStream.getTracks().forEach(t => t.stop());
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    photoCameras = devices.filter(d => d.kind === 'videoinput');
+    const deviceId = photoCameras[photoCameraIndex % Math.max(photoCameras.length,1)]?.deviceId;
+    photoStream = await navigator.mediaDevices.getUserMedia({ video: deviceId ? {deviceId:{exact:deviceId}} : {facingMode:'environment'} });
+    document.getElementById('photo-video').srcObject = photoStream;
+  } catch(e) { alert('Caméra non disponible. Utilisez "Importer".'); closePhotoCapture(); }
+}
+function switchCamera() { photoCameraIndex++; startPhotoCamera(); }
+function snapPhoto() {
+  const video = document.getElementById('photo-video');
+  const canvas = document.getElementById('photo-canvas');
+  canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  document.getElementById('photo-snap-img').src = canvas.toDataURL('image/jpeg', 0.82);
+  document.getElementById('photo-preview-snap').style.display = 'block';
+  document.getElementById('photo-video').style.display = 'none';
+}
+function retakePhoto() {
+  document.getElementById('photo-preview-snap').style.display = 'none';
+  document.getElementById('photo-video').style.display = 'block';
+}
+function confirmPhoto() {
+  addPhotoToTarget(document.getElementById('photo-snap-img').src);
+  closePhotoCapture();
+  showModal(photoTarget === 'epi' ? 'modal-add' : 'modal-batch');
+}
+function closePhotoCapture() {
+  if (photoStream) { photoStream.getTracks().forEach(t => t.stop()); photoStream = null; }
+  document.getElementById('photo-video').style.display = 'block';
+  document.getElementById('photo-preview-snap').style.display = 'none';
+}
+function addPhotoToTarget(dataUrl) {
+  if (photoTarget === 'epi') { pendingEpiPhotos.push(dataUrl); renderPhotoPreview('f-photos-preview', pendingEpiPhotos, 'epi'); }
+  else { pendingBatchPhotos.push(dataUrl); renderPhotoPreview('b-photos-preview', pendingBatchPhotos, 'batch'); }
+}
+function importPhotos(input, target) {
+  Array.from(input.files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      if (target === 'epi') { pendingEpiPhotos.push(e.target.result); renderPhotoPreview('f-photos-preview', pendingEpiPhotos, 'epi'); }
+      else { pendingBatchPhotos.push(e.target.result); renderPhotoPreview('b-photos-preview', pendingBatchPhotos, 'batch'); }
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+function renderPhotoPreview(containerId, photos, target) {
+  document.getElementById(containerId).innerHTML = photos.map((p,i) =>
+    `<div style="position:relative;display:inline-block">
+      <img src="${p}" class="photo-thumb">
+      <button onclick="removePhoto(${i},'${target}')" style="position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--danger);color:#fff;border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center">×</button>
+    </div>`).join('');
+}
+function removePhoto(idx, target) {
+  if (target === 'epi') { pendingEpiPhotos.splice(idx,1); renderPhotoPreview('f-photos-preview', pendingEpiPhotos, 'epi'); }
+  else { pendingBatchPhotos.splice(idx,1); renderPhotoPreview('b-photos-preview', pendingBatchPhotos, 'batch'); }
+}
+
+// ==================== HISTORY ====================
+function openHistory(type, id) {
+  showModal('modal-history');
+  const statusText  = { ok:'✓ Conforme', warn:'⚠ Réserve', danger:'✖ Non-conforme', retired:'— Réformé', lost:'? Introuvable' };
+  const statusColor = { ok:'var(--accent)', warn:'var(--warn)', danger:'var(--danger)', retired:'var(--text2)', lost:'#5b21b6' };
+  const yearBlock = (yearControls) => Object.keys(
+    yearControls.reduce((acc,c) => { (acc[c.date?.slice(0,4)]||=[]).push(c); return acc; }, {})
+  ).sort((a,b)=>b-a).map(year => {
+    const yc = yearControls.filter(c => c.date?.startsWith(year));
+    return `<div style="margin-bottom:18px">
+      <div style="font-size:14px;font-weight:700;color:var(--text2);margin-bottom:8px">${year} — ${yc.length} contrôle${yc.length>1?'s':''}</div>
+      <div class="table-wrap" style="margin-bottom:0"><table>
+        <thead><tr><th>Date</th><th>Contrôleur</th><th>Résultat</th><th>Observations</th></tr></thead>
+        <tbody>${yc.map(c => `<tr>
+          <td style="font-size:13px">${c.date}</td><td>${c.who}</td>
+          <td><span style="font-weight:600;color:${statusColor[c.result]||'var(--text2)'}">${statusText[c.result]||c.result}</span></td>
+          <td style="font-size:13px;color:var(--text2)">${c.notes||'—'}</td>
+        </tr>`).join('')}</tbody>
+      </table></div>
+    </div>`;
+  }).join('');
+
+  if (type === 'epi') {
+    const epi = epis.find(e => e.ref === id);
+    if (!epi) return;
+    document.getElementById('hist-title').textContent = `${epi.ref} — Historique`;
+    document.getElementById('hist-subtitle').textContent = `${epi.type} ${epi.brand} ${epi.model} — Achat : ${epi.buy}`;
+    const photos = epi.photos || [];
+    document.getElementById('hist-photos').innerHTML = photos.length ? `<div style="margin-bottom:14px"><div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Photos</div><div class="photo-grid">${photos.map(p=>`<img src="${p}" class="photo-thumb" onclick="this.style.width=this.style.width?'':'100%'">`).join('')}</div></div>` : '';
+    const epiCtrl = controls.filter(c => c.ref === id).sort((a,b) => b.date?.localeCompare(a.date));
+    document.getElementById('hist-years').innerHTML = epiCtrl.length ? yearBlock(epiCtrl) : `<div style="text-align:center;padding:32px;color:var(--text2)">Aucun contrôle enregistré.</div>`;
+  } else {
+    const batch = batches.find(b => b.id === id);
+    if (!batch) return;
+    document.getElementById('hist-title').textContent = `Lot ${batch.name} — Historique`;
+    document.getElementById('hist-subtitle').textContent = `${batch.type} ${batch.brand} ${batch.model} — ${batch.id}`;
+    const photos = batch.photos || [];
+    document.getElementById('hist-photos').innerHTML = photos.length ? `<div style="margin-bottom:14px"><div class="photo-grid">${photos.map(p=>`<img src="${p}" class="photo-thumb">`).join('')}</div></div>` : '';
+    const bRefs = epis.filter(e => e.batchId === id).map(e => e.ref);
+    const bCtrl = controls.filter(c => bRefs.includes(c.ref)).sort((a,b) => b.date?.localeCompare(a.date));
+    document.getElementById('hist-years').innerHTML = bCtrl.length ? yearBlock(bCtrl) : `<div style="text-align:center;padding:32px;color:var(--text2)">Aucun contrôle pour ce lot.</div>`;
+  }
+}
+
+// ==================== CHECKS ====================
+function renderChecks() {
+  document.getElementById('checks-grid').innerHTML = Object.entries(EPI_CHECKS).map(([type, chk]) => {
+    const cfg = EPI_CONFIG[type];
+    const typeEpis = epis.filter(e => e.type === type && e.status !== 'retired' && e.status !== 'lost');
+    const issues = typeEpis.filter(e => getStatus(e) !== 'ok').length;
+    return `<div style="background:var(--surface);border-radius:var(--rad-lg);border:1px solid var(--border);overflow:hidden;cursor:pointer;transition:box-shadow 0.15s;box-shadow:var(--shadow)" onclick="openCheckSheet('${type}')" onmouseover="this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.boxShadow='var(--shadow)'">
+      <div style="background:var(--accent-light);padding:16px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border)">
+        <span style="font-size:30px">${chk.icon}</span>
+        <div style="flex:1"><div style="font-size:15px;font-weight:700;color:var(--accent-text)">${type}</div>
+          <div style="font-size:12px;color:var(--accent-text);margin-top:2px">Norme ${cfg?.norm||'—'} · max ${cfg?.lifeMax||'?'} ans</div>
+        </div>
+        ${typeEpis.length ? `<div style="text-align:right"><div style="font-size:18px;font-weight:700;color:${issues?'var(--warn)':'var(--accent)'}">${typeEpis.length}</div><div style="font-size:11px;color:var(--text2)">EPI</div></div>` : ''}
+      </div>
+      <div style="padding:14px 18px">
+        <div style="font-size:13px;color:var(--text2);line-height:1.55;margin-bottom:12px;font-style:italic">${chk.resume.substring(0,90)}…</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+          <span style="font-size:12px;background:var(--accent-light);color:var(--accent-text);padding:3px 10px;border-radius:999px;font-weight:600">${chk.points.length} points de contrôle</span>
+          <span style="font-size:12px;background:var(--danger-bg);color:var(--danger);padding:3px 10px;border-radius:999px;font-weight:600">${chk.retirement.length} critères de réforme</span>
+        </div>
+        <div style="font-size:13px;color:var(--accent);font-weight:600">📋 Voir la fiche →</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openCheckSheet(type) {
+  const cfg = EPI_CONFIG[type], chk = EPI_CHECKS[type];
+  if (!chk) { alert('Fiche non disponible pour ce type.'); return; }
+  document.getElementById('check-title').textContent = `${chk.icon} Fiche de contrôle — ${type}`;
+  document.getElementById('check-subtitle').textContent = `Norme ${cfg?.norm||''} — Contrôle tous les ${cfg?.ctrlMonths||12} mois — Durée vie max ${cfg?.lifeMax||'?'} ans`;
+  document.getElementById('check-body').innerHTML = `
+    <div class="check-resume">${chk.resume}</div>
+    <div class="check-norm-badge">${chk.icon} Norme ${cfg?.norm||'—'} &nbsp;·&nbsp; /${cfg?.ctrlMonths||12} mois &nbsp;·&nbsp; Max ${cfg?.lifeMax||'?'} ans</div>
+    <div class="check-section">
+      <div class="check-section-title ok-title">✓ Points de contrôle (${chk.points.length})</div>
+      ${chk.points.map(p=>`<div class="check-item"><div class="check-bullet check-bullet-ok"></div><div>${p}</div></div>`).join('')}
+    </div>
+    <div class="check-section">
+      <div class="check-section-title danger-title">✖ Conditions de mise au rebut (${chk.retirement.length})</div>
+      ${chk.retirement.map(r=>`<div class="check-item"><div class="check-bullet check-bullet-danger"></div><div>${r}</div></div>`).join('')}
+    </div>
+    <div class="check-section">
+      <div class="check-section-title doc-title">📄 Notices & documentation fabricant</div>
+      ${chk.docLinks.map(d=>`<a href="${d.url}" target="_blank" rel="noopener" class="doc-link"><span class="doc-link-icon">↗</span><span>${d.label}</span></a>`).join('')}
+      <div style="font-size:12px;color:var(--text3);margin-top:6px">⚠ Consultez toujours la notice spécifique à votre modèle.</div>
+    </div>`;
+  showModal('modal-check');
+}
+
+// ==================== BULK SELECT ====================
+let selectedRefs2 = new Set(); // renamed to avoid conflict
+function onEpiCheckChange() {
+  selectedRefs2.clear();
+  document.querySelectorAll('.epi-chk:checked').forEach(chk => selectedRefs2.add(chk.dataset.ref));
+  updateBulkBar();
+}
+function toggleSelectAll(masterChk) {
+  document.querySelectorAll('.epi-chk:not(:disabled)').forEach(chk => chk.checked = masterChk.checked);
+  onEpiCheckChange();
+}
+function clearSelection() {
+  selectedRefs2.clear();
+  document.querySelectorAll('.epi-chk').forEach(chk => chk.checked = false);
+  const master = document.getElementById('select-all-chk');
+  if (master) master.checked = false;
+  updateBulkBar();
+}
+function updateBulkBar() {
+  const bar = document.getElementById('bulk-bar'), n = selectedRefs2.size;
+  const txt = document.getElementById('bulk-bar-text');
+  bar?.classList.toggle('visible', n > 0);
+  if (txt) txt.textContent = `${n} EPI sélectionné${n>1?'s':''}`;
+}
+function openBulkControl() {
+  if (!selectedRefs2.size) return;
+  document.getElementById('bulk-ctrl-title').textContent = `Contrôle groupé — ${selectedRefs2.size} EPI`;
+  document.getElementById('bulk-ctrl-desc').textContent  = 'Tous les EPI cochés seront marqués Conformes.';
+  document.getElementById('blk-date').value = todayStr;
+  document.getElementById('blk-who').value  = currentUser?.name || '';
+  document.getElementById('blk-notes').value = '';
+  renderBulkItems(true); showModal('modal-bulk-ctrl');
+}
+function openBulkControlCustom() {
+  if (!selectedRefs2.size) return;
+  document.getElementById('bulk-ctrl-title').textContent = `Contrôle groupé personnalisé — ${selectedRefs2.size} EPI`;
+  document.getElementById('bulk-ctrl-desc').textContent  = 'Ajustez le résultat individuellement.';
+  document.getElementById('blk-date').value = todayStr;
+  document.getElementById('blk-who').value  = currentUser?.name || '';
+  document.getElementById('blk-notes').value = '';
+  renderBulkItems(false); showModal('modal-bulk-ctrl');
+}
+function renderBulkItems(allOk) {
+  const refs = Array.from(selectedRefs2);
+  const wrap = document.getElementById('bulk-items-wrap');
+  if (allOk) {
+    wrap.innerHTML = `
+      <div style="background:var(--accent-light);border-radius:var(--rad);padding:12px 16px;margin-bottom:8px;font-size:14px;color:var(--accent-text);font-weight:600">✓ ${refs.length} EPI → Conformes</div>
+      <div class="table-wrap" style="margin-bottom:0"><table><thead><tr><th>Référence</th><th>Type</th><th>Marque / Modèle</th></tr></thead>
+      <tbody>${refs.map(ref => { const e=epis.find(x=>x.ref===ref); return `<tr><td style="font-weight:700">${ref}</td><td class="muted">${e?.type||'—'}</td><td class="muted">${e?e.brand+' '+e.model:'—'}</td></tr>`; }).join('')}</tbody></table></div>`;
+  } else {
+    wrap.innerHTML = `
+      <div style="display:flex;gap:8px;padding:8px 0;margin-bottom:10px;border-bottom:1px solid var(--border);flex-wrap:wrap">
+        <span style="font-size:13px;color:var(--text2);flex:1;align-self:center">Appliquer à tous :</span>
+        <button class="btn btn-sm" onclick="setBulkAll('ok')">✓ Conformes</button>
+        <button class="btn btn-sm btn-warn" onclick="setBulkAll('warn')">⚠ Réserve</button>
+        <button class="btn btn-sm btn-danger" onclick="setBulkAll('retired')">✖ Réformer</button>
+      </div>
+      <div class="table-wrap" style="margin-bottom:0"><table>
+        <thead><tr><th>Référence</th><th>Modèle</th><th>Résultat</th></tr></thead>
+        <tbody>${refs.map((ref, idx) => {
+          const e = epis.find(x => x.ref === ref);
+          return `<tr>
+            <td style="font-weight:700">${ref}</td>
+            <td class="muted">${e?e.brand+' '+e.model:'—'}</td>
+            <td><select onchange="updateBulkRowColor(${idx},this)" style="padding:6px 8px;border-radius:8px;border:1px solid var(--border2);font-size:13px;color:var(--accent);font-weight:600;font-family:var(--font)">
+              <option value="ok">✓ Conforme</option>
+              <option value="warn">⚠ Réserve</option>
+              <option value="danger">✖ Non-conforme</option>
+              <option value="retired">— Réformer</option>
+              <option value="lost">? Introuvable</option>
+            </select></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>`;
+  }
+}
+function updateBulkRowColor(idx, sel) {
+  const c={ok:'var(--accent)',warn:'var(--warn)',danger:'var(--danger)',retired:'var(--text2)',lost:'#5b21b6'};
+  sel.style.color = c[sel.value]||'var(--text2)';
+}
+function setBulkAll(result) {
+  document.querySelectorAll('#bulk-items-wrap select').forEach(sel => { sel.value=result; updateBulkRowColor(0,sel); });
+}
+async function saveBulkControl() {
+  const date  = document.getElementById('blk-date').value;
+  const who   = document.getElementById('blk-who').value.trim();
+  const notes = document.getElementById('blk-notes').value;
+  if (!date || !who) { alert('Date et contrôleur obligatoires'); return; }
+  const selects = document.querySelectorAll('#bulk-items-wrap select');
+  const refs    = Array.from(selectedRefs2);
+  showLoading('Enregistrement…');
+  for (let i = 0; i < refs.length; i++) {
+    const result = selects.length > 0 ? (selects[i]?.value || 'ok') : 'ok';
+    const ctrl   = { id:uid(), date, ref:refs[i], who, result, notes: notes||'Contrôle groupé' };
+    controls.push(ctrl);
+    const epi = epis.find(e => e.ref === refs[i]);
+    if (epi) { epi.lastCtrl = date; epi.status = result; await fsSet('epis', refs[i], epi); }
+    await fsSet('controls', ctrl.id, ctrl);
+  }
+  hideLoading(); closeModal(); clearSelection();
+  renderInventory(); renderDashboard(); updateAlertBadge();
+  showToast(`${refs.length} contrôle${refs.length>1?'s':''} enregistré${refs.length>1?'s':''}`);
+}
+
+// ==================== PDF EXPORT ====================
+function exportPDF(type) {
+  closeModal();
+  const w = window.open('','_blank');
+  const date = new Date().toLocaleDateString('fr-FR');
+  const header = title => `<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #16a34a;padding-bottom:12px;margin-bottom:24px"><div><h1 style="font-size:20px;color:#16a34a;margin:0">🧗 Gestion des EPI AGORA</h1><div style="font-size:13px;color:#666;margin-top:4px">${title} — ${date}</div></div></div>`;
+  const TS = `width:100%;border-collapse:collapse;font-size:12px;font-family:sans-serif;margin-bottom:20px`;
+  const TH = `background:#16a34a;color:#fff;padding:8px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.05em`;
+  const TD = `padding:7px 10px;border-bottom:0.5px solid #ddd`;
+  const AR = `background:#f7f8fa`;
+  const ST = { ok:'✓ Conforme', warn:'⚠ À contrôler', danger:'✖ En alerte', retired:'— Réformé', lost:'? Introuvable' };
+  let html = '';
+  if (type === 'inventory') {
+    html = header('Inventaire complet') + `<table style="${TS}"><thead><tr><th style="${TH}">Ref</th><th style="${TH}">Type</th><th style="${TH}">Marque/Modèle</th><th style="${TH}">Achat</th><th style="${TH}">Âge</th><th style="${TH}">Dernier ctrl</th><th style="${TH}">Prochain</th><th style="${TH}">État</th></tr></thead><tbody>` +
+      epis.map((e,i) => { const s=getStatus(e),cfg=EPI_CONFIG[e.type],fab=e.fab||e.buy,ageM=fab?Math.max(0,diffMonths(todayStr,fab)):0,c=s==='danger'?'#dc2626':s==='warn'?'#b45309':s==='retired'?'#999':'#16a34a'; return `<tr style="${i%2?AR:''}"><td style="${TD}">${e.ref}</td><td style="${TD}">${e.type}</td><td style="${TD}">${e.brand} ${e.model}</td><td style="${TD}">${e.buy}</td><td style="${TD}">${Math.floor(ageM/12)}a ${ageM%12}m${cfg?' / '+cfg.lifeMax+'a max':''}</td><td style="${TD}">${e.lastCtrl||'—'}</td><td style="${TD}">${getNextCtrl(e)||'—'}</td><td style="${TD};color:${c};font-weight:600">${ST[s]||s}</td></tr>`; }).join('') + '</tbody></table>';
+  } else if (type === 'alerts') {
+    const dan=epis.filter(e=>getStatus(e)==='danger'), war=epis.filter(e=>getStatus(e)==='warn'), lat=loans.filter(l=>l.status==='late');
+    html = header('Rapport d'alertes') +
+      `<h2 style="font-size:15px;color:#dc2626;margin:0 0 10px">En alerte (${dan.length})</h2><table style="${TS}"><thead><tr><th style="${TH}">Ref</th><th style="${TH}">Type</th><th style="${TH}">Modèle</th><th style="${TH}">Raison</th></tr></thead><tbody>${dan.map((e,i)=>{const cfg=EPI_CONFIG[e.type],ls=getLifeStatus(e),r=ls==='danger'?`Max ${cfg?.lifeMax}a dépassée`:`Retard ${Math.abs(diffDays(getNextCtrl(e)||todayStr,todayStr))}j`;return`<tr style="${i%2?AR:''}"><td style="${TD}">${e.ref}</td><td style="${TD}">${e.type}</td><td style="${TD}">${e.brand} ${e.model}</td><td style="${TD};color:#dc2626;font-weight:600">${r}</td></tr>`}).join('')}</tbody></table>` +
+      `<h2 style="font-size:15px;color:#b45309;margin:0 0 10px">À contrôler (${war.length})</h2><table style="${TS}"><thead><tr><th style="${TH}">Ref</th><th style="${TH}">Type</th><th style="${TH}">Modèle</th><th style="${TH}">Date</th></tr></thead><tbody>${war.map((e,i)=>`<tr style="${i%2?AR:''}"><td style="${TD}">${e.ref}</td><td style="${TD}">${e.type}</td><td style="${TD}">${e.brand} ${e.model}</td><td style="${TD};color:#b45309">${getNextCtrl(e)}</td></tr>`).join('')}</tbody></table>`;
+    if (lat.length) html += `<h2 style="font-size:15px;color:#dc2626;margin:0 0 10px">Prêts en retard (${lat.length})</h2><table style="${TS}"><thead><tr><th style="${TH}">Adhérent</th><th style="${TH}">EPI</th><th style="${TH}">Retour prévu</th></tr></thead><tbody>${lat.map((l,i)=>`<tr style="${i%2?AR:''}"><td style="${TD}">${l.member}</td><td style="${TD}">${l.ref}</td><td style="${TD};color:#dc2626">${l.returnDate}</td></tr>`).join('')}</tbody></table>`;
+  } else if (type === 'controls') {
+    const em={}; epis.forEach(e=>em[e.ref]=e.type);
+    html = header('Historique des contrôles') + `<table style="${TS}"><thead><tr><th style="${TH}">Date</th><th style="${TH}">Ref</th><th style="${TH}">Type</th><th style="${TH}">Contrôleur</th><th style="${TH}">Résultat</th><th style="${TH}">Observations</th></tr></thead><tbody>` +
+      [...controls].sort((a,b)=>b.date.localeCompare(a.date)).map((c,i)=>{const col=c.result==='danger'?'#dc2626':c.result==='warn'?'#b45309':c.result==='retired'?'#999':'#16a34a';return`<tr style="${i%2?AR:''}"><td style="${TD}">${c.date}</td><td style="${TD}">${c.ref}</td><td style="${TD}">${em[c.ref]||'—'}</td><td style="${TD}">${c.who}</td><td style="${TD};color:${col};font-weight:600">${ST[c.result]||c.result}</td><td style="${TD}">${c.notes||'—'}</td></tr>`;}).join('') + '</tbody></table>';
+  } else if (type === 'loans') {
+    const em={}; epis.forEach(e=>em[e.ref]=e.type);
+    const sl={active:'En cours',returned:'Rendu',late:'En retard'};
+    html = header('Registre des prêts') + `<table style="${TS}"><thead><tr><th style="${TH}">Date</th><th style="${TH}">Adhérent</th><th style="${TH}">EPI</th><th style="${TH}">Type</th><th style="${TH}">Retour prévu</th><th style="${TH}">Statut</th></tr></thead><tbody>` +
+      loans.map((l,i)=>{const col=l.status==='late'?'#dc2626':l.status==='active'?'#b45309':'#16a34a';return`<tr style="${i%2?AR:''}"><td style="${TD}">${l.date}</td><td style="${TD}">${l.member}</td><td style="${TD}">${l.ref}</td><td style="${TD}">${em[l.ref]||'—'}</td><td style="${TD}">${l.returnDate}</td><td style="${TD};color:${col};font-weight:600">${sl[l.status]}</td></tr>`;}).join('') + '</tbody></table>';
+  } else if (type === 'epi_labels') {
+    html = header('Étiquettes EPI — QR Codes') + '<div>' + epis.filter(e=>e.status!=='retired').map(e=>`<div style="display:inline-block;width:180px;height:120px;border:1px solid #ccc;border-radius:8px;padding:8px;margin:6px;vertical-align:top;font-family:sans-serif;page-break-inside:avoid"><div style="display:flex;gap:6px;align-items:center"><img src="https://api.qrserver.com/v1/create-qr-code/?size=70x70&data=${encodeURIComponent('EPI:'+e.ref+':'+e.type+':'+e.brand+':'+e.model+':'+e.norm+':'+e.lot)}" width="70" height="70" style="border-radius:4px"><div><div style="font-size:11px;font-weight:700;color:#16a34a">${e.ref}</div><div style="font-size:10px;color:#666;margin-top:2px">${e.type}</div><div style="font-size:9px;color:#999">${e.brand} ${e.model}</div><div style="font-size:9px;color:#999">Achat: ${e.buy}</div></div></div></div>`).join('') + '</div>';
+  }
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>EPI AGORA — Export</title><style>body{font-family:Georgia,serif;padding:32px;max-width:1000px;margin:0 auto;color:#111827}@media print{.no-print{display:none}}</style></head><body>${html}<button class="no-print" onclick="window.print()" style="position:fixed;bottom:20px;right:20px;background:#16a34a;color:#fff;border:none;padding:12px 20px;border-radius:8px;font-size:14px;cursor:pointer">🖨 Imprimer / PDF</button></body></html>`);
+  w.document.close();
+}
+
+// ==================== INIT ====================
+(async () => {
+  await loadAllData();
+  // Auto-try login from localStorage session
+  const saved = localStorage.getItem('epi_session');
+  if (saved) {
+    try {
+      const sess = JSON.parse(saved);
+      const user = members.find(m => m.login === sess.login && m.pass === sess.pass);
+      if (user) { loginSuccess(user); return; }
+    } catch(e) {}
+    localStorage.removeItem('epi_session');
+  }
+})();
+updateAlertBadge();
+updateBatchBadge();
+
+</script>
+
+</body>
+</html>
