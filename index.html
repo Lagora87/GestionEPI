@@ -726,1299 +726,1431 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
 </div>
 
 <script>
-// ==================== SUPABASE INTEGRATION ====================
+// ==================== SUPABASE CONFIG ====================
+var SUPABASE_URL  = 'https://jnptmjkjicidrxlykvdl.supabase.co';
+var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpucHRtamtqaWNpZHJ4bHlrdmRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMDAzODEsImV4cCI6MjA5MTY3NjM4MX0.gOzBXcM4_JqoWsYt88yXo66';
+
 // ==================== HELPERS ====================
-const today = new Date();
-const fmt = d => { const x = new Date(d); return x.toISOString().split('T')[0]; };
-const todayStr = fmt(today);
-const addDays = (d,n) => { const r=new Date(d); r.setDate(r.getDate()+n); return r; };
-const addMonths = (d,n) => { const r=new Date(d); r.setMonth(r.getMonth()+n); return r; };
-const diffDays = (a,b) => Math.floor((new Date(a)-new Date(b))/86400000);
-const diffMonths = (a,b) => Math.floor(diffDays(a,b)/30.5);
-const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+var today    = new Date();
+var todayStr = today.toISOString().split('T')[0];
+function fmt(d)        { return new Date(d).toISOString().split('T')[0]; }
+function addDays(d,n)  { var r=new Date(d); r.setDate(r.getDate()+n); return r; }
+function addMonths(d,n){ var r=new Date(d); r.setMonth(r.getMonth()+n); return r; }
+function diffDays(a,b) { return Math.floor((new Date(a)-new Date(b))/86400000); }
+function diffMonths(a,b){ return Math.floor(diffDays(a,b)/30.5); }
+function uid()         { return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
 
 // ==================== STATIC CONFIG ====================
-const EPI_CONFIG = {
-  'Corde':          { lifeMax: 10, lifeUse: 5,  ctrlMonths: 12, norm: 'EN892' },
-  'Harnais':        { lifeMax: 10, lifeUse: 5,  ctrlMonths: 12, norm: 'EN12277' },
-  'Casque':         { lifeMax: 10, lifeUse: 5,  ctrlMonths: 12, norm: 'EN12492' },
-  'Dégaine':        { lifeMax: 10, lifeUse: 10, ctrlMonths: 12, norm: 'EN566/EN12275' },
-  'Mousqueton':     { lifeMax: 10, lifeUse: 10, ctrlMonths: 12, norm: 'EN12275' },
-  'Assureur':       { lifeMax: 10, lifeUse: 5,  ctrlMonths: 12, norm: 'EN15151' },
-  'Longe':          { lifeMax: 10, lifeUse: 5,  ctrlMonths: 12, norm: 'EN354' },
-  'Baudrier enfant':{ lifeMax: 5,  lifeUse: 3,  ctrlMonths: 6,  norm: 'EN12277' },
+var EPI_CONFIG = {
+  'Corde':          { lifeMax:10, lifeUse:5,  ctrlMonths:12, norm:'EN892' },
+  'Harnais':        { lifeMax:10, lifeUse:5,  ctrlMonths:12, norm:'EN12277' },
+  'Casque':         { lifeMax:10, lifeUse:5,  ctrlMonths:12, norm:'EN12492' },
+  'Degaine':        { lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN566/EN12275' },
+  'Mousqueton':     { lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN12275' },
+  'Assureur':       { lifeMax:10, lifeUse:5,  ctrlMonths:12, norm:'EN15151' },
+  'Longe':          { lifeMax:10, lifeUse:5,  ctrlMonths:12, norm:'EN354' },
+  'Baudrier enfant':{ lifeMax:5,  lifeUse:3,  ctrlMonths:6,  norm:'EN12277' },
 };
 
-const EPI_CHECKS = {
-  'Corde': { icon:'🪢', resume:"Corde dynamique simple, double ou jumelle. Absorbe l'énergie de chute.", points:['Gaine : absence de coupures, effilochages, zones dures ou molles, bouclettes','Âme : pas de zones molles, plates ou torsadées (signe de choc absorbé)','Extrémités : manchons non décollés, marquage lisible, pas de nœuds permanents','Aspect général : pas de contamination chimique (acide, solvant), pas de taches suspectes','Souplesse homogène sur toute la longueur, pas de rigidité localisée','Étiquette centrale lisible (numéro de série, date fabrication, norme)'], retirement:['Chute facteur 2 ou chute importante ayant sollicité fortement la corde','Coupure ou entaille visible dans la gaine ou l'âme','Zone molle, plate ou dure localisée sur l'âme','Diamètre réduit de plus de 20% sur une section','Contamination chimique avérée (acide, hydrocarbures…)','Durée de vie max atteinte (10 ans depuis fabrication, 5 ans d'usage intensif)','Toute corde de plus de 10 ans quelle que soit son utilisation'], docLinks:[{label:'Notice Petzl (cordes)',url:'https://www.petzl.com/fr/Sport/Cordes'},{label:'Notice Mammut',url:'https://www.mammut.com/fr/fr/c/cordes'},{label:'Norme EN 892',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}]},
-  'Harnais': { icon:'🔰', resume:"Harnais d'encordement reliant le grimpeur à la corde via le point ventral ou dorsal.", points:['Sangles : pas de coupures, effilochages, abrasions profondes, zones rigides ou décolorées','Coutures : vérifier les coutures de charge (point ventral, sous-cuisses) — aucun fil coupé','Boucles de réglage : fonctionnement correct, blocage effectif, pas de déformation','Point ventral : pas de déformation, usure ou détérioration de l'anneau ou du rabat','Sous-cuisses et ceinture : élasticité et souplesse normales, rembourrage intact','Étiquette de traçabilité lisible (référence, taille, norme, date)'], retirement:['Chute ayant généré un choc violent (facteur de chute élevé)','Coupure ou entaille dans une sangle, même partielle','Couture de charge endommagée ou décousue','Déformation ou usure marquée du point ventral','Boucle de réglage défaillante','Contamination chimique','Durée de vie max atteinte (10 ans fabrication, 5 ans usage intensif)'], docLinks:[{label:'Notice Petzl (harnais)',url:'https://www.petzl.com/fr/Sport/Harnais'},{label:'Notice Black Diamond',url:'https://www.blackdiamondequipment.com/fr_FR/harnesses'},{label:'Norme EN 12277',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}]},
-  'Casque': { icon:'⛑️', resume:'Casque escalade protégeant la tête contre les chutes de pierres et impacts.', points:['Coque externe : pas de fissures, craquelures, éclats ou déformation visible','Mousse interne (EPS) : pas d'enfoncement, compression ou fissure','Système de réglage : fonctionnement fluide, blocage efficace, pas de pièce cassée','Jugulaire et boucle : sangle intacte, boucle non déformée, fermeture opérationnelle','Réseau de sangles internes : pas de rupture, usure ou décollement','Étiquette intérieure lisible (normes, taille, date de fabrication)'], retirement:['Après tout impact significatif, même sans dommage visible','Fissure ou craquelure visible sur la coque','Déformation ou enfoncement de la mousse interne','Jugulaire ou boucle de fermeture défectueuse','Exposition à des produits chimiques','Durée de vie max atteinte (10 ans fabrication, 5 ans usage intensif)'], docLinks:[{label:'Notice Petzl (casques)',url:'https://www.petzl.com/fr/Sport/Casques'},{label:'Notice Edelrid',url:'https://www.edelrid.com/fr/sport/casques'},{label:'Norme EN 12492',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}]},
-  'Dégaine': { icon:'🔗', resume:'Ensemble de deux mousquetons reliés par une sangle cousue.', points:['Mousquetons : ouverture/fermeture du doigt fluide, doigt revenant seul en position fermée','Mousquetons : absence de criques, fissures, déformation','Sangle cousue : pas de coupures, effilochages, ni traces de choc sur les coutures','Axe et ressort du doigt : pas de jeu excessif, ressort fonctionnel','Marquage lisible : charge de rupture (kN), norme, fabricant'], retirement:['Mousqueton ouvert lors d'une chute','Fissure ou déformation visible sur le corps ou le doigt','Doigt ne revenant pas seul en position fermée','Entaille dans la sangle cousue','Coutures effilochées ou décousues','Durée de vie max atteinte (10 ans)'], docLinks:[{label:'Notice Petzl (dégaines)',url:'https://www.petzl.com/fr/Sport/Degaines'},{label:'Normes EN 566/12275',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}]},
-  'Mousqueton': { icon:'🔒', resume:'Connecteur métallique pour relier différents éléments du système.', points:['Corps : absence de fissures, criques, déformation ou corrosion profonde','Doigt (gate) : ouverture facile, retour automatique en position fermée et verrouillée','Verrouillage : vissage/dévissage correct ou système automatique fonctionnel','Gorge intérieure : absence de rainure d'usure profonde','Marquage lisible : résistance (kN), norme, fabricant'], retirement:['Fissure ou crique visible sur le corps ou le doigt','Déformation visible du corps','Doigt ne revenant pas seul en position fermée','Système de verrouillage défaillant','Rainure d'usure profonde dans la gorge','Durée de vie max atteinte (10 ans)'], docLinks:[{label:'Notice Petzl (mousquetons)',url:'https://www.petzl.com/fr/Sport/Mousquetons'},{label:'Norme EN 12275',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}]},
-  'Assureur': { icon:'🎛️', resume:'Dispositif mécanique pour assurer et/ou descendre en rappel en contrôlant la corde.', points:['Corps : pas de fissures, déformation, usure excessive','Mécanisme assisté : came ou levier fonctionnel, pas de jeu anormal','Ressort interne : vérifier le retour en position de blocage','Gorge(s) de friction : absence de rainure d'usure profonde','Poignée ou levier : retour automatique correct'], retirement:['Mécanisme assisté ne bloquant plus la corde en cas de lâcher','Fissure ou déformation du corps','Usure profonde de la gorge de friction','Ressort ou came interne défaillant','Durée de vie max atteinte (10 ans, 5 ans usage intensif)'], docLinks:[{label:'Notice Petzl Grigri',url:'https://www.petzl.com/fr/Sport/Assureurs-et-descendeurs/GRIGRI'},{label:'Norme EN 15151',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}]},
-  'Longe': { icon:'🧵', resume:'Sangle ou corde cousue reliant le grimpeur à un ancrage.', points:['Sangles : absence de coupures, effilochages, abrasions profondes','Coutures : vérifier les coutures de charge aux extrémités','Absorbeur de choc (si intégré) : non déclenché, protège-absorbeur intact','Absence de nœuds permanents dans la sangle'], retirement:['Absorbeur de choc déclenché','Coupure ou entaille dans la sangle','Couture de charge endommagée','Contamination chimique','Durée de vie max atteinte (10 ans fabrication, 5 ans usage intensif)'], docLinks:[{label:'Notice Petzl (longes)',url:'https://www.petzl.com/fr/Sport/Longes'},{label:'Norme EN 354',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}]},
-  'Baudrier enfant': { icon:'👶', resume:'Harnais adapté aux morphologies enfants avec durée de vie réduite.', points:['Sangles : pas de coupures, effilochages, ni zones rigides ou décolorées','Coutures de charge : vérifier minutieusement les points de jonction','Boucles de réglage : fonctionnement correct et blocage fiable','Ajustement taille : vérifier la compatibilité avec la morphologie actuelle','Point ventral : pas de déformation, usure ni détérioration'], retirement:['Chute ayant généré un choc violent','Coupure ou entaille dans une sangle','Couture de charge endommagée','Boucle de réglage défaillante','Harnais devenu trop petit — ne jamais forcer','Durée de vie max atteinte (5 ans fabrication, 3 ans usage intensif)'], docLinks:[{label:'Notice Petzl harnais enfant',url:'https://www.petzl.com/fr/Sport/Harnais/Enfant'},{label:'Guide FFME sécurité',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}]},
+// Type display names (UI label → internal key)
+var TYPE_KEYS = {
+  'Corde':'Corde','Harnais':'Harnais','Casque':'Casque',
+  'D\u00e9gaine':'Degaine','Mousqueton':'Mousqueton','Assureur':'Assureur',
+  'Longe':'Longe','Baudrier enfant':'Baudrier enfant'
 };
 
-const ROLE_PERMS = {
+var EPI_CHECKS = {
+  'Corde': {
+    icon:'&#129682;',
+    resume:"Corde dynamique. Absorbe l'energie de chute.",
+    points:[
+      'Gaine : absence de coupures, effilochages, zones dures ou molles',
+      'Ame : pas de zones molles, plates ou torsadees (signe de choc absorbe)',
+      'Extremites : manchons non decollees, marquage lisible',
+      'Pas de contamination chimique (acide, solvant)',
+      'Souplesse homogene sur toute la longueur',
+      'Etiquette centrale lisible (serie, date fabrication, norme)'
+    ],
+    retirement:[
+      'Chute facteur 2 ou chute importante ayant sollicite fortement la corde',
+      'Coupure ou entaille visible dans la gaine ou l\'ame',
+      'Zone molle, plate ou dure localisee sur l\'ame',
+      'Diametre reduit de plus de 20% sur une section',
+      'Contamination chimique averee',
+      'Duree de vie max atteinte (10 ans fabrication, 5 ans usage intensif)',
+      'Toute corde de plus de 10 ans'
+    ],
+    docLinks:[
+      {label:'Notice Petzl (cordes)',url:'https://www.petzl.com/fr/Sport/Cordes'},
+      {label:'Notice Mammut',url:'https://www.mammut.com/fr/fr/c/cordes'},
+      {label:'Notice Beal',url:'https://www.beal-planet.com/fr/cordes-escalade'},
+      {label:'Norme EN 892 - FFME',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}
+    ]
+  },
+  'Harnais': {
+    icon:'&#128288;',
+    resume:"Harnais d'encordement reliant le grimpeur a la corde.",
+    points:[
+      'Sangles : pas de coupures, effilochages, zones rigides ou decolorees',
+      'Coutures de charge (point ventral, sous-cuisses) : aucun fil coupe',
+      'Boucles de reglage : fonctionnement correct, blocage effectif',
+      'Point ventral : pas de deformation ni usure de l\'anneau',
+      'Sous-cuisses et ceinture : elasticite normale, rembourrage intact',
+      'Etiquette lisible (reference, taille, norme, date)'
+    ],
+    retirement:[
+      'Chute ayant genere un choc violent',
+      'Coupure ou entaille dans une sangle, meme partielle',
+      'Couture de charge endommagee ou decousue',
+      'Deformation ou usure marquee du point ventral',
+      'Boucle de reglage bloquee ou ne verrouillant plus',
+      'Contamination chimique',
+      'Duree de vie max atteinte (10 ans fabrication, 5 ans usage intensif)'
+    ],
+    docLinks:[
+      {label:'Notice Petzl (harnais)',url:'https://www.petzl.com/fr/Sport/Harnais'},
+      {label:'Notice Black Diamond',url:'https://www.blackdiamondequipment.com/fr_FR/harnesses'},
+      {label:'Notice Edelrid',url:'https://www.edelrid.com/fr/sport/harnais'},
+      {label:'Norme EN 12277 - FFME',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}
+    ]
+  },
+  'Casque': {
+    icon:'&#9937;&#65039;',
+    resume:'Casque escalade protegeant la tete contre les chutes de pierres.',
+    points:[
+      'Coque externe : pas de fissures, craquelures, eclats ou deformation',
+      'Mousse interne (EPS) : pas d\'enfoncement, compression ou fissure',
+      'Systeme de reglage : fonctionnement fluide, blocage efficace',
+      'Jugulaire et boucle : sangle intacte, fermeture operationnelle',
+      'Reseau de sangles internes : pas de rupture ni decollement',
+      'Etiquette lisible (normes, taille, date de fabrication)'
+    ],
+    retirement:[
+      'Apres tout impact significatif, meme sans degat visible',
+      'Fissure ou craquelure sur la coque, meme superficielle',
+      'Deformation ou enfoncement de la mousse interne',
+      'Jugulaire ou boucle defectueuse ou cassee',
+      'Exposition a des produits chimiques (solvants)',
+      'Duree de vie max atteinte (10 ans fabrication, 5 ans usage intensif)'
+    ],
+    docLinks:[
+      {label:'Notice Petzl (casques)',url:'https://www.petzl.com/fr/Sport/Casques'},
+      {label:'Notice Edelrid',url:'https://www.edelrid.com/fr/sport/casques'},
+      {label:'Norme EN 12492 - FFME',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}
+    ]
+  },
+  'Degaine': {
+    icon:'&#128279;',
+    resume:'Ensemble de deux mousquetons relies par une sangle cousue.',
+    points:[
+      'Mousquetons : ouverture/fermeture fluide, doigt revenant seul ferme',
+      'Mousquetons : absence de criques, fissures, deformation',
+      'Sangle cousue : pas de coupures, effilochages ni traces de choc',
+      'Axe et ressort du doigt : pas de jeu excessif',
+      'Marquage lisible : charge de rupture (kN), norme, fabricant'
+    ],
+    retirement:[
+      'Mousqueton ouvert lors d\'une chute',
+      'Fissure ou deformation visible sur corps ou doigt',
+      'Doigt ne revenant pas seul en position fermee',
+      'Entaille dans la sangle cousue',
+      'Coutures effilochees ou decousues',
+      'Duree de vie max atteinte (10 ans)'
+    ],
+    docLinks:[
+      {label:'Notice Petzl (degaines)',url:'https://www.petzl.com/fr/Sport/Degaines'},
+      {label:'Normes EN 566/12275 - FFME',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}
+    ]
+  },
+  'Mousqueton': {
+    icon:'&#128274;',
+    resume:'Connecteur metallique pour relier differents elements du systeme.',
+    points:[
+      'Corps : absence de fissures, criques, deformation ou corrosion',
+      'Doigt : ouverture facile, retour automatique ferme et verrouille',
+      'Verrouillage : vissage/devissage correct ou systeme auto fonctionnel',
+      'Gorge interieure : absence de rainure d\'usure profonde',
+      'Marquage lisible : resistance (kN), norme, fabricant'
+    ],
+    retirement:[
+      'Fissure ou crique visible sur corps ou doigt',
+      'Deformation visible du corps',
+      'Doigt ne revenant pas seul en position fermee',
+      'Systeme de verrouillage defaillant',
+      'Rainure d\'usure profonde dans la gorge',
+      'Duree de vie max atteinte (10 ans)'
+    ],
+    docLinks:[
+      {label:'Notice Petzl',url:'https://www.petzl.com/fr/Sport/Mousquetons'},
+      {label:'Notice Black Diamond',url:'https://www.blackdiamondequipment.com/fr_FR/carabiners-and-quickdraws'},
+      {label:'Norme EN 12275 - FFME',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}
+    ]
+  },
+  'Assureur': {
+    icon:'&#127897;&#65039;',
+    resume:'Dispositif mecanique pour assurer et/ou descendre en rappel.',
+    points:[
+      'Corps : pas de fissures, deformation, usure excessive',
+      'Mecanisme assiste : came ou levier fonctionnel, pas de jeu anormal',
+      'Ressort interne : retour correct en position de blocage',
+      'Gorge(s) de friction : absence de rainure d\'usure profonde',
+      'Poignee ou levier : retour automatique correct'
+    ],
+    retirement:[
+      'Mecanisme assiste ne bloquant plus la corde en cas de lacher',
+      'Fissure ou deformation du corps',
+      'Usure profonde de la gorge de friction',
+      'Ressort ou came interne defaillant',
+      'Duree de vie max atteinte (10 ans, 5 ans usage intensif)'
+    ],
+    docLinks:[
+      {label:'Notice Petzl Grigri',url:'https://www.petzl.com/fr/Sport/Assureurs-et-descendeurs/GRIGRI'},
+      {label:'Norme EN 15151 - FFME',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}
+    ]
+  },
+  'Longe': {
+    icon:'&#129525;',
+    resume:'Sangle ou corde cousue reliant le grimpeur a un ancrage.',
+    points:[
+      'Sangles : absence de coupures, effilochages, abrasions profondes',
+      'Coutures de charge aux extremites : aucun fil rompu',
+      'Absorbeur de choc (si integre) : non declenche, protege intact',
+      'Absence de noeuds permanents dans la sangle'
+    ],
+    retirement:[
+      'Absorbeur de choc declenche (longe ayant arrete une chute)',
+      'Coupure ou entaille dans la sangle',
+      'Couture de charge endommagee ou decousue',
+      'Contamination chimique',
+      'Duree de vie max atteinte (10 ans fabrication, 5 ans usage intensif)'
+    ],
+    docLinks:[
+      {label:'Notice Petzl (longes)',url:'https://www.petzl.com/fr/Sport/Longes'},
+      {label:'Notice Beal',url:'https://www.beal-planet.com/fr/longes'},
+      {label:'Norme EN 354 - FFME',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}
+    ]
+  },
+  'Baudrier enfant': {
+    icon:'&#128118;',
+    resume:'Harnais adapte aux morphologies enfants. Duree de vie reduite.',
+    points:[
+      'Sangles : pas de coupures, effilochages ni zones rigides',
+      'Coutures de charge : verification minutieuse des points de jonction',
+      'Boucles de reglage : fonctionnement correct et blocage fiable',
+      'Ajustement taille : compatibilite avec la morphologie actuelle',
+      'Point ventral : pas de deformation ni usure'
+    ],
+    retirement:[
+      'Chute ayant genere un choc violent',
+      'Coupure ou entaille dans une sangle',
+      'Couture de charge endommagee ou decousue',
+      'Boucle de reglage defaillante',
+      'Harnais devenu trop petit - ne jamais forcer l\'ajustement',
+      'Contamination chimique',
+      'Duree de vie max atteinte (5 ans fabrication, 3 ans usage intensif)'
+    ],
+    docLinks:[
+      {label:'Notice Petzl harnais enfant',url:'https://www.petzl.com/fr/Sport/Harnais'},
+      {label:'Guide FFME securite',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}
+    ]
+  }
+};
+
+var ROLE_PERMS = {
   admin:   ['view_epi','add_epi','view_controls','add_controls','view_loans','manage_loans','export_pdf','manage_members'],
   referent:['view_epi','add_epi','view_controls','add_controls','view_loans','manage_loans','export_pdf'],
-  member:  ['view_epi','view_loans'],
+  member:  ['view_epi','view_loans']
 };
 
-// ==================== IN-MEMORY STORE (synced from Firestore or demo) ====================
-let epis     = [];
-let controls = [];
-let loans    = [];
-let batches  = [];
-let members  = [];
-let currentUser = null;
-let editingMemberId = null;
-let qrStream = null, qrInterval = null, qrParsed = null;
-let nextMemberId = 10, nextBatchNum = 2;
-let photoStream = null, photoTarget = null, photoCameraIndex = 0, photoCameras = [];
-let pendingEpiPhotos = [], pendingBatchPhotos = [];
-let selectedRefs2 = new Set();
-let batchCtrlTarget = null;
+// ==================== IN-MEMORY STORE ====================
+var epis=[], controls=[], loans=[], batches=[], members=[];
+var currentUser=null, editingMemberId=null;
+var qrStream=null, qrInterval=null, qrParsed=null;
+var nextBatchNum=2;
+var photoStream=null, photoTarget=null, photoCameraIndex=0, photoCameras=[];
+var pendingEpiPhotos=[], pendingBatchPhotos=[];
+var selectedRefs2=new Set();
+var batchCtrlTarget=null;
 
-// ==================== LOADING OVERLAY ====================
+// ==================== UI HELPERS ====================
 function showLoading(msg) {
-  let el = document.getElementById('loading-overlay');
+  var el = document.getElementById('loading-overlay');
   if (!el) {
     el = document.createElement('div');
     el.id = 'loading-overlay';
-    el.style.cssText = 'position:fixed;inset:0;background:rgba(255,255,255,0.85);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-family:var(--font)';
-    el.innerHTML = '<div style="width:36px;height:36px;border:3px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite"></div><div id="loading-msg" style="font-size:15px;color:var(--text2)"></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>';
+    el.style.cssText = 'position:fixed;inset:0;background:rgba(255,255,255,0.9);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-family:var(--font)';
+    el.innerHTML = '<div style="width:36px;height:36px;border:3px solid #e5e7eb;border-top-color:#16a34a;border-radius:50%;animation:spin 0.7s linear infinite"></div><div id="loading-msg" style="font-size:15px;color:#6b7280"></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>';
     document.body.appendChild(el);
   }
-  document.getElementById('loading-msg').textContent = msg || 'Chargement…';
+  document.getElementById('loading-msg').textContent = msg || 'Chargement...';
   el.style.display = 'flex';
 }
 function hideLoading() {
-  const el = document.getElementById('loading-overlay');
+  var el = document.getElementById('loading-overlay');
   if (el) el.style.display = 'none';
 }
-function showToast(msg, type='ok') {
-  let el = document.getElementById('toast');
+function showToast(msg, type) {
+  var el = document.getElementById('toast');
   if (!el) {
     el = document.createElement('div');
     el.id = 'toast';
-    el.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9998;font-family:var(--font);font-size:14px;font-weight:600;padding:12px 20px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.12);transition:opacity 0.3s;pointer-events:none';
+    el.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9998;font-size:14px;font-weight:600;padding:12px 20px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.12);transition:opacity 0.3s;pointer-events:none;font-family:var(--font)';
     document.body.appendChild(el);
   }
   el.textContent = msg;
-  el.style.background = type==='ok' ? '#dcfce7' : type==='err' ? '#fee2e2' : '#fef3c7';
-  el.style.color = type==='ok' ? '#14532d' : type==='err' ? '#dc2626' : '#b45309';
+  el.style.background = type==='err' ? '#fee2e2' : type==='warn' ? '#fef3c7' : '#dcfce7';
+  el.style.color       = type==='err' ? '#dc2626' : type==='warn' ? '#b45309' : '#14532d';
   el.style.opacity = '1';
   clearTimeout(el._t);
-  el._t = setTimeout(() => el.style.opacity = '0', 2800);
+  el._t = setTimeout(function(){ el.style.opacity='0'; }, 3000);
 }
 
-// ==================== DEMO DATA ====================
+// ==================== DEMO FALLBACK DATA ====================
 function loadDemoData() {
   members = [
-    { id:1, name:'Admin Club', login:'admin', pass:'admin123', role:'admin', perms:ROLE_PERMS.admin, lastAccess:todayStr, email:'admin@demo.local' },
-    { id:2, name:'Marie Dupont', login:'marie', pass:'marie123', role:'referent', perms:ROLE_PERMS.referent, lastAccess:fmt(addDays(today,-2)), email:'marie@demo.local' },
-    { id:3, name:'Jean Martin', login:'jean', pass:'jean123', role:'member', perms:ROLE_PERMS.member, lastAccess:fmt(addDays(today,-5)), email:'jean@demo.local' },
+    {id:'1',name:'Admin Club',login:'admin',pass:'admin123',role:'admin',perms:ROLE_PERMS.admin,lastAccess:todayStr,email:''},
+    {id:'2',name:'Marie Dupont',login:'marie',pass:'marie123',role:'referent',perms:ROLE_PERMS.referent,lastAccess:todayStr,email:''},
+    {id:'3',name:'Jean Martin',login:'jean',pass:'jean123',role:'member',perms:ROLE_PERMS.member,lastAccess:todayStr,email:''}
   ];
   epis = [
-    { ref:'CRD-001', type:'Corde', brand:'Petzl', model:'Arial 10.0', buy:'2022-03-15', fab:'2022-01-01', norm:'EN892', lot:'LOT220315', status:'ok', lastCtrl:'2024-09-10', notes:'', photos:[] },
-    { ref:'CRD-002', type:'Corde', brand:'Mammut', model:'Infinity 9.5', buy:'2021-06-20', fab:'2021-04-01', norm:'EN892', lot:'LOT210620', status:'warn', lastCtrl:'2024-03-01', notes:'Légère usure au milieu', photos:[] },
-    { ref:'HRN-001', type:'Harnais', brand:'Petzl', model:'Adjama', buy:'2023-01-10', fab:'2022-12-01', norm:'EN12277', lot:'LOT230110', status:'ok', lastCtrl:'2024-11-20', notes:'', photos:[] },
-    { ref:'HRN-002', type:'Harnais', brand:'Black Diamond', model:'Momentum', buy:'2020-05-05', fab:'2020-03-01', norm:'EN12277', lot:'LOT200505', status:'danger', lastCtrl:'2023-05-05', notes:'Sangle ventrale à remplacer', photos:[] },
-    { ref:'CSQ-001', type:'Casque', brand:'Petzl', model:'Boreo', buy:'2022-11-30', fab:'2022-10-01', norm:'EN12492', lot:'LOT221130', status:'ok', lastCtrl:'2024-10-15', notes:'', photos:[] },
-    { ref:'CSQ-002', type:'Casque', brand:'Edelrid', model:'Shield II', buy:'2019-04-01', fab:'2019-02-01', norm:'EN12492', lot:'LOT190401', status:'retired', lastCtrl:'2024-01-10', notes:'Chute importante — réformé', photos:[] },
-    { ref:'ASS-001', type:'Assureur', brand:'Petzl', model:'Grigri+', buy:'2023-07-01', fab:'2023-05-01', norm:'EN15151', lot:'LOT230701', status:'ok', lastCtrl:'2024-12-01', notes:'', photos:[] },
-    { ref:'LNG-001', type:'Longe', brand:'Beal', model:'Dynaclip', buy:'2021-09-15', fab:'2021-08-01', norm:'EN354', lot:'LOT210915', status:'warn', lastCtrl:'2024-02-20', notes:'Vérifier coutures', photos:[] },
+    {ref:'CRD-001',type:'Corde',brand:'Petzl',model:'Arial 10.0',buy:'2022-03-15',fab:'2022-01-01',norm:'EN892',lot:'LOT220315',status:'ok',lastCtrl:'2024-09-10',notes:'',photos:[]},
+    {ref:'HRN-001',type:'Harnais',brand:'Petzl',model:'Adjama',buy:'2023-01-10',fab:'2022-12-01',norm:'EN12277',lot:'LOT230110',status:'ok',lastCtrl:'2024-11-20',notes:'',photos:[]},
+    {ref:'CSQ-001',type:'Casque',brand:'Petzl',model:'Boreo',buy:'2022-11-30',fab:'2022-10-01',norm:'EN12492',lot:'LOT221130',status:'ok',lastCtrl:'2024-10-15',notes:'',photos:[]},
+    {ref:'ASS-001',type:'Assureur',brand:'Petzl',model:'Grigri+',buy:'2023-07-01',fab:'2023-05-01',norm:'EN15151',lot:'LOT230701',status:'ok',lastCtrl:'2024-12-01',notes:'',photos:[]},
+    {ref:'HRN-002',type:'Harnais',brand:'Black Diamond',model:'Momentum',buy:'2020-05-05',fab:'2020-03-01',norm:'EN12277',lot:'LOT200505',status:'danger',lastCtrl:'2023-05-05',notes:'Sangle ventrale a remplacer',photos:[]}
   ];
   controls = [
-    { id:'c1', date:'2024-12-01', ref:'ASS-001', who:'Marie Dupont', result:'ok', notes:'Mécanisme parfait' },
-    { id:'c2', date:'2024-11-20', ref:'HRN-001', who:'Jean Martin', result:'ok', notes:'RAS' },
-    { id:'c3', date:'2024-10-15', ref:'CSQ-001', who:'Marie Dupont', result:'ok', notes:'RAS' },
-    { id:'c4', date:'2024-09-10', ref:'CRD-001', who:'Pierre Durand', result:'ok', notes:'Gaine saine' },
-    { id:'c5', date:'2024-03-01', ref:'CRD-002', who:'Jean Martin', result:'warn', notes:'Légère usure centrale' },
-    { id:'c6', date:'2024-02-20', ref:'LNG-001', who:'Marie Dupont', result:'warn', notes:'Surveiller coutures' },
-    { id:'c7', date:'2024-01-10', ref:'CSQ-002', who:'Pierre Durand', result:'retired', notes:'Impact trop important' },
-    { id:'c8', date:'2023-05-05', ref:'HRN-002', who:'Jean Martin', result:'danger', notes:'Sangle ventrale dégradée' },
+    {id:'c1',date:'2024-12-01',ref:'ASS-001',who:'Marie Dupont',result:'ok',notes:'Mecanisme parfait'},
+    {id:'c2',date:'2024-11-20',ref:'HRN-001',who:'Jean Martin',result:'ok',notes:'RAS'},
+    {id:'c3',date:'2024-09-10',ref:'CRD-001',who:'Marie Dupont',result:'ok',notes:'Gaine saine'}
   ];
   loans = [
-    { id:'l1', date:fmt(addDays(today,-3)), member:'Sophie Laurent', ref:'CRD-001', returnDate:fmt(addDays(today,4)), status:'active' },
-    { id:'l2', date:fmt(addDays(today,-10)), member:'Lucas Petit', ref:'CSQ-001', returnDate:fmt(addDays(today,-3)), status:'late' },
+    {id:'l1',date:fmt(addDays(today,-3)),member:'Sophie Laurent',ref:'CRD-001',returnDate:fmt(addDays(today,4)),status:'active'}
   ];
-  batches = [
-    { id:'LOT-2024-001', name:'Baudriers adultes 2024', type:'Harnais', brand:'Petzl', model:'Corax', buy:'2024-03-01', fab:'2024-01-01', norm:'EN12277', lot:'B240301', created:'2024-03-01', photos:[] },
-  ];
+  batches = [];
 }
 
-// ==================== SUPABASE CONFIG ====================
-const SUPABASE_URL  = 'https://jnptmjkjicidrxlykvdl.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpucHRtamtqaWNpZHJ4bHlrdmRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMDAzODEsImV4cCI6MjA5MTY3NjM4MX0.gOzBXcM4_JqoWsYt88yXo66';
-
-// ── REST helper ────────────────────────────────────────────────
-async function sbFetch(path, method = 'GET', body = null, extraHeaders = {}) {
-  const headers = {
-    'apikey':        SUPABASE_ANON,
+// ==================== SUPABASE REST ====================
+function sbFetch(path, method, body, extraHeaders) {
+  var headers = {
+    'apikey': SUPABASE_ANON,
     'Authorization': 'Bearer ' + SUPABASE_ANON,
-    'Content-Type':  'application/json',
-    ...extraHeaders,
+    'Content-Type': 'application/json'
   };
-  const opts = { method, headers };
-  if (body !== null) opts.body = JSON.stringify(body);
-  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, opts);
-  if (!res.ok) {
-    const txt = await res.text();
-    throw new Error('Supabase ' + res.status + ' on ' + path + ': ' + txt);
+  if (extraHeaders) {
+    Object.keys(extraHeaders).forEach(function(k){ headers[k] = extraHeaders[k]; });
   }
-  const txt = await res.text();
-  return txt ? JSON.parse(txt) : [];
-}
-
-// ── CRUD ───────────────────────────────────────────────────────
-async function dbSelect(table, filter = '') {
-  return sbFetch(table + '?select=*' + (filter ? '&' + filter : ''));
-}
-
-async function dbUpsert(table, row) {
-  return sbFetch(table + '?on_conflict=' + Object.keys(row)[0], 'POST', row, {
-    'Prefer': 'resolution=merge-duplicates,return=minimal',
-  });
-}
-
-async function dbPatch(table, key, val, patch) {
-  return sbFetch(table + '?' + key + '=eq.' + encodeURIComponent(val), 'PATCH', patch, {
-    'Prefer': 'return=minimal',
-  });
-}
-
-async function dbDelete(table, key, val) {
-  return sbFetch(table + '?' + key + '=eq.' + encodeURIComponent(val), 'DELETE', null, {
-    'Prefer': 'return=minimal',
-  });
-}
-
-// ── Schema helpers ─────────────────────────────────────────────
-// Each table stores a JSONB `data` column + a unique text key column
-// epis → ref | controls → ctrl_id | loans → loan_id | batches → batch_id | members → member_id
-const TABLE_KEY = { epis:'ref', controls:'ctrl_id', loans:'loan_id', batches:'batch_id', members:'member_id' };
-
-async function fsSet(table, rowId, obj) {
-  const key = TABLE_KEY[table];
-  const clean = JSON.parse(JSON.stringify(obj)); // strip undefined
-  await dbUpsert(table, { [key]: String(rowId), data: clean });
-}
-
-async function fsUpdate(table, rowId, patch) {
-  const key = TABLE_KEY[table];
-  try {
-    const rows = await dbSelect(table, key + '=eq.' + encodeURIComponent(rowId));
-    if (rows.length > 0) {
-      const merged = { ...rows[0].data, ...patch };
-      await dbUpsert(table, { [key]: String(rowId), data: merged });
-    }
-  } catch(e) { console.warn('fsUpdate:', e.message); }
-}
-
-async function fsDelete(table, rowId) {
-  await dbDelete(table, TABLE_KEY[table], rowId);
-}
-
-// ── Photo upload ───────────────────────────────────────────────
-async function uploadPhotoToStorage(dataUrl, path) {
-  if (!dataUrl || dataUrl.startsWith('http')) return dataUrl;
-  try {
-    const [meta, b64] = dataUrl.split(',');
-    const mime = meta.match(/:(.*?);/)[1];
-    const bin  = atob(b64);
-    const u8   = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
-    const res = await fetch(SUPABASE_URL + '/storage/v1/object/epi-photos/' + path, {
-      method: 'POST',
-      headers: {
-        'apikey': SUPABASE_ANON,
-        'Authorization': 'Bearer ' + SUPABASE_ANON,
-        'Content-Type': mime,
-        'x-upsert': 'true',
-      },
-      body: new Blob([u8], { type: mime }),
+  var opts = { method: method || 'GET', headers: headers };
+  if (body !== undefined && body !== null) opts.body = JSON.stringify(body);
+  return fetch(SUPABASE_URL + '/rest/v1/' + path, opts).then(function(res) {
+    return res.text().then(function(txt) {
+      if (!res.ok) throw new Error('Supabase ' + res.status + ' [' + path + ']: ' + txt);
+      return txt ? JSON.parse(txt) : [];
     });
-    if (!res.ok) throw new Error('upload ' + res.status);
-    return SUPABASE_URL + '/storage/v1/object/public/epi-photos/' + path;
-  } catch(e) { console.warn('Photo upload failed:', e.message); return dataUrl; }
+  });
 }
 
-// ── Load all data ──────────────────────────────────────────────
-async function loadAllData() {
-  showLoading('Connexion à Supabase…');
-  try {
-    const [rEpis, rControls, rLoans, rBatches, rMembers] = await Promise.all([
-      dbSelect('epis'),
-      dbSelect('controls', 'order=created_at.desc'),
-      dbSelect('loans'),
-      dbSelect('batches'),
-      dbSelect('members'),
-    ]);
-    epis     = rEpis.map(r => ({ ...r.data, ref: r.ref }));
-    controls = rControls.map(r => ({ ...r.data, id: r.ctrl_id }));
-    loans    = rLoans.map(r => ({ ...r.data, id: r.loan_id }));
-    batches  = rBatches.map(r => ({ ...r.data, id: r.batch_id }));
-    members  = rMembers.map(r => ({ ...r.data, id: r.member_id }));
-    if (members.length === 0) await seedInitialAdmin();
-    hideLoading();
-  } catch(e) {
-    hideLoading();
-    console.error('loadAllData error:', e);
-    showToast('Erreur Supabase : ' + e.message + ' — vérifiez la console', 'err');
-    loadDemoData(); // fallback
-  }
+function dbSelect(table, filter) {
+  var qs = 'select=*' + (filter ? '&' + filter : '');
+  return sbFetch(table + '?' + qs);
+}
+function dbUpsert(table, row) {
+  var keyCol = ({epis:'ref',controls:'ctrl_id',loans:'loan_id',batches:'batch_id',members:'member_id'})[table] || 'id';
+  return sbFetch(table + '?on_conflict=' + keyCol, 'POST', row, {
+    'Prefer': 'resolution=merge-duplicates,return=minimal'
+  });
+}
+function dbPatch(table, key, val, patch) {
+  return sbFetch(table + '?' + key + '=eq.' + encodeURIComponent(val), 'PATCH', patch, {
+    'Prefer': 'return=minimal'
+  });
+}
+function dbDel(table, key, val) {
+  return sbFetch(table + '?' + key + '=eq.' + encodeURIComponent(val), 'DELETE', null, {
+    'Prefer': 'return=minimal'
+  });
 }
 
-async function seedInitialAdmin() {
-  const admin = {
-    id: '1', name: 'Admin Club', login: 'admin', pass: 'admin123',
-    role: 'admin', perms: ROLE_PERMS.admin, lastAccess: todayStr, email: ''
-  };
+var TABLE_KEY = {epis:'ref',controls:'ctrl_id',loans:'loan_id',batches:'batch_id',members:'member_id'};
+
+function fsSet(table, rowId, obj) {
+  var key = TABLE_KEY[table];
+  var clean = JSON.parse(JSON.stringify(obj));
+  return dbUpsert(table, {[key]: String(rowId), data: clean});
+}
+function fsUpdate(table, rowId, patch) {
+  var key = TABLE_KEY[table];
+  return dbSelect(table, key + '=eq.' + encodeURIComponent(rowId)).then(function(rows) {
+    if (rows && rows.length > 0) {
+      var merged = Object.assign({}, rows[0].data, patch);
+      return dbUpsert(table, {[key]: String(rowId), data: merged});
+    }
+  }).catch(function(e){ console.warn('fsUpdate:', e.message); });
+}
+function fsDelete(table, rowId) {
+  return dbDel(table, TABLE_KEY[table], rowId);
+}
+
+// ==================== LOAD DATA ====================
+function loadAllData() {
+  showLoading('Connexion a Supabase...');
+  return Promise.all([
+    dbSelect('epis'),
+    dbSelect('controls','order=created_at.desc'),
+    dbSelect('loans'),
+    dbSelect('batches'),
+    dbSelect('members')
+  ]).then(function(results) {
+    var rEpis=results[0], rControls=results[1], rLoans=results[2], rBatches=results[3], rMembers=results[4];
+    epis     = rEpis.map(function(r){ return Object.assign({},r.data,{ref:r.ref}); });
+    controls = rControls.map(function(r){ return Object.assign({},r.data,{id:r.ctrl_id}); });
+    loans    = rLoans.map(function(r){ return Object.assign({},r.data,{id:r.loan_id}); });
+    batches  = rBatches.map(function(r){ return Object.assign({},r.data,{id:r.batch_id}); });
+    members  = rMembers.map(function(r){ return Object.assign({},r.data,{id:r.member_id}); });
+    hideLoading();
+    if (members.length === 0) {
+      return seedInitialAdmin();
+    }
+  }).catch(function(e) {
+    hideLoading();
+    console.error('Supabase error:', e);
+    showToast('Supabase inaccessible - mode demo active', 'warn');
+    loadDemoData();
+  });
+}
+
+function seedInitialAdmin() {
+  var admin = {id:'1',name:'Admin Club',login:'admin',pass:'admin123',
+    role:'admin',perms:ROLE_PERMS.admin,lastAccess:todayStr,email:''};
   members = [admin];
-  await fsSet('members', '1', admin);
+  return fsSet('members','1',admin);
+}
+
+// ==================== PHOTO UPLOAD ====================
+function uploadPhotoToStorage(dataUrl, path) {
+  if (!dataUrl || dataUrl.indexOf('http') === 0) return Promise.resolve(dataUrl);
+  try {
+    var parts = dataUrl.split(',');
+    var mime  = parts[0].match(/:(.*?);/)[1];
+    var bin   = atob(parts[1]);
+    var u8    = new Uint8Array(bin.length);
+    for (var i=0;i<bin.length;i++) u8[i]=bin.charCodeAt(i);
+    return fetch(SUPABASE_URL+'/storage/v1/object/epi-photos/'+path, {
+      method:'POST',
+      headers:{'apikey':SUPABASE_ANON,'Authorization':'Bearer '+SUPABASE_ANON,
+               'Content-Type':mime,'x-upsert':'true'},
+      body: new Blob([u8],{type:mime})
+    }).then(function(res){
+      if (!res.ok) throw new Error('upload '+res.status);
+      return SUPABASE_URL+'/storage/v1/object/public/epi-photos/'+path;
+    });
+  } catch(e) { console.warn('Photo upload failed:',e.message); return Promise.resolve(dataUrl); }
 }
 
 // ==================== AUTH ====================
 function doLogin() {
-  const login = document.getElementById('login-user').value.trim();
-  const pass  = document.getElementById('login-pass').value;
-  const errEl = document.getElementById('login-error');
-  if (!login || !pass) { errEl.style.display='block'; errEl.textContent='Renseignez identifiant et mot de passe.'; return; }
-  const user = members.find(m => m.login === login && m.pass === pass);
+  var login = document.getElementById('login-user').value.trim();
+  var pass  = document.getElementById('login-pass').value;
+  var errEl = document.getElementById('login-error');
+  if (!login || !pass) {
+    errEl.style.display='block';
+    errEl.textContent='Renseignez identifiant et mot de passe.';
+    return;
+  }
+  var user = members.find(function(m){ return m.login===login && m.pass===pass; });
   if (!user) {
-    errEl.style.display = 'block';
-    errEl.textContent = members.length === 0
-      ? 'Données pas encore chargées — attendez quelques secondes et réessayez.'
+    errEl.style.display='block';
+    errEl.textContent = members.length===0
+      ? 'Donnees pas encore chargees. Attendez quelques secondes et reessayez.'
       : 'Identifiant ou mot de passe incorrect.';
     return;
   }
-  errEl.style.display = 'none';
+  errEl.style.display='none';
   loginSuccess(user);
 }
 
 function loginSuccess(user) {
   currentUser = user;
-  fsUpdate('members', String(user.id), { lastAccess: todayStr }).catch(()=>{});
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  document.getElementById('sidebar-username').textContent = user.name;
-  document.getElementById('sidebar-userrole').textContent = {admin:'Administrateur',referent:'Référent EPI',member:'Membre'}[user.role];
-  localStorage.setItem('epi_session', JSON.stringify({ login: user.login, pass: user.pass }));
+  fsUpdate('members', String(user.id), {lastAccess:todayStr}).catch(function(){});
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('sidebar-username').textContent=user.name;
+  var roleLabel={admin:'Administrateur',referent:'Referent EPI',member:'Membre'};
+  document.getElementById('sidebar-userrole').textContent=roleLabel[user.role]||user.role;
+  try { localStorage.setItem('epi_session',JSON.stringify({login:user.login,pass:user.pass})); } catch(e){}
   applyPermissions();
   renderDashboard();
 }
 
 function doLogout() {
-  currentUser = null;
-  localStorage.removeItem('epi_session');
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('login-user').value = '';
-  document.getElementById('login-pass').value = '';
-  document.getElementById('login-error').style.display = 'none';
+  currentUser=null;
+  try { localStorage.removeItem('epi_session'); } catch(e){}
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-user').value='';
+  document.getElementById('login-pass').value='';
+  document.getElementById('login-error').style.display='none';
 }
 
-function hasPerm(p) { return currentUser && currentUser.perms.includes(p); }
+function hasPerm(p){ return currentUser && currentUser.perms && currentUser.perms.indexOf(p)!==-1; }
 
 function applyPermissions() {
-  document.querySelectorAll('[data-perm]').forEach(el => {
-    el.classList.toggle('hidden', !hasPerm(el.getAttribute('data-perm')));
+  document.querySelectorAll('[data-perm]').forEach(function(el){
+    el.classList.toggle('hidden',!hasPerm(el.getAttribute('data-perm')));
   });
-  ['btn-add-epi','btn-qr-scan','btn-add-batch'].forEach(id => {
-    document.getElementById(id)?.classList.toggle('hidden', !hasPerm('add_epi'));
+  ['btn-add-epi','btn-qr-scan','btn-add-batch'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.classList.toggle('hidden',!hasPerm('add_epi'));
   });
-  document.getElementById('btn-add-ctrl')?.classList.toggle('hidden', !hasPerm('add_controls'));
+  var ctrl=document.getElementById('btn-add-ctrl');
+  if(ctrl) ctrl.classList.toggle('hidden',!hasPerm('add_controls'));
 }
 
 // ==================== NAVIGATION ====================
+var currentPage='dashboard';
 function showPage(id, el) {
-  currentPage = id;
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(n => n.classList.remove('active'));
-  document.getElementById('page-'+id)?.classList.add('active');
-  if (el) el.classList.add('active');
-  const titles = { dashboard:'Tableau de bord', inventory:'Inventaire EPI', controls:'Historique des contrôles',
-    loans:'Gestion des prêts', alerts:'Alertes', members:'Gestion des membres', batches:'Lots d'EPI', checks:'Fiches de contrôle' };
-  document.getElementById('topbar-title').textContent = titles[id] || id;
-  const renders = { dashboard:renderDashboard, inventory:renderInventory, controls:renderControls,
-    loans:renderLoans, alerts:renderAlerts, members:renderMembers, batches:renderBatches, checks:renderChecks };
-  if (renders[id]) renders[id]();
+  currentPage=id;
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.nav-btn').forEach(function(n){ n.classList.remove('active'); });
+  var pg=document.getElementById('page-'+id); if(pg) pg.classList.add('active');
+  if(el) el.classList.add('active');
+  var titles={dashboard:'Tableau de bord',inventory:'Inventaire EPI',controls:'Historique des controles',
+    loans:'Gestion des prets',alerts:'Alertes',members:'Gestion des membres',
+    batches:'Lots d\'EPI',checks:'Fiches de controle'};
+  document.getElementById('topbar-title').textContent=titles[id]||id;
+  var renders={dashboard:renderDashboard,inventory:renderInventory,controls:renderControls,
+    loans:renderLoans,alerts:renderAlerts,members:renderMembers,batches:renderBatches,checks:renderChecks};
+  if(renders[id]) renders[id]();
 }
 
 // ==================== STATUS CALC ====================
 function getNextCtrl(epi) {
-  if (!epi.lastCtrl) return null;
-  const cfg = EPI_CONFIG[epi.type];
-  return fmt(addMonths(new Date(epi.lastCtrl), cfg ? cfg.ctrlMonths : 12));
+  if(!epi.lastCtrl) return null;
+  var cfg=EPI_CONFIG[epi.type]; var months=cfg?cfg.ctrlMonths:12;
+  return fmt(addMonths(new Date(epi.lastCtrl),months));
 }
 function getLifeStatus(epi) {
-  if (epi.status === 'retired' || epi.status === 'lost') return null;
-  const cfg = EPI_CONFIG[epi.type];
-  const fabDate = epi.fab || epi.buy;
-  if (!cfg || !fabDate) return null;
-  const ageYears = diffMonths(todayStr, fabDate) / 12;
-  if (ageYears >= cfg.lifeMax) return 'danger';
-  if (ageYears >= cfg.lifeUse) return 'warn';
+  if(epi.status==='retired'||epi.status==='lost') return null;
+  var cfg=EPI_CONFIG[epi.type]; var fabDate=epi.fab||epi.buy;
+  if(!cfg||!fabDate) return null;
+  var ageYears=diffMonths(todayStr,fabDate)/12;
+  if(ageYears>=cfg.lifeMax) return 'danger';
+  if(ageYears>=cfg.lifeUse) return 'warn';
   return null;
 }
 function getStatus(epi) {
-  if (epi.status === 'retired') return 'retired';
-  if (epi.status === 'lost') return 'lost';
-  const life = getLifeStatus(epi);
-  if (life === 'danger') return 'danger';
-  const next = getNextCtrl(epi);
-  if (!next) return 'warn';
-  const d = diffDays(next, todayStr);
-  if (d < 0) return 'danger';
-  if (d < 60) return 'warn';
-  if (life === 'warn') return 'warn';
-  return epi.status === 'danger' ? 'danger' : epi.status === 'warn' ? 'warn' : 'ok';
+  if(epi.status==='retired') return 'retired';
+  if(epi.status==='lost') return 'lost';
+  var life=getLifeStatus(epi);
+  if(life==='danger') return 'danger';
+  var next=getNextCtrl(epi); if(!next) return 'warn';
+  var d=diffDays(next,todayStr);
+  if(d<0) return 'danger'; if(d<60) return 'warn';
+  if(life==='warn') return 'warn';
+  return (epi.status==='danger')?'danger':(epi.status==='warn')?'warn':'ok';
 }
 function badgeHtml(s) {
-  const map = { ok:'badge-ok', warn:'badge-warn', danger:'badge-danger', retired:'badge-retired', lost:'badge-lost' };
-  const lbl = { ok:'Conforme', warn:'À contrôler', danger:'En alerte', retired:'Réformé', lost:'Introuvable' };
-  return `<span class="badge ${map[s]||'badge-retired'}">${lbl[s]||s}</span>`;
+  var map={ok:'badge-ok',warn:'badge-warn',danger:'badge-danger',retired:'badge-retired',lost:'badge-lost'};
+  var lbl={ok:'Conforme',warn:'A controler',danger:'En alerte',retired:'Reforme',lost:'Introuvable'};
+  return '<span class="badge '+(map[s]||'badge-retired')+'">'+(lbl[s]||s)+'</span>';
 }
 function lifespanBar(epi) {
-  const cfg = EPI_CONFIG[epi.type];
-  const fabDate = epi.fab || epi.buy;
-  if (!cfg || !fabDate) return '—';
-  const ageM = Math.max(0, diffMonths(todayStr, fabDate));
-  const maxM = cfg.lifeMax * 12;
-  const pct = Math.min(100, Math.round(ageM / maxM * 100));
-  const color = pct >= 100 ? '#dc2626' : pct >= 70 ? '#b45309' : '#16a34a';
-  return `<div style="font-size:12px;color:var(--text2)">${Math.floor(ageM/12)}a ${ageM%12}m / ${cfg.lifeMax}a max</div>
-    <div class="lifespan-bar"><div class="lifespan-fill" style="width:${pct}%;background:${color}"></div></div>`;
+  var cfg=EPI_CONFIG[epi.type]; var fabDate=epi.fab||epi.buy;
+  if(!cfg||!fabDate) return '&mdash;';
+  var ageM=Math.max(0,diffMonths(todayStr,fabDate));
+  var maxM=cfg.lifeMax*12;
+  var pct=Math.min(100,Math.round(ageM/maxM*100));
+  var color=pct>=100?'#dc2626':pct>=70?'#b45309':'#16a34a';
+  return '<div style="font-size:12px;color:var(--text2)">'+Math.floor(ageM/12)+'a '+(ageM%12)+'m / '+cfg.lifeMax+'a max</div>'
+    +'<div class="lifespan-bar"><div class="lifespan-fill" style="width:'+pct+'%;background:'+color+'"></div></div>';
 }
 
 // ==================== DASHBOARD ====================
 function renderDashboard() {
-  const active = epis.filter(e => e.status !== 'retired' && e.status !== 'lost');
-  document.getElementById('stat-total').textContent  = active.length;
-  document.getElementById('stat-ok').textContent     = active.filter(e => getStatus(e) === 'ok').length;
-  document.getElementById('stat-warn').textContent   = active.filter(e => getStatus(e) === 'warn').length;
-  document.getElementById('stat-danger').textContent = active.filter(e => getStatus(e) === 'danger').length;
-  const types = {};
-  epis.forEach(e => {
-    if (!types[e.type]) types[e.type] = { total:0, s:'ok' };
+  var active=epis.filter(function(e){ return e.status!=='retired'&&e.status!=='lost'; });
+  document.getElementById('stat-total').textContent=active.length;
+  document.getElementById('stat-ok').textContent=active.filter(function(e){return getStatus(e)==='ok';}).length;
+  document.getElementById('stat-warn').textContent=active.filter(function(e){return getStatus(e)==='warn';}).length;
+  document.getElementById('stat-danger').textContent=active.filter(function(e){return getStatus(e)==='danger';}).length;
+  var types={};
+  epis.forEach(function(e){
+    if(!types[e.type]) types[e.type]={total:0,s:'ok'};
     types[e.type].total++;
-    const s = getStatus(e);
-    if (s === 'danger') types[e.type].s = 'danger';
-    else if (s === 'warn' && types[e.type].s !== 'danger') types[e.type].s = 'warn';
+    var s=getStatus(e);
+    if(s==='danger') types[e.type].s='danger';
+    else if(s==='warn'&&types[e.type].s!=='danger') types[e.type].s='warn';
   });
-  document.getElementById('type-summary').innerHTML = Object.entries(types).map(([t,v]) => {
-    const cfg = EPI_CONFIG[t];
-    return `<tr><td>${t}</td><td>${v.total}</td><td class="muted" style="font-size:12px">${cfg ? cfg.lifeMax+'a max' : '—'}</td><td>${badgeHtml(v.s)}</td></tr>`;
+  document.getElementById('type-summary').innerHTML=Object.keys(types).map(function(t){
+    var v=types[t]; var cfg=EPI_CONFIG[t];
+    return '<tr><td>'+t+'</td><td>'+v.total+'</td><td class="muted" style="font-size:12px">'+(cfg?cfg.lifeMax+'a max':'&mdash;')+'</td><td>'+badgeHtml(v.s)+'</td></tr>';
   }).join('');
-  const upcoming = epis.filter(e => e.status !== 'retired' && e.status !== 'lost' && getNextCtrl(e))
-    .map(e => ({...e, next: getNextCtrl(e)})).sort((a,b) => a.next.localeCompare(b.next)).slice(0,6);
-  document.getElementById('upcoming-controls').innerHTML = upcoming.map(e => {
-    const d = diffDays(e.next, todayStr);
-    return `<tr><td><strong style="font-weight:700">${e.ref}</strong></td><td class="muted">${e.type}</td><td class="${d<0?'c-danger':d<60?'c-warn':'c-ok'}" style="font-size:13px">${e.next}</td></tr>`;
+  var upcoming=epis.filter(function(e){ return e.status!=='retired'&&e.status!=='lost'&&getNextCtrl(e); })
+    .map(function(e){ return Object.assign({},e,{next:getNextCtrl(e)}); })
+    .sort(function(a,b){ return a.next.localeCompare(b.next); }).slice(0,6);
+  document.getElementById('upcoming-controls').innerHTML=upcoming.map(function(e){
+    var d=diffDays(e.next,todayStr);
+    var cls=d<0?'c-danger':d<60?'c-warn':'c-ok';
+    return '<tr><td><strong>'+e.ref+'</strong></td><td class="muted">'+e.type+'</td><td class="'+cls+'" style="font-size:13px">'+e.next+'</td></tr>';
   }).join('');
   updateAlertBadge();
 }
 function updateAlertBadge() {
-  const n = epis.filter(e => getStatus(e) === 'danger').length + loans.filter(l => l.status === 'late').length;
-  const b = document.getElementById('alert-badge');
-  if (b) { b.textContent = n; b.classList.toggle('hidden', n === 0); }
+  var n=epis.filter(function(e){return getStatus(e)==='danger';}).length+loans.filter(function(l){return l.status==='late';}).length;
+  var b=document.getElementById('alert-badge'); if(b){b.textContent=n;b.classList.toggle('hidden',n===0);}
 }
 function updateBatchBadge() {
-  const b = document.getElementById('batch-badge');
-  if (b) { b.textContent = batches.length; b.classList.toggle('hidden', batches.length === 0); }
+  var b=document.getElementById('batch-badge'); if(b){b.textContent=batches.length;b.classList.toggle('hidden',batches.length===0);}
 }
 
 // ==================== INVENTORY ====================
 function renderInventory() {
-  const q  = (document.getElementById('search-input')?.value || '').toLowerCase();
-  const ft = document.getElementById('filter-type')?.value;
-  const fs = document.getElementById('filter-status')?.value;
-  const filtered = epis.filter(e => {
-    if (q && ![e.ref,e.brand,e.model,e.type].join(' ').toLowerCase().includes(q)) return false;
-    if (ft && e.type !== ft) return false;
-    if (fs && getStatus(e) !== fs) return false;
+  var q=(document.getElementById('search-input')||{}).value||''; q=q.toLowerCase();
+  var ft=(document.getElementById('filter-type')||{}).value||'';
+  var fs=(document.getElementById('filter-status')||{}).value||'';
+  var filtered=epis.filter(function(e){
+    if(q&&[e.ref,e.brand,e.model,e.type].join(' ').toLowerCase().indexOf(q)===-1) return false;
+    if(ft&&e.type!==ft) return false;
+    if(fs&&getStatus(e)!==fs) return false;
     return true;
   });
-  document.getElementById('inventory-table').innerHTML = filtered.map(e => {
-    const batchTag = e.batchId ? `<span style="font-size:11px;font-weight:700;background:var(--surface2);border:1px solid var(--border2);color:var(--text2);padding:2px 8px;border-radius:6px;cursor:pointer;margin-left:6px" onclick="showBatch('${e.batchId}')" title="Voir le lot">${e.batchId}</span>` : '';
-    const canCtrl  = hasPerm('add_controls');
-    const isActive = e.status !== 'retired' && e.status !== 'lost';
-    return `<tr>
-      <td style="width:40px"><input type="checkbox" class="epi-chk" data-ref="${e.ref}" onchange="onEpiCheckChange()" ${!isActive?'disabled style="opacity:0.3"':''}></td>
-      <td><strong style="font-weight:700">${e.ref}</strong>${batchTag}</td>
-      <td>${e.type}</td>
-      <td><div style="display:flex;align-items:center;gap:8px">
-        ${e.photos && e.photos.length ? `<img src="${e.photos[0]}" class="photo-thumb" onclick="openHistory('epi','${e.ref}')">` : `<div class="photo-placeholder" onclick="openHistory('epi','${e.ref}')" title="Historique">📋</div>`}
-        <span>${e.brand} ${e.model}</span>
-      </div></td>
-      <td class="muted">${e.buy}</td>
-      <td style="min-width:120px">${lifespanBar(e)}</td>
-      <td class="muted">${e.lastCtrl||'—'}</td>
-      <td class="muted">${getNextCtrl(e)||'—'}</td>
-      <td>${badgeHtml(getStatus(e))}</td>
-      <td style="white-space:nowrap">
-        <button class="btn btn-sm" onclick="openCheckSheet('${e.type}')">📋 Fiche</button>
-        ${canCtrl ? `<button class="btn btn-sm" style="margin-left:4px" onclick="openModalControl('${e.ref}')">Contrôler</button>` : ''}
-      </td>
-    </tr>`;
+  var canCtrl=hasPerm('add_controls');
+  document.getElementById('inventory-table').innerHTML=filtered.map(function(e){
+    var bTag=e.batchId?'<span style="font-size:11px;font-weight:700;background:var(--surface2);border:1px solid var(--border2);color:var(--text2);padding:2px 8px;border-radius:6px;cursor:pointer;margin-left:6px" onclick="showBatch(\''+e.batchId+'\')" title="Voir le lot">'+e.batchId+'</span>':'';
+    var isActive=e.status!=='retired'&&e.status!=='lost';
+    var photo=e.photos&&e.photos.length?'<img src="'+e.photos[0]+'" class="photo-thumb" onclick="openHistory(\'epi\',\''+e.ref+'\')">':'<div class="photo-placeholder" onclick="openHistory(\'epi\',\''+e.ref+'\')" title="Historique">&#128203;</div>';
+    return '<tr>'
+      +'<td style="width:40px"><input type="checkbox" class="epi-chk" data-ref="'+e.ref+'" onchange="onEpiCheckChange()"'+(isActive?'':' disabled style="opacity:0.3"')+'></td>'
+      +'<td><strong>'+e.ref+'</strong>'+bTag+'</td>'
+      +'<td>'+e.type+'</td>'
+      +'<td><div style="display:flex;align-items:center;gap:8px">'+photo+'<span>'+e.brand+' '+e.model+'</span></div></td>'
+      +'<td class="muted">'+e.buy+'</td>'
+      +'<td style="min-width:120px">'+lifespanBar(e)+'</td>'
+      +'<td class="muted">'+(e.lastCtrl||'&mdash;')+'</td>'
+      +'<td class="muted">'+(getNextCtrl(e)||'&mdash;')+'</td>'
+      +'<td>'+badgeHtml(getStatus(e))+'</td>'
+      +'<td style="white-space:nowrap"><button class="btn btn-sm" onclick="openCheckSheet(\''+e.type+'\')">&#128203; Fiche</button>'
+      +(canCtrl?'<button class="btn btn-sm" style="margin-left:4px" onclick="openModalControl(\''+e.ref+'\')">Controler</button>':'')
+      +'</td></tr>';
   }).join('');
 }
 
 // ==================== CONTROLS ====================
 function renderControls() {
-  const q = (document.getElementById('ctrl-search')?.value || '').toLowerCase();
-  const epiMap = {}; epis.forEach(e => epiMap[e.ref] = e.type);
-  const statusColor = { ok:'var(--accent)', warn:'var(--warn)', danger:'var(--danger)', retired:'var(--text2)', lost:'#5b21b6' };
-  const statusText  = { ok:'✓ Conforme', warn:'⚠ Réserve', danger:'✖ Non-conforme', retired:'— Réformé', lost:'? Introuvable' };
-  const filtered = [...controls].filter(c => !q || [c.ref,c.who].join(' ').toLowerCase().includes(q))
-    .sort((a,b) => (b.date||'').localeCompare(a.date||''));
-  document.getElementById('controls-table').innerHTML = filtered.map(c => `
-    <tr>
-      <td style="font-size:13px">${c.date}</td>
-      <td><strong style="font-weight:700">${c.ref}</strong></td>
-      <td class="muted">${epiMap[c.ref]||'—'}</td>
-      <td>${c.who}</td>
-      <td><span style="font-weight:600;color:${statusColor[c.result]||'var(--text2)'}">${statusText[c.result]||c.result}</span></td>
-      <td class="muted" style="font-size:13px">${c.notes||'—'}</td>
-    </tr>`).join('');
+  var q=((document.getElementById('ctrl-search')||{}).value||'').toLowerCase();
+  var epiMap={}; epis.forEach(function(e){epiMap[e.ref]=e.type;});
+  var sColor={ok:'var(--accent)',warn:'var(--warn)',danger:'var(--danger)',retired:'var(--text2)',lost:'#5b21b6'};
+  var sText={ok:'&#10003; Conforme',warn:'&#9888; Reserve',danger:'&#10007; Non-conforme',retired:'&mdash; Reforme',lost:'? Introuvable'};
+  var sorted=controls.filter(function(c){return !q||[c.ref,c.who].join(' ').toLowerCase().indexOf(q)!==-1;})
+    .slice().sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
+  document.getElementById('controls-table').innerHTML=sorted.map(function(c){
+    return '<tr><td style="font-size:13px">'+c.date+'</td><td><strong>'+c.ref+'</strong></td>'
+      +'<td class="muted">'+(epiMap[c.ref]||'&mdash;')+'</td><td>'+c.who+'</td>'
+      +'<td><span style="font-weight:600;color:'+(sColor[c.result]||'var(--text2)')+';">'+(sText[c.result]||c.result)+'</span></td>'
+      +'<td class="muted" style="font-size:13px">'+(c.notes||'&mdash;')+'</td></tr>';
+  }).join('');
 }
 
 // ==================== LOANS ====================
 function renderLoans() {
-  const epiMap = {}; epis.forEach(e => epiMap[e.ref] = e.type);
-  const slbl = { active:'En cours', returned:'Rendu', late:'En retard' };
-  const scls = { active:'badge-warn', returned:'badge-ok', late:'badge-danger' };
-  const canManage = hasPerm('manage_loans');
-  document.getElementById('loans-table').innerHTML = loans.map((l,i) => `
-    <tr>
-      <td style="font-size:13px">${l.date}</td>
-      <td>${l.member}</td>
-      <td><strong style="font-weight:700">${l.ref}</strong></td>
-      <td class="muted">${epiMap[l.ref]||'—'}</td>
-      <td style="font-size:13px">${l.returnDate}</td>
-      <td><span class="badge ${scls[l.status]}">${slbl[l.status]}</span></td>
-      <td>${canManage && l.status!=='returned' ? `<button class="btn btn-sm" onclick="returnLoan('${l.id||i}')">Rendu</button>` : ''}</td>
-    </tr>`).join('');
+  var epiMap={}; epis.forEach(function(e){epiMap[e.ref]=e.type;});
+  var slbl={active:'En cours',returned:'Rendu',late:'En retard'};
+  var scls={active:'badge-warn',returned:'badge-ok',late:'badge-danger'};
+  var canManage=hasPerm('manage_loans');
+  document.getElementById('loans-table').innerHTML=loans.map(function(l,i){
+    var retBtn=canManage&&l.status!=='returned'?'<button class="btn btn-sm" onclick="returnLoan(\''+l.id+'\')">Rendu</button>':'';
+    return '<tr><td style="font-size:13px">'+l.date+'</td><td>'+l.member+'</td>'
+      +'<td><strong>'+l.ref+'</strong></td><td class="muted">'+(epiMap[l.ref]||'&mdash;')+'</td>'
+      +'<td style="font-size:13px">'+l.returnDate+'</td>'
+      +'<td><span class="badge '+(scls[l.status]||'')+'">'+slbl[l.status]+'</span></td>'
+      +'<td>'+retBtn+'</td></tr>';
+  }).join('');
 }
-async function returnLoan(idOrIdx) {
-  const loan = typeof idOrIdx === 'string' ? loans.find(l => l.id === idOrIdx) : loans[idOrIdx];
-  if (!loan) return;
-  loan.status = 'returned';
-  await fsUpdate('loans', loan.id || String(idOrIdx), { status:'returned' });
-  renderLoans();
-  updateAlertBadge();
-  showToast('Prêt marqué comme rendu');
+function returnLoan(loanId) {
+  var loan=loans.find(function(l){return l.id===loanId;});
+  if(!loan) return;
+  loan.status='returned';
+  fsUpdate('loans',loanId,{status:'returned'}).catch(function(){});
+  renderLoans(); updateAlertBadge();
+  showToast('Pret marque comme rendu');
 }
 
 // ==================== ALERTS ====================
 function renderAlerts() {
-  const alerts = [];
-  epis.forEach(e => {
-    const s = getStatus(e);
-    const next = getNextCtrl(e);
-    if (s === 'danger' && e.status !== 'retired') {
-      const d = next ? diffDays(next, todayStr) : -999;
-      const lifeS = getLifeStatus(e);
-      let desc = `${e.type} ${e.brand} ${e.model}`;
-      if (lifeS === 'danger') { const cfg = EPI_CONFIG[e.type]; desc += ` — durée max (${cfg?.lifeMax}a) dépassée`; }
-      else if (d < 0) desc += ` — contrôle en retard de ${Math.abs(d)}j`;
-      alerts.push({ type:'danger', icon:'⚠', title:`${e.ref} — action requise`, desc, date:next||'—' });
-    } else if (s === 'warn') {
-      const d = diffDays(next, todayStr);
-      alerts.push({ type:'warn', icon:'○', title:`${e.ref} — contrôle à prévoir`, desc:`${e.type} ${e.brand} ${e.model} — dans ${d}j`, date:next });
+  var alerts=[];
+  epis.forEach(function(e){
+    var s=getStatus(e); var next=getNextCtrl(e);
+    if(s==='danger'&&e.status!=='retired'){
+      var d=next?diffDays(next,todayStr):-999;
+      var ls=getLifeStatus(e);
+      var desc=e.type+' '+e.brand+' '+e.model;
+      if(ls==='danger'){var cfg=EPI_CONFIG[e.type];desc+=' &mdash; max ('+(cfg?cfg.lifeMax:'?')+'a) depassee';}
+      else if(d<0) desc+=' &mdash; retard de '+Math.abs(d)+'j';
+      alerts.push({type:'danger',icon:'&#9888;',title:e.ref+' &mdash; action requise',desc:desc,date:next||'&mdash;'});
+    } else if(s==='warn'){
+      var d2=diffDays(next,todayStr);
+      alerts.push({type:'warn',icon:'&#9675;',title:e.ref+' &mdash; controle a prevoir',
+        desc:e.type+' '+e.brand+' '+e.model+' &mdash; dans '+d2+'j',date:next});
     }
   });
-  loans.filter(l => l.status==='late').forEach(l => {
-    alerts.push({ type:'danger', icon:'📦', title:`Prêt en retard — ${l.member}`, desc:`${l.ref} — retour prévu le ${l.returnDate}`, date:l.returnDate });
+  loans.filter(function(l){return l.status==='late';}).forEach(function(l){
+    alerts.push({type:'danger',icon:'&#128230;',title:'Pret en retard &mdash; '+l.member,
+      desc:l.ref+' &mdash; retour prevu le '+l.returnDate,date:l.returnDate});
   });
-  if (!alerts.length) { document.getElementById('alerts-list').innerHTML = `<div style="text-align:center;padding:48px;color:var(--text2)">✓ Aucune alerte active</div>`; return; }
-  document.getElementById('alerts-list').innerHTML = alerts.map(a => `
-    <div class="alert-item">
-      <div class="alert-icon alert-icon-${a.type}">${a.icon}</div>
-      <div class="alert-body"><div class="alert-title">${a.title}</div><div class="alert-desc">${a.desc}</div></div>
-      <div style="font-size:12px;color:var(--text3);flex-shrink:0">${a.date}</div>
-    </div>`).join('');
+  if(!alerts.length){document.getElementById('alerts-list').innerHTML='<div style="text-align:center;padding:48px;color:var(--text2)">&#10003; Aucune alerte active</div>';return;}
+  document.getElementById('alerts-list').innerHTML=alerts.map(function(a){
+    return '<div class="alert-item">'
+      +'<div class="alert-icon alert-icon-'+a.type+'">'+a.icon+'</div>'
+      +'<div class="alert-body"><div class="alert-title">'+a.title+'</div><div class="alert-desc">'+a.desc+'</div></div>'
+      +'<div style="font-size:12px;color:var(--text3);flex-shrink:0">'+a.date+'</div></div>';
+  }).join('');
 }
 
 // ==================== MEMBERS ====================
 function renderMembers() {
-  const rlbl = { admin:'Administrateur', referent:'Référent EPI', member:'Membre' };
-  const rcls = { admin:'badge-role-admin', referent:'badge-role-referent', member:'badge-role-member' };
-  document.getElementById('members-table').innerHTML = members.map(m => {
-    const isMe = m.id === currentUser?.id;
-    return `<tr>
-      <td><strong style="font-weight:700">${m.name}</strong>${isMe?' <span style="font-size:11px;color:var(--text2)">(vous)</span>':''}</td>
-      <td style="font-family:var(--font-mono);font-size:13px">${m.login}</td>
-      <td><span class="badge ${rcls[m.role]}">${rlbl[m.role]}</span></td>
-      <td style="font-size:13px;color:var(--text2)">${m.perms.length} permission${m.perms.length>1?'s':''}</td>
-      <td style="font-size:13px;color:var(--text2)">${m.lastAccess||'—'}</td>
-      <td style="display:flex;gap:6px">
-        <button class="btn btn-sm" onclick="editMember(${m.id})">Modifier</button>
-        ${!isMe ? `<button class="btn btn-sm btn-danger" onclick="deleteMember(${m.id})">Supprimer</button>` : ''}
-      </td>
-    </tr>`;
+  var rlbl={admin:'Administrateur',referent:'Referent EPI',member:'Membre'};
+  var rcls={admin:'badge-role-admin',referent:'badge-role-referent',member:'badge-role-member'};
+  document.getElementById('members-table').innerHTML=members.map(function(m){
+    var isMe=currentUser&&m.id===currentUser.id;
+    var delBtn=!isMe?'<button class="btn btn-sm btn-danger" onclick="deleteMember(\''+m.id+'\')">Supprimer</button>':'';
+    return '<tr>'
+      +'<td><strong>'+m.name+'</strong>'+(isMe?' <span style="font-size:11px;color:var(--text2)">(vous)</span>':'')+'</td>'
+      +'<td style="font-family:var(--font-mono);font-size:13px">'+m.login+'</td>'
+      +'<td><span class="badge '+(rcls[m.role]||'')+'">'+rlbl[m.role]+'</span></td>'
+      +'<td style="font-size:13px;color:var(--text2)">'+(m.perms?m.perms.length:0)+' perms</td>'
+      +'<td style="font-size:13px;color:var(--text2)">'+(m.lastAccess||'&mdash;')+'</td>'
+      +'<td style="display:flex;gap:6px"><button class="btn btn-sm" onclick="editMember(\''+m.id+'\')">Modifier</button>'+delBtn+'</td>'
+      +'</tr>';
   }).join('');
 }
 function editMember(id) {
-  editingMemberId = id;
-  const m = members.find(x => x.id === id);
-  document.getElementById('member-modal-title').textContent = 'Modifier le membre';
-  document.getElementById('member-save-btn').textContent = 'Enregistrer';
-  document.getElementById('m-name').value = m.name;
-  document.getElementById('m-login').value = m.login;
-  document.getElementById('m-pass').value = '';
-  document.getElementById('m-pass').placeholder = 'Laisser vide pour conserver';
-  document.getElementById('m-email').value = m.email || '';
-  document.getElementById('m-role').value = m.role;
-  ['view_epi','add_epi','view_controls','add_controls','view_loans','manage_loans','export_pdf','manage_members']
-    .forEach(p => { document.getElementById('p-'+p).checked = m.perms.includes(p); });
+  editingMemberId=id;
+  var m=members.find(function(x){return String(x.id)===String(id);});
+  if(!m) return;
+  document.getElementById('member-modal-title').textContent='Modifier le membre';
+  document.getElementById('member-save-btn').textContent='Enregistrer';
+  document.getElementById('m-name').value=m.name;
+  document.getElementById('m-login').value=m.login;
+  document.getElementById('m-pass').value='';
+  document.getElementById('m-pass').placeholder='Laisser vide pour conserver';
+  document.getElementById('m-email').value=m.email||'';
+  document.getElementById('m-role').value=m.role;
+  ['view_epi','add_epi','view_controls','add_controls','view_loans','manage_loans','export_pdf','manage_members'].forEach(function(p){
+    var el=document.getElementById('p-'+p); if(el) el.checked=m.perms&&m.perms.indexOf(p)!==-1;
+  });
   openModal('member');
 }
-async function deleteMember(id) {
-  if (!confirm('Supprimer ce membre ?')) return;
-  members = members.filter(m => m.id !== id);
-  await fsDelete('members', String(id));
+function deleteMember(id) {
+  if(!confirm('Supprimer ce membre ?')) return;
+  members=members.filter(function(m){return String(m.id)!==String(id);});
+  fsDelete('members',id).catch(function(){});
   renderMembers();
-  showToast('Membre supprimé');
+  showToast('Membre supprime');
 }
-async function saveMember() {
-  const name  = document.getElementById('m-name').value.trim();
-  const login = document.getElementById('m-login').value.trim();
-  const pass  = document.getElementById('m-pass').value;
-  const email = document.getElementById('m-email').value.trim();
-  const role  = document.getElementById('m-role').value;
-  if (!name || !login) { alert('Nom et identifiant obligatoires'); return; }
-  if (!editingMemberId && !pass) { alert('Mot de passe obligatoire'); return; }
-  const allPerms = ['view_epi','add_epi','view_controls','add_controls','view_loans','manage_loans','export_pdf','manage_members'];
-  const perms = allPerms.filter(p => document.getElementById('p-'+p).checked);
-  if (editingMemberId) {
-    const m = members.find(x => x.id === editingMemberId);
-    Object.assign(m, { name, login, role, perms, email });
-    if (pass) m.pass = pass;
-    if (m.id === currentUser?.id) { currentUser = m; applyPermissions(); }
-    await fsSet('members', String(m.id), m);
+function saveMember() {
+  var name=document.getElementById('m-name').value.trim();
+  var login=document.getElementById('m-login').value.trim();
+  var pass=document.getElementById('m-pass').value;
+  var email=document.getElementById('m-email').value.trim();
+  var role=document.getElementById('m-role').value;
+  if(!name||!login){alert('Nom et identifiant obligatoires');return;}
+  if(!editingMemberId&&!pass){alert('Mot de passe obligatoire');return;}
+  var allPerms=['view_epi','add_epi','view_controls','add_controls','view_loans','manage_loans','export_pdf','manage_members'];
+  var perms=allPerms.filter(function(p){var el=document.getElementById('p-'+p);return el&&el.checked;});
+  if(editingMemberId) {
+    var m=members.find(function(x){return String(x.id)===String(editingMemberId);});
+    if(m){Object.assign(m,{name:name,login:login,role:role,perms:perms,email:email});if(pass)m.pass=pass;}
+    if(currentUser&&String(currentUser.id)===String(editingMemberId)){currentUser=m;applyPermissions();}
+    fsSet('members',String(editingMemberId),m).catch(function(){});
   } else {
-    if (members.find(m => m.login === login)) { alert('Identifiant déjà utilisé'); return; }
-    const newId = Date.now();
-    const nm = { id:newId, name, login, pass, email, role, perms, lastAccess:'—' };
+    if(members.find(function(m){return m.login===login;})){alert('Identifiant deja utilise');return;}
+    var newId=String(Date.now());
+    var nm={id:newId,name:name,login:login,pass:pass,email:email,role:role,perms:perms,lastAccess:'&mdash;'};
     members.push(nm);
-    await fsSet('members', String(newId), nm);
+    fsSet('members',newId,nm).catch(function(){});
   }
-  closeModal();
-  renderMembers();
-  showToast('Membre enregistré');
+  closeModal(); renderMembers(); showToast('Membre enregistre');
 }
 function updateRolePerms() {
-  const role = document.getElementById('m-role').value;
-  const p = ROLE_PERMS[role] || [];
-  ['view_epi','add_epi','view_controls','add_controls','view_loans','manage_loans','export_pdf','manage_members']
-    .forEach(perm => { document.getElementById('p-'+perm).checked = p.includes(perm); });
+  var role=document.getElementById('m-role').value;
+  var p=ROLE_PERMS[role]||[];
+  ['view_epi','add_epi','view_controls','add_controls','view_loans','manage_loans','export_pdf','manage_members'].forEach(function(perm){
+    var el=document.getElementById('p-'+perm); if(el) el.checked=p.indexOf(perm)!==-1;
+  });
 }
 
 // ==================== MODALS ====================
-const ALL_MODALS = ['modal-add','modal-qr','modal-control','modal-loan','modal-member','modal-pdf',
+var ALL_MODALS=['modal-add','modal-qr','modal-control','modal-loan','modal-member','modal-pdf',
   'modal-batch','modal-batch-ctrl','modal-photo','modal-history','modal-check','modal-bulk-ctrl'];
 function showModal(id) {
-  ALL_MODALS.forEach(x => document.getElementById(x)?.classList.add('hidden'));
+  ALL_MODALS.forEach(function(x){var el=document.getElementById(x);if(el)el.classList.add('hidden');});
   document.getElementById('modal-overlay').classList.add('open');
-  document.getElementById(id)?.classList.remove('hidden');
+  var el=document.getElementById(id); if(el) el.classList.remove('hidden');
 }
 function openModal(type) {
-  if (type === 'qr') { showModal('modal-qr'); startQR(); }
-  else if (type === 'add') {
+  if(type==='qr'){showModal('modal-qr');startQR();}
+  else if(type==='add'){
     showModal('modal-add');
-    ['f-ref','f-brand','f-model','f-norm','f-lot','f-notes'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('f-type').value = '';
-    document.getElementById('f-buy').value = document.getElementById('f-fab').value = '';
-    document.getElementById('lifespan-hint-wrap').style.display = 'none';
-    pendingEpiPhotos = []; renderPhotoPreview('f-photos-preview', [], 'epi');
+    ['f-ref','f-brand','f-model','f-norm','f-lot','f-notes'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+    var ft=document.getElementById('f-type'); if(ft) ft.value='';
+    var fb=document.getElementById('f-buy'); if(fb) fb.value='';
+    var ff=document.getElementById('f-fab'); if(ff) ff.value='';
+    var lh=document.getElementById('lifespan-hint-wrap'); if(lh) lh.style.display='none';
+    pendingEpiPhotos=[]; renderPhotoPreview('f-photos-preview',[]);
   }
-  else if (type === 'control') {
+  else if(type==='control'){
     showModal('modal-control'); populateEPISelect('c-ref');
-    document.getElementById('c-date').value = todayStr;
-    document.getElementById('c-who').value = currentUser?.name || '';
-    document.getElementById('c-notes').value = ''; document.getElementById('c-result').value = 'ok';
+    document.getElementById('c-date').value=todayStr;
+    document.getElementById('c-who').value=currentUser?currentUser.name:'';
+    document.getElementById('c-notes').value='';
+    document.getElementById('c-result').value='ok';
   }
-  else if (type === 'loan') {
+  else if(type==='loan'){
     showModal('modal-loan'); populateEPISelect('l-ref');
-    document.getElementById('l-member').value = '';
-    document.getElementById('l-date').value = todayStr;
-    document.getElementById('l-return').value = fmt(addDays(today, 7));
+    document.getElementById('l-member').value='';
+    document.getElementById('l-date').value=todayStr;
+    document.getElementById('l-return').value=fmt(addDays(today,7));
   }
-  else if (type === 'member') {
-    if (!editingMemberId) {
-      document.getElementById('member-modal-title').textContent = 'Nouveau membre';
-      document.getElementById('member-save-btn').textContent = 'Créer';
-      ['m-name','m-login','m-pass','m-email'].forEach(id => document.getElementById(id).value = '');
-      document.getElementById('m-pass').placeholder = '••••••••';
-      document.getElementById('m-role').value = 'member'; updateRolePerms();
+  else if(type==='member'){
+    if(!editingMemberId){
+      document.getElementById('member-modal-title').textContent='Nouveau membre';
+      document.getElementById('member-save-btn').textContent='Creer';
+      ['m-name','m-login','m-pass','m-email'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+      var mp=document.getElementById('m-pass'); if(mp) mp.placeholder='••••••••';
+      var mr=document.getElementById('m-role'); if(mr) mr.value='member';
+      updateRolePerms();
     }
     showModal('modal-member');
   }
-  else if (type === 'pdf') { showModal('modal-pdf'); }
-  else if (type === 'batch') {
+  else if(type==='pdf'){showModal('modal-pdf');}
+  else if(type==='batch'){
     showModal('modal-batch');
-    ['b-name','b-brand','b-model','b-norm','b-lot','b-qty','b-prefix'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('b-type').value = '';
-    document.getElementById('b-buy').value = todayStr; document.getElementById('b-fab').value = '';
-    document.getElementById('batch-preview').textContent = '—';
-    document.getElementById('batch-lifespan-hint-wrap').style.display = 'none';
-    pendingBatchPhotos = []; renderPhotoPreview('b-photos-preview', [], 'batch');
+    ['b-name','b-brand','b-model','b-norm','b-lot','b-qty','b-prefix'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+    var bt=document.getElementById('b-type'); if(bt) bt.value='';
+    var bb=document.getElementById('b-buy'); if(bb) bb.value=todayStr;
+    var bfab=document.getElementById('b-fab'); if(bfab) bfab.value='';
+    var bp=document.getElementById('batch-preview'); if(bp) bp.textContent='&mdash;';
+    var bh=document.getElementById('batch-lifespan-hint-wrap'); if(bh) bh.style.display='none';
+    pendingBatchPhotos=[]; renderPhotoPreview('b-photos-preview',[]);
   }
 }
-function openPDFModal() { editingMemberId = null; openModal('pdf'); }
-function closeModal() {
+function openPDFModal(){editingMemberId=null;openModal('pdf');}
+function closeModal(){
   document.getElementById('modal-overlay').classList.remove('open');
-  stopQR(); closePhotoCapture(); editingMemberId = null;
+  stopQR(); closePhotoCapture(); editingMemberId=null;
 }
-function closeModalOverlay(e) { if (e.target === document.getElementById('modal-overlay')) closeModal(); }
-function openModalControl(ref) { openModal('control'); document.getElementById('c-ref').value = ref; }
-function populateEPISelect(selId) {
-  document.getElementById(selId).innerHTML = '<option value="">Choisir…</option>' +
-    epis.filter(e => e.status !== 'retired' && e.status !== 'lost')
-      .map(e => `<option value="${e.ref}">${e.ref} — ${e.type} ${e.brand}</option>`).join('');
+function closeModalOverlay(e){if(e.target===document.getElementById('modal-overlay'))closeModal();}
+function openModalControl(ref){openModal('control');document.getElementById('c-ref').value=ref;}
+function populateEPISelect(selId){
+  var sel=document.getElementById(selId); if(!sel) return;
+  sel.innerHTML='<option value="">Choisir...</option>'+epis.filter(function(e){return e.status!=='retired'&&e.status!=='lost';})
+    .map(function(e){return '<option value="'+e.ref+'">'+e.ref+' \u2014 '+e.type+' '+e.brand+'</option>';}).join('');
 }
 
 // ==================== ADD EPI ====================
-async function addEPI(prefill) {
-  const data = prefill || {};
-  const ref  = (data.ref || document.getElementById('f-ref').value).trim();
-  const type = data.type || document.getElementById('f-type').value;
-  if (!ref || !type) { alert('Référence et type sont obligatoires'); return; }
-  if (epis.find(e => e.ref === ref)) { alert('Référence déjà existante'); return; }
-
-  showLoading('Enregistrement…');
-  let photos = [...pendingEpiPhotos];
-  photos = await Promise.all(photos.map((p, i) => uploadPhotoToStorage(p, `epis/${ref}/photo_${i}.jpg`)));
-  const epi = {
-    ref, type,
-    brand: data.brand || document.getElementById('f-brand').value,
-    model: data.model || document.getElementById('f-model').value,
-    buy: document.getElementById('f-buy').value || todayStr,
-    fab: document.getElementById('f-fab').value || '',
-    norm: data.norm || document.getElementById('f-norm').value,
-    lot: data.lot || document.getElementById('f-lot').value,
-    status: 'ok', lastCtrl: '', notes: document.getElementById('f-notes').value,
-    photos
-  };
-  epis.push(epi);
-  pendingEpiPhotos = [];
-  await fsSet('epis', ref, epi);
-  hideLoading();
-  closeModal();
-  renderInventory(); renderDashboard();
-  showToast('EPI ajouté avec succès');
+function addEPI(prefill) {
+  var data=prefill||{};
+  var ref=(data.ref||document.getElementById('f-ref').value).trim();
+  var type=data.type||document.getElementById('f-type').value;
+  if(!ref||!type){alert('Reference et type obligatoires');return;}
+  if(epis.find(function(e){return e.ref===ref;})){alert('Reference deja existante');return;}
+  showLoading('Enregistrement...');
+  var photos=pendingEpiPhotos.slice();
+  Promise.all(photos.map(function(p,i){return uploadPhotoToStorage(p,'epis/'+ref+'/photo_'+i+'.jpg');}))
+  .then(function(uploadedPhotos){
+    var epi={ref:ref,type:type,
+      brand:data.brand||document.getElementById('f-brand').value,
+      model:data.model||document.getElementById('f-model').value,
+      buy:document.getElementById('f-buy').value||todayStr,
+      fab:document.getElementById('f-fab').value||'',
+      norm:data.norm||document.getElementById('f-norm').value,
+      lot:data.lot||document.getElementById('f-lot').value,
+      status:'ok',lastCtrl:'',
+      notes:document.getElementById('f-notes').value,
+      photos:uploadedPhotos
+    };
+    epis.push(epi); pendingEpiPhotos=[];
+    return fsSet('epis',ref,epi);
+  }).then(function(){
+    hideLoading(); closeModal(); renderInventory(); renderDashboard();
+    showToast('EPI ajoute avec succes');
+  }).catch(function(e){hideLoading();showToast('Erreur: '+e.message,'err');console.error(e);});
 }
 
 // ==================== ADD CONTROL ====================
-async function addControl() {
-  const ref    = document.getElementById('c-ref').value;
-  const date   = document.getElementById('c-date').value;
-  const who    = document.getElementById('c-who').value.trim();
-  const result = document.getElementById('c-result').value;
-  if (!ref || !date || !who) { alert('Champs obligatoires manquants'); return; }
-  const ctrl = { id: uid(), date, ref, who, result, notes: document.getElementById('c-notes').value };
-  controls.push(ctrl);
-  const epi = epis.find(e => e.ref === ref);
-  if (epi) { epi.lastCtrl = date; epi.status = result; await fsSet('epis', ref, epi); }
-  await fsSet('controls', ctrl.id, ctrl);
-  closeModal();
-  renderControls(); renderDashboard(); updateAlertBadge();
-  showToast('Contrôle enregistré');
+function addControl() {
+  var ref=document.getElementById('c-ref').value;
+  var date=document.getElementById('c-date').value;
+  var who=document.getElementById('c-who').value.trim();
+  var result=document.getElementById('c-result').value;
+  if(!ref||!date||!who){alert('Champs obligatoires manquants');return;}
+  var ctrl={id:uid(),date:date,ref:ref,who:who,result:result,notes:document.getElementById('c-notes').value};
+  controls.unshift(ctrl);
+  var epi=epis.find(function(e){return e.ref===ref;});
+  if(epi){epi.lastCtrl=date;epi.status=result;}
+  fsSet('controls',ctrl.id,ctrl).catch(function(){});
+  if(epi) fsSet('epis',ref,epi).catch(function(){});
+  closeModal(); renderControls(); renderDashboard(); updateAlertBadge();
+  showToast('Controle enregistre');
 }
 
 // ==================== ADD LOAN ====================
-async function addLoan() {
-  const member = document.getElementById('l-member').value.trim();
-  const ref    = document.getElementById('l-ref').value;
-  if (!member || !ref) { alert('Adhérent et EPI obligatoires'); return; }
-  const loan = { id: uid(), date: document.getElementById('l-date').value, member, ref,
-    returnDate: document.getElementById('l-return').value, status: 'active' };
+function addLoan() {
+  var member=document.getElementById('l-member').value.trim();
+  var ref=document.getElementById('l-ref').value;
+  if(!member||!ref){alert('Adherent et EPI obligatoires');return;}
+  var loan={id:uid(),date:document.getElementById('l-date').value,member:member,ref:ref,
+    returnDate:document.getElementById('l-return').value,status:'active'};
   loans.push(loan);
-  await fsSet('loans', loan.id, loan);
-  closeModal();
-  renderLoans();
-  showToast('Prêt créé');
+  fsSet('loans',loan.id,loan).catch(function(){});
+  closeModal(); renderLoans();
+  showToast('Pret cree');
 }
 
 // ==================== LIFESPAN HINT ====================
 function updateLifespanHint() {
-  const type = document.getElementById('f-type').value;
-  const cfg  = EPI_CONFIG[type];
-  const wrap = document.getElementById('lifespan-hint-wrap');
-  if (cfg) {
-    document.getElementById('lifespan-hint').textContent =
-      `Durée max : ${cfg.lifeMax} ans — Usage intensif : ${cfg.lifeUse} ans — Contrôle tous les ${cfg.ctrlMonths} mois — Norme ${cfg.norm}`;
-    wrap.style.display = 'block';
-    let btn = document.getElementById('lifespan-check-btn');
-    if (!btn) {
-      btn = Object.assign(document.createElement('button'), { id:'lifespan-check-btn', type:'button', className:'btn btn-sm', style:'margin-top:6px', textContent:'📋 Voir la fiche de contrôle' });
-      wrap.querySelector('div').append(document.createElement('br'), btn);
+  var type=document.getElementById('f-type').value;
+  var cfg=EPI_CONFIG[type];
+  var wrap=document.getElementById('lifespan-hint-wrap');
+  if(cfg){
+    document.getElementById('lifespan-hint').textContent='Max: '+cfg.lifeMax+' ans \u2014 Usage: '+cfg.lifeUse+' ans \u2014 Controle /'+cfg.ctrlMonths+' mois \u2014 Norme '+cfg.norm;
+    wrap.style.display='block';
+    var btn=document.getElementById('lifespan-check-btn');
+    if(!btn){
+      btn=document.createElement('button');
+      btn.id='lifespan-check-btn'; btn.type='button'; btn.className='btn btn-sm';
+      btn.style.marginTop='6px'; btn.textContent='Voir la fiche de controle';
+      wrap.querySelector('div').appendChild(btn);
     }
-    btn.onclick = () => openCheckSheet(type);
-  } else { wrap.style.display = 'none'; }
+    btn.onclick=function(){openCheckSheet(type);};
+  } else { wrap.style.display='none'; }
 }
 
 // ==================== QR CODE ====================
 function startQR() {
-  if (!navigator.mediaDevices?.getUserMedia) { document.getElementById('qr-result').textContent = '⚠ Caméra non disponible.'; return; }
-  navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' } })
-    .then(stream => {
-      qrStream = stream;
-      const video = document.getElementById('qr-video');
-      video.srcObject = stream; video.play();
-      if ('BarcodeDetector' in window) {
-        const bd = new BarcodeDetector({ formats:['qr_code'] });
-        qrInterval = setInterval(async () => {
-          try { const bc = await bd.detect(video); if (bc.length) processQR(bc[0].rawValue); } catch(e) {}
-        }, 400);
-      } else {
-        document.getElementById('qr-result').innerHTML = '📷 Caméra active. BarcodeDetector non supporté — collez le contenu manuellement :<br><input type="text" style="width:100%;margin-top:8px" placeholder="EPI:REF:TYPE:..." oninput="processQR(this.value)">';
-      }
-    }).catch(() => { document.getElementById('qr-result').textContent = '⚠ Accès caméra refusé.'; });
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    document.getElementById('qr-result').textContent='Camera non disponible.'; return;
+  }
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
+  .then(function(stream){
+    qrStream=stream;
+    var video=document.getElementById('qr-video'); video.srcObject=stream; video.play();
+    if('BarcodeDetector' in window){
+      var bd=new BarcodeDetector({formats:['qr_code']});
+      qrInterval=setInterval(function(){
+        bd.detect(video).then(function(bc){if(bc.length)processQR(bc[0].rawValue);}).catch(function(){});
+      },400);
+    } else {
+      document.getElementById('qr-result').innerHTML='Camera active. BarcodeDetector non supporte &mdash; collez le contenu manuellement :<br><input type="text" style="width:100%;margin-top:8px" placeholder="EPI:REF:TYPE:..." oninput="processQR(this.value)">';
+    }
+  }).catch(function(){document.getElementById('qr-result').textContent='Acces camera refuse.';});
 }
-function stopQR() {
-  if (qrStream) { qrStream.getTracks().forEach(t => t.stop()); qrStream = null; }
-  if (qrInterval) { clearInterval(qrInterval); qrInterval = null; }
-  qrParsed = null;
-  document.getElementById('qr-confirm-btn')?.classList.add('hidden');
+function stopQR(){
+  if(qrStream){qrStream.getTracks().forEach(function(t){t.stop();});qrStream=null;}
+  if(qrInterval){clearInterval(qrInterval);qrInterval=null;}
+  qrParsed=null;
+  var b=document.getElementById('qr-confirm-btn'); if(b) b.classList.add('hidden');
 }
-function processQR(raw) {
-  if (!raw?.startsWith('EPI:')) { document.getElementById('qr-result').textContent = '⚠ QR non reconnu.'; return; }
-  const parts = raw.split(':');
-  qrParsed = { ref:parts[1], type:parts[2], brand:parts[3]||'', model:parts[4]||'', norm:parts[5]||'', lot:parts[6]||'' };
-  const exists = epis.find(e => e.ref === qrParsed.ref);
-  if (exists) { document.getElementById('qr-result').innerHTML = `✓ EPI déjà en inventaire : <strong>${exists.ref}</strong>`; document.getElementById('qr-confirm-btn')?.classList.add('hidden'); return; }
-  document.getElementById('qr-result').innerHTML = `✓ Détecté : <strong>${qrParsed.ref}</strong> — ${qrParsed.type} ${qrParsed.brand} ${qrParsed.model}`;
-  document.getElementById('qr-confirm-btn')?.classList.remove('hidden');
+function processQR(raw){
+  if(!raw||raw.indexOf('EPI:')!==0){document.getElementById('qr-result').textContent='QR non reconnu.';return;}
+  var parts=raw.split(':');
+  qrParsed={ref:parts[1],type:parts[2],brand:parts[3]||'',model:parts[4]||'',norm:parts[5]||'',lot:parts[6]||''};
+  var exists=epis.find(function(e){return e.ref===qrParsed.ref;});
+  if(exists){document.getElementById('qr-result').innerHTML='Deja en inventaire : <strong>'+exists.ref+'</strong>';var b=document.getElementById('qr-confirm-btn');if(b)b.classList.add('hidden');return;}
+  document.getElementById('qr-result').innerHTML='Detecte : <strong>'+qrParsed.ref+'</strong> &mdash; '+qrParsed.type+' '+qrParsed.brand+' '+qrParsed.model;
+  var b=document.getElementById('qr-confirm-btn'); if(b) b.classList.remove('hidden');
   stopQR();
 }
-function confirmQRAdd() {
-  if (!qrParsed) return;
-  document.getElementById('f-ref').value   = qrParsed.ref;
-  document.getElementById('f-type').value  = EPI_CONFIG[qrParsed.type] ? qrParsed.type : '';
-  document.getElementById('f-brand').value = qrParsed.brand;
-  document.getElementById('f-model').value = qrParsed.model;
-  document.getElementById('f-norm').value  = qrParsed.norm;
-  document.getElementById('f-lot').value   = qrParsed.lot;
-  document.getElementById('f-buy').value   = todayStr;
-  updateLifespanHint();
-  showModal('modal-add');
+function confirmQRAdd(){
+  if(!qrParsed) return;
+  document.getElementById('f-ref').value=qrParsed.ref;
+  document.getElementById('f-type').value=EPI_CONFIG[qrParsed.type]?qrParsed.type:'';
+  document.getElementById('f-brand').value=qrParsed.brand;
+  document.getElementById('f-model').value=qrParsed.model;
+  document.getElementById('f-norm').value=qrParsed.norm;
+  document.getElementById('f-lot').value=qrParsed.lot;
+  document.getElementById('f-buy').value=todayStr;
+  updateLifespanHint(); showModal('modal-add');
 }
 
 // ==================== BATCH ====================
-function updateBatchPreview() {
-  const prefix = document.getElementById('b-prefix').value.trim().toUpperCase();
-  const qty    = parseInt(document.getElementById('b-qty').value) || 0;
-  const el     = document.getElementById('batch-preview');
-  if (!prefix || qty < 1) { el.textContent = '—'; return; }
-  const refs = Array.from({length:Math.min(qty,5)}, (_,i) => `${prefix}-${String(i+1).padStart(3,'0')}`);
-  el.textContent = refs.join(', ') + (qty > 5 ? ` … ${prefix}-${String(qty).padStart(3,'0')} (${qty} au total)` : '');
+function updateBatchPreview(){
+  var prefix=(document.getElementById('b-prefix').value||'').trim().toUpperCase();
+  var qty=parseInt(document.getElementById('b-qty').value)||0;
+  var el=document.getElementById('batch-preview');
+  if(!prefix||qty<1){el.textContent='&mdash;';return;}
+  var refs=[];
+  for(var i=1;i<=Math.min(qty,5);i++) refs.push(prefix+'-'+String(i).padStart(3,'0'));
+  el.textContent=refs.join(', ')+(qty>5?' ... '+prefix+'-'+String(qty).padStart(3,'0')+' ('+qty+' au total)':'');
 }
-function updateBatchLifespanHint() {
-  const type = document.getElementById('b-type').value;
-  const cfg  = EPI_CONFIG[type];
-  const wrap = document.getElementById('batch-lifespan-hint-wrap');
-  if (cfg) { document.getElementById('batch-lifespan-hint').textContent = `Durée max : ${cfg.lifeMax} ans — Usage : ${cfg.lifeUse} ans — Contrôle /${cfg.ctrlMonths} mois — Norme ${cfg.norm}`; wrap.style.display = 'block'; }
-  else { wrap.style.display = 'none'; }
+function updateBatchLifespanHint(){
+  var type=document.getElementById('b-type').value;
+  var cfg=EPI_CONFIG[type];
+  var wrap=document.getElementById('batch-lifespan-hint-wrap');
+  if(cfg){document.getElementById('batch-lifespan-hint').textContent='Max: '+cfg.lifeMax+'a \u2014 Usage: '+cfg.lifeUse+'a \u2014 /'+cfg.ctrlMonths+' mois \u2014 '+cfg.norm; wrap.style.display='block';}
+  else wrap.style.display='none';
 }
-async function createBatch() {
-  const name   = document.getElementById('b-name').value.trim();
-  const type   = document.getElementById('b-type').value;
-  const qty    = parseInt(document.getElementById('b-qty').value);
-  const prefix = document.getElementById('b-prefix').value.trim().toUpperCase();
-  if (!name || !type || !qty || !prefix) { alert('Nom, type, quantité et préfixe obligatoires'); return; }
-  const batchId = `LOT-${new Date().getFullYear()}-${String(nextBatchNum++).padStart(3,'0')}`;
-  const buy = document.getElementById('b-buy').value || todayStr;
-  const fab = document.getElementById('b-fab').value || '';
-  const brand = document.getElementById('b-brand').value;
-  const model = document.getElementById('b-model').value;
-  const norm  = document.getElementById('b-norm').value;
-  const lot   = document.getElementById('b-lot').value;
-  const newRefs = [], conflicts = [];
-  for (let i = 1; i <= qty; i++) {
-    const r = `${prefix}-${String(i).padStart(3,'0')}`;
-    epis.find(e => e.ref === r) ? conflicts.push(r) : newRefs.push(r);
-  }
-  if (conflicts.length && !confirm(`${conflicts.length} référence(s) existent déjà. Continuer sans elles ?`)) return;
-
-  showLoading('Création du lot…');
-  let photos = [...pendingBatchPhotos];
-  photos = await Promise.all(photos.map((p,i) => uploadPhotoToStorage(p, `batches/${batchId}/photo_${i}.jpg`)));
-  const batch = { id:batchId, name, type, brand, model, buy, fab, norm, lot, created:todayStr, photos };
-  batches.push(batch);
-  await fsSet('batches', batchId, batch);
-  for (const ref of newRefs) {
-    const epi = { ref, type, brand, model, buy, fab, norm, lot, status:'ok', lastCtrl:'', notes:'', photos:[], batchId };
-    epis.push(epi);
-    await fsSet('epis', ref, epi);
-  }
-  pendingBatchPhotos = [];
-  hideLoading();
-  closeModal();
-  showPage('batches', document.querySelector('[onclick*="batches"]')); renderBatches(); renderDashboard();
-  showToast(`Lot créé — ${newRefs.length} EPI générés`);
-  setTimeout(() => { if (currentPage === 'batches') toggleBatch(batchId); }, 300);
+function createBatch(){
+  var name=document.getElementById('b-name').value.trim();
+  var type=document.getElementById('b-type').value;
+  var qty=parseInt(document.getElementById('b-qty').value);
+  var prefix=(document.getElementById('b-prefix').value||'').trim().toUpperCase();
+  if(!name||!type||!qty||!prefix){alert('Nom, type, quantite et prefixe obligatoires');return;}
+  var batchId='LOT-'+new Date().getFullYear()+'-'+String(nextBatchNum++).padStart(3,'0');
+  var buy=document.getElementById('b-buy').value||todayStr;
+  var fab=document.getElementById('b-fab').value||'';
+  var brand=document.getElementById('b-brand').value;
+  var model=document.getElementById('b-model').value;
+  var norm=document.getElementById('b-norm').value;
+  var lot=document.getElementById('b-lot').value;
+  var newRefs=[],conflicts=[];
+  for(var i=1;i<=qty;i++){var r=prefix+'-'+String(i).padStart(3,'0'); epis.find(function(e){return e.ref===r;})?conflicts.push(r):newRefs.push(r);}
+  if(conflicts.length&&!confirm(conflicts.length+' references existent deja. Continuer?')) return;
+  showLoading('Creation du lot...');
+  var photos=pendingBatchPhotos.slice();
+  Promise.all(photos.map(function(p,i){return uploadPhotoToStorage(p,'batches/'+batchId+'/photo_'+i+'.jpg');}))
+  .then(function(uploadedPhotos){
+    var batch={id:batchId,name:name,type:type,brand:brand,model:model,buy:buy,fab:fab,norm:norm,lot:lot,created:todayStr,photos:uploadedPhotos};
+    batches.push(batch); pendingBatchPhotos=[];
+    var promises=[fsSet('batches',batchId,batch)];
+    newRefs.forEach(function(ref){
+      var epi={ref:ref,type:type,brand:brand,model:model,buy:buy,fab:fab,norm:norm,lot:lot,status:'ok',lastCtrl:'',notes:'',photos:[],batchId:batchId};
+      epis.push(epi); promises.push(fsSet('epis',ref,epi));
+    });
+    return Promise.all(promises);
+  }).then(function(){
+    hideLoading(); closeModal();
+    showPage('batches',document.querySelector('[onclick*="batches"]'));
+    renderBatches(); renderDashboard();
+    showToast('Lot cree \u2014 '+newRefs.length+' EPI generes');
+    setTimeout(function(){toggleBatch(batchId);},200);
+  }).catch(function(e){hideLoading();showToast('Erreur: '+e.message,'err');console.error(e);});
 }
-
-function renderBatches() {
-  const container = document.getElementById('batches-list');
-  if (!batches.length) { container.innerHTML = `<div style="text-align:center;padding:48px;color:var(--text2)">Aucun lot. Utilisez "+ Créer un lot".</div>`; return; }
-  container.innerHTML = batches.map(b => {
-    const bEpis = epis.filter(e => e.batchId === b.id);
-    const total   = bEpis.length;
-    const ok      = bEpis.filter(e => getStatus(e) === 'ok').length;
-    const warn    = bEpis.filter(e => getStatus(e) === 'warn').length;
-    const danger  = bEpis.filter(e => getStatus(e) === 'danger').length;
-    const retired = bEpis.filter(e => e.status === 'retired').length;
-    const active  = total - retired;
-    const cfg     = EPI_CONFIG[b.type];
-    return `<div class="batch-card" id="bcard-${b.id}">
-      <div class="batch-header" onclick="toggleBatch('${b.id}')">
-        <div class="batch-chevron" id="bchev-${b.id}">▶</div>
-        <div class="batch-info">
-          <div class="batch-name">${b.name}</div>
-          <div class="batch-meta">${b.type} — ${b.brand} ${b.model} — Acheté le ${b.buy}${cfg?' — max '+cfg.lifeMax+'a':''}</div>
-        </div>
-        <div class="batch-stats">
-          <div class="batch-stat"><div class="batch-stat-val c-neutral">${total}</div><div class="batch-stat-lbl">Total</div></div>
-          <div class="batch-stat"><div class="batch-stat-val c-ok">${ok}</div><div class="batch-stat-lbl">OK</div></div>
-          ${warn ? `<div class="batch-stat"><div class="batch-stat-val c-warn">${warn}</div><div class="batch-stat-lbl">Réserve</div></div>` : ''}
-          ${danger ? `<div class="batch-stat"><div class="batch-stat-val c-danger">${danger}</div><div class="batch-stat-lbl">Alerte</div></div>` : ''}
-          ${retired ? `<div class="batch-stat"><div class="batch-stat-val c-neutral">${retired}</div><div class="batch-stat-lbl">Réformés</div></div>` : ''}
-        </div>
-      </div>
-      <div class="batch-body" id="bbody-${b.id}">
-        <div class="batch-actions-row">
-          ${hasPerm('add_controls') ? `<button class="btn btn-sm btn-primary" onclick="openBatchControl('${b.id}')">✓ Contrôle du lot</button>` : ''}
-          <button class="btn btn-sm" onclick="openHistory('batch','${b.id}')">📋 Historique</button>
-          <span style="font-size:13px;color:var(--text2);margin-left:4px">${active} EPI actif${active>1?'s':''}</span>
-        </div>
-        ${b.photos?.length ? `<div class="photo-grid" style="padding:0 20px 10px">${b.photos.map(p=>`<img src="${p}" class="photo-thumb">`).join('')}</div>` : ''}
-        ${bEpis.map(e => {
-          const s = getStatus(e), next = getNextCtrl(e), isRetired = e.status === 'retired';
-          return `<div class="batch-item-row" style="${isRetired?'opacity:0.5':''}">
-            <div class="batch-item-ref">${e.ref}</div>
-            <div class="batch-item-info">${e.brand} ${e.model} — dernier : ${e.lastCtrl||'jamais'} — prochain : ${next||'—'}</div>
-            <div class="batch-item-ctrl">
-              ${badgeHtml(s)}
-              <button class="btn btn-sm" onclick="openHistory('epi','${e.ref}')">📋</button>
-              ${hasPerm('add_epi') && !isRetired ? `<button class="btn btn-sm btn-danger" onclick="detachFromBatch('${e.ref}')">↗ Sortir</button>` : ''}
-            </div>
-          </div>`;
-        }).join('')}
-        ${bEpis.length === 0 ? `<div style="padding:16px 20px;font-size:13px;color:var(--text2)">Aucun EPI dans ce lot.</div>` : ''}
-      </div>
-    </div>`;
+function renderBatches(){
+  var container=document.getElementById('batches-list');
+  if(!batches.length){container.innerHTML='<div style="text-align:center;padding:48px;color:var(--text2)">Aucun lot. Utilisez "+ Creer un lot".</div>';return;}
+  container.innerHTML=batches.map(function(b){
+    var bEpis=epis.filter(function(e){return e.batchId===b.id;});
+    var total=bEpis.length,ok=bEpis.filter(function(e){return getStatus(e)==='ok';}).length;
+    var warn=bEpis.filter(function(e){return getStatus(e)==='warn';}).length;
+    var danger=bEpis.filter(function(e){return getStatus(e)==='danger';}).length;
+    var retired=bEpis.filter(function(e){return e.status==='retired';}).length;
+    var active=total-retired; var cfg=EPI_CONFIG[b.type];
+    var photosHtml=b.photos&&b.photos.length?'<div class="photo-grid" style="padding:0 20px 10px">'+b.photos.map(function(p){return '<img src="'+p+'" class="photo-thumb">';}).join('')+'</div>':'';
+    var itemsHtml=bEpis.map(function(e){
+      var s=getStatus(e),next=getNextCtrl(e),isRetired=e.status==='retired';
+      var ctrlBtn=hasPerm('add_epi')&&!isRetired?'<button class="btn btn-sm btn-danger" onclick="detachFromBatch(\''+e.ref+'\')">&#8599; Sortir</button>':'';
+      return '<div class="batch-item-row" style="'+(isRetired?'opacity:0.5':'')+'"><div class="batch-item-ref">'+e.ref+'</div>'
+        +'<div class="batch-item-info">'+e.brand+' '+e.model+' \u2014 dernier: '+(e.lastCtrl||'jamais')+' \u2014 prochain: '+(next||'&mdash;')+'</div>'
+        +'<div class="batch-item-ctrl">'+badgeHtml(s)+'<button class="btn btn-sm" onclick="openHistory(\'epi\',\''+e.ref+'\')">&#128203;</button>'+ctrlBtn+'</div></div>';
+    }).join('')+(bEpis.length===0?'<div style="padding:16px 20px;font-size:13px;color:var(--text2)">Aucun EPI dans ce lot.</div>':'');
+    return '<div class="batch-card" id="bcard-'+b.id+'">'
+      +'<div class="batch-header" onclick="toggleBatch(\''+b.id+'\')"><div class="batch-chevron" id="bchev-'+b.id+'">&#9654;</div>'
+      +'<div class="batch-info"><div class="batch-name">'+b.name+'</div><div class="batch-meta">'+b.type+' \u2014 '+b.brand+' '+b.model+' \u2014 Achat: '+b.buy+(cfg?' \u2014 max '+cfg.lifeMax+'a':'')+'</div></div>'
+      +'<div class="batch-stats">'
+      +'<div class="batch-stat"><div class="batch-stat-val c-neutral">'+total+'</div><div class="batch-stat-lbl">Total</div></div>'
+      +'<div class="batch-stat"><div class="batch-stat-val c-ok">'+ok+'</div><div class="batch-stat-lbl">OK</div></div>'
+      +(warn?'<div class="batch-stat"><div class="batch-stat-val c-warn">'+warn+'</div><div class="batch-stat-lbl">Reserve</div></div>':'')
+      +(danger?'<div class="batch-stat"><div class="batch-stat-val c-danger">'+danger+'</div><div class="batch-stat-lbl">Alerte</div></div>':'')
+      +(retired?'<div class="batch-stat"><div class="batch-stat-val c-neutral">'+retired+'</div><div class="batch-stat-lbl">Reforms</div></div>':'')
+      +'</div></div>'
+      +'<div class="batch-body" id="bbody-'+b.id+'">'
+      +'<div class="batch-actions-row">'
+      +(hasPerm('add_controls')?'<button class="btn btn-sm btn-primary" onclick="openBatchControl(\''+b.id+'\')">&#10003; Controle du lot</button>':'')
+      +'<button class="btn btn-sm" onclick="openHistory(\'batch\',\''+b.id+'\')">&#128203; Historique</button>'
+      +'<span style="font-size:13px;color:var(--text2);margin-left:4px">'+active+' EPI actif'+(active>1?'s':'')+'</span>'
+      +'</div>'+photosHtml+itemsHtml+'</div></div>';
   }).join('');
   updateBatchBadge();
 }
-
-function toggleBatch(id) {
-  document.getElementById('bbody-'+id)?.classList.toggle('open');
-  document.getElementById('bchev-'+id)?.classList.toggle('open');
+function toggleBatch(id){
+  var b=document.getElementById('bbody-'+id); if(b) b.classList.toggle('open');
+  var c=document.getElementById('bchev-'+id); if(c) c.classList.toggle('open');
 }
-
-function openBatchControl(batchId) {
-  const batch = batches.find(b => b.id === batchId);
-  const bEpis = epis.filter(e => e.batchId === batchId && e.status !== 'retired');
-  if (!bEpis.length) { alert('Aucun EPI actif dans ce lot'); return; }
-  batchCtrlTarget = { batchId, items: bEpis.map(e => ({ ref:e.ref, result:'ok' })) };
-  document.getElementById('bctrl-title').textContent = `Contrôle du lot — ${batch.name}`;
-  document.getElementById('bctrl-desc').textContent  = `${bEpis.length} EPI — ${batch.type} ${batch.brand} ${batch.model}`;
-  document.getElementById('bc-date').value = todayStr;
-  document.getElementById('bc-who').value  = currentUser?.name || '';
-  renderBatchCtrlItems();
-  showModal('modal-batch-ctrl');
+function openBatchControl(batchId){
+  var batch=batches.find(function(b){return b.id===batchId;});
+  var bEpis=epis.filter(function(e){return e.batchId===batchId&&e.status!=='retired';});
+  if(!bEpis.length){alert('Aucun EPI actif dans ce lot');return;}
+  batchCtrlTarget={batchId:batchId,items:bEpis.map(function(e){return {ref:e.ref,result:'ok'};})};
+  document.getElementById('bctrl-title').textContent='Controle du lot \u2014 '+batch.name;
+  document.getElementById('bctrl-desc').textContent=bEpis.length+' EPI \u2014 '+batch.type+' '+batch.brand+' '+batch.model;
+  document.getElementById('bc-date').value=todayStr;
+  document.getElementById('bc-who').value=currentUser?currentUser.name:'';
+  renderBatchCtrlItems(); showModal('modal-batch-ctrl');
 }
-function renderBatchCtrlItems() {
-  const colors = { ok:'var(--accent)', warn:'var(--warn)', danger:'var(--danger)', retired:'var(--text2)', lost:'#5b21b6' };
-  document.getElementById('bctrl-items').innerHTML = batchCtrlTarget.items.map((item, idx) => {
-    const epi = epis.find(e => e.ref === item.ref);
-    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--border);font-size:14px">
-      <div style="font-weight:700;min-width:88px">${item.ref}</div>
-      <div style="flex:1;color:var(--text2);font-size:13px">${epi?epi.brand+' '+epi.model:''}</div>
-      <select onchange="setBatchItemResult(${idx},this.value)" style="padding:6px 8px;border-radius:8px;border:1px solid var(--border2);font-size:13px;color:var(--accent);font-weight:600;font-family:var(--font)">
-        <option value="ok" ${item.result==='ok'?'selected':''}>✓ Conforme</option>
-        <option value="warn" ${item.result==='warn'?'selected':''}>⚠ Réserve</option>
-        <option value="danger" ${item.result==='danger'?'selected':''}>✖ Non-conforme</option>
-        <option value="retired" ${item.result==='retired'?'selected':''}>— Réformer</option>
-        <option value="lost" ${item.result==='lost'?'selected':''}>? Introuvable</option>
-      </select>
-    </div>`;
+function renderBatchCtrlItems(){
+  var c={ok:'var(--accent)',warn:'var(--warn)',danger:'var(--danger)',retired:'var(--text2)',lost:'#5b21b6'};
+  document.getElementById('bctrl-items').innerHTML=batchCtrlTarget.items.map(function(item,idx){
+    var epi=epis.find(function(e){return e.ref===item.ref;});
+    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--border);font-size:14px">'
+      +'<div style="font-weight:700;min-width:88px">'+item.ref+'</div>'
+      +'<div style="flex:1;color:var(--text2);font-size:13px">'+(epi?epi.brand+' '+epi.model:'')+'</div>'
+      +'<select onchange="setBatchItemResult('+idx+',this.value)" style="padding:6px 8px;border-radius:8px;border:1px solid var(--border2);font-size:13px;color:'+c[item.result]+';font-weight:600;font-family:var(--font)">'
+      +'<option value="ok"'+(item.result==='ok'?' selected':'')+'>&#10003; Conforme</option>'
+      +'<option value="warn"'+(item.result==='warn'?' selected':'')+'>&#9888; Reserve</option>'
+      +'<option value="danger"'+(item.result==='danger'?' selected':'')+'>&#10007; Non-conforme</option>'
+      +'<option value="retired"'+(item.result==='retired'?' selected':'')+'>&mdash; Reformer</option>'
+      +'<option value="lost"'+(item.result==='lost'?' selected':'')+'>? Introuvable</option>'
+      +'</select></div>';
   }).join('');
   updateBatchCtrlSummary();
 }
-function setBatchItemResult(idx, val) {
-  batchCtrlTarget.items[idx].result = val;
-  const sel = document.querySelectorAll('#bctrl-items select')[idx];
-  if (sel) { const c={ok:'var(--accent)',warn:'var(--warn)',danger:'var(--danger)',retired:'var(--text2)',lost:'#5b21b6'}; sel.style.color=c[val]; }
+function setBatchItemResult(idx,val){
+  batchCtrlTarget.items[idx].result=val;
+  var sels=document.querySelectorAll('#bctrl-items select');
+  var c={ok:'var(--accent)',warn:'var(--warn)',danger:'var(--danger)',retired:'var(--text2)',lost:'#5b21b6'};
+  if(sels[idx]) sels[idx].style.color=c[val]||'var(--text2)';
   updateBatchCtrlSummary();
 }
-function setBatchCtrlAll(result) { batchCtrlTarget?.items.forEach((_,i) => setBatchItemResult(i, result)); renderBatchCtrlItems(); }
-function updateBatchCtrlSummary() {
-  const counts = {}; batchCtrlTarget?.items.forEach(i => counts[i.result] = (counts[i.result]||0)+1);
-  const lbl = { ok:'conforme', warn:'réserve', danger:'non-conforme', retired:'à réformer', lost:'introuvable' };
-  document.getElementById('bctrl-summary').textContent = 'Résumé : ' +
-    Object.entries(counts).map(([k,v]) => `${v} ${lbl[k]||k}`).join(' · ');
+function setBatchCtrlAll(result){batchCtrlTarget.items.forEach(function(_,i){setBatchItemResult(i,result);});renderBatchCtrlItems();}
+function updateBatchCtrlSummary(){
+  var counts={};
+  batchCtrlTarget.items.forEach(function(i){counts[i.result]=(counts[i.result]||0)+1;});
+  var lbl={ok:'conforme',warn:'reserve',danger:'non-conforme',retired:'a reformer',lost:'introuvable'};
+  document.getElementById('bctrl-summary').textContent='Resume: '+Object.keys(counts).map(function(k){return counts[k]+' '+lbl[k];}).join(' \u00b7 ');
 }
-async function saveBatchControl() {
-  const date = document.getElementById('bc-date').value;
-  const who  = document.getElementById('bc-who').value.trim();
-  if (!date || !who) { alert('Date et contrôleur obligatoires'); return; }
-  showLoading('Enregistrement…');
-  for (const item of batchCtrlTarget.items) {
-    const ctrl = { id:uid(), date, ref:item.ref, who, result:item.result, notes:`Contrôle lot ${batchCtrlTarget.batchId}` };
-    controls.push(ctrl);
-    const epi = epis.find(e => e.ref === item.ref);
-    if (epi) { epi.lastCtrl = date; epi.status = item.result; await fsSet('epis', item.ref, epi); }
-    await fsSet('controls', ctrl.id, ctrl);
-  }
-  hideLoading(); closeModal();
-  renderBatches(); renderDashboard(); updateAlertBadge();
-  showToast(`${batchCtrlTarget.items.length} contrôles enregistrés`);
+function saveBatchControl(){
+  var date=document.getElementById('bc-date').value;
+  var who=document.getElementById('bc-who').value.trim();
+  if(!date||!who){alert('Date et controleur obligatoires');return;}
+  showLoading('Enregistrement...');
+  var promises=[];
+  batchCtrlTarget.items.forEach(function(item){
+    var ctrl={id:uid(),date:date,ref:item.ref,who:who,result:item.result,notes:'Controle lot '+batchCtrlTarget.batchId};
+    controls.unshift(ctrl);
+    var epi=epis.find(function(e){return e.ref===item.ref;});
+    if(epi){epi.lastCtrl=date;epi.status=item.result;promises.push(fsSet('epis',item.ref,epi));}
+    promises.push(fsSet('controls',ctrl.id,ctrl));
+  });
+  Promise.all(promises).then(function(){
+    hideLoading(); closeModal(); renderBatches(); renderDashboard(); updateAlertBadge();
+    showToast(batchCtrlTarget.items.length+' controles enregistres');
+  }).catch(function(e){hideLoading();showToast('Erreur: '+e.message,'err');});
 }
-async function detachFromBatch(ref) {
-  if (!confirm(`Sortir ${ref} du lot ?`)) return;
-  const epi = epis.find(e => e.ref === ref);
-  if (epi) { delete epi.batchId; await fsUpdate('epis', ref, { batchId: null }); }
-  renderBatches();
-  showToast('EPI sorti du lot');
+function detachFromBatch(ref){
+  if(!confirm('Sortir '+ref+' du lot ?')) return;
+  var epi=epis.find(function(e){return e.ref===ref;});
+  if(epi){delete epi.batchId;fsUpdate('epis',ref,{batchId:null}).catch(function(){});}
+  renderBatches(); showToast('EPI sorti du lot');
 }
-function showBatch(batchId) {
-  showPage('batches', document.querySelector('[onclick*="batches"]'));
-  setTimeout(() => {
-    const body = document.getElementById('bbody-'+batchId);
-    if (body && !body.classList.contains('open')) toggleBatch(batchId);
-    document.getElementById('bcard-'+batchId)?.scrollIntoView({ behavior:'smooth', block:'start' });
-  }, 100);
+function showBatch(batchId){
+  showPage('batches',document.querySelector('[onclick*="batches"]'));
+  setTimeout(function(){
+    var body=document.getElementById('bbody-'+batchId);
+    if(body&&!body.classList.contains('open')) toggleBatch(batchId);
+    var card=document.getElementById('bcard-'+batchId);
+    if(card) card.scrollIntoView({behavior:'smooth',block:'start'});
+  },100);
 }
 
 // ==================== PHOTO CAPTURE ====================
-function openPhotoCapture(target) {
-  photoTarget = target; showModal('modal-photo');
-  document.getElementById('photo-preview-snap').style.display = 'none';
-  document.getElementById('photo-video').style.display = 'block';
+function openPhotoCapture(target){
+  photoTarget=target; showModal('modal-photo');
+  document.getElementById('photo-preview-snap').style.display='none';
+  document.getElementById('photo-video').style.display='block';
   startPhotoCamera();
 }
-async function startPhotoCamera() {
-  if (photoStream) photoStream.getTracks().forEach(t => t.stop());
-  try {
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    photoCameras = devices.filter(d => d.kind === 'videoinput');
-    const deviceId = photoCameras[photoCameraIndex % Math.max(photoCameras.length,1)]?.deviceId;
-    photoStream = await navigator.mediaDevices.getUserMedia({ video: deviceId ? {deviceId:{exact:deviceId}} : {facingMode:'environment'} });
-    document.getElementById('photo-video').srcObject = photoStream;
-  } catch(e) { alert('Caméra non disponible. Utilisez "Importer".'); closePhotoCapture(); }
+function startPhotoCamera(){
+  if(photoStream) photoStream.getTracks().forEach(function(t){t.stop();});
+  navigator.mediaDevices.enumerateDevices().then(function(devices){
+    photoCameras=devices.filter(function(d){return d.kind==='videoinput';});
+    var deviceId=photoCameras[photoCameraIndex%Math.max(photoCameras.length,1)]&&photoCameras[photoCameraIndex%Math.max(photoCameras.length,1)].deviceId;
+    return navigator.mediaDevices.getUserMedia({video:deviceId?{deviceId:{exact:deviceId}}:{facingMode:'environment'}});
+  }).then(function(stream){
+    photoStream=stream;
+    document.getElementById('photo-video').srcObject=stream;
+  }).catch(function(){alert('Camera non disponible. Utilisez Importer.');closePhotoCapture();});
 }
-function switchCamera() { photoCameraIndex++; startPhotoCamera(); }
-function snapPhoto() {
-  const video = document.getElementById('photo-video');
-  const canvas = document.getElementById('photo-canvas');
-  canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-  canvas.getContext('2d').drawImage(video, 0, 0);
-  document.getElementById('photo-snap-img').src = canvas.toDataURL('image/jpeg', 0.82);
-  document.getElementById('photo-preview-snap').style.display = 'block';
-  document.getElementById('photo-video').style.display = 'none';
+function switchCamera(){photoCameraIndex++;startPhotoCamera();}
+function snapPhoto(){
+  var video=document.getElementById('photo-video');
+  var canvas=document.getElementById('photo-canvas');
+  canvas.width=video.videoWidth; canvas.height=video.videoHeight;
+  canvas.getContext('2d').drawImage(video,0,0);
+  document.getElementById('photo-snap-img').src=canvas.toDataURL('image/jpeg',0.82);
+  document.getElementById('photo-preview-snap').style.display='block';
+  document.getElementById('photo-video').style.display='none';
 }
-function retakePhoto() {
-  document.getElementById('photo-preview-snap').style.display = 'none';
-  document.getElementById('photo-video').style.display = 'block';
-}
-function confirmPhoto() {
+function retakePhoto(){document.getElementById('photo-preview-snap').style.display='none';document.getElementById('photo-video').style.display='block';}
+function confirmPhoto(){
   addPhotoToTarget(document.getElementById('photo-snap-img').src);
   closePhotoCapture();
-  showModal(photoTarget === 'epi' ? 'modal-add' : 'modal-batch');
+  showModal(photoTarget==='epi'?'modal-add':'modal-batch');
 }
-function closePhotoCapture() {
-  if (photoStream) { photoStream.getTracks().forEach(t => t.stop()); photoStream = null; }
-  document.getElementById('photo-video').style.display = 'block';
-  document.getElementById('photo-preview-snap').style.display = 'none';
+function closePhotoCapture(){
+  if(photoStream){photoStream.getTracks().forEach(function(t){t.stop();});photoStream=null;}
+  var pv=document.getElementById('photo-video'); if(pv) pv.style.display='block';
+  var ps=document.getElementById('photo-preview-snap'); if(ps) ps.style.display='none';
 }
-function addPhotoToTarget(dataUrl) {
-  if (photoTarget === 'epi') { pendingEpiPhotos.push(dataUrl); renderPhotoPreview('f-photos-preview', pendingEpiPhotos, 'epi'); }
-  else { pendingBatchPhotos.push(dataUrl); renderPhotoPreview('b-photos-preview', pendingBatchPhotos, 'batch'); }
+function addPhotoToTarget(dataUrl){
+  if(photoTarget==='epi'){pendingEpiPhotos.push(dataUrl);renderPhotoPreview('f-photos-preview',pendingEpiPhotos,'epi');}
+  else{pendingBatchPhotos.push(dataUrl);renderPhotoPreview('b-photos-preview',pendingBatchPhotos,'batch');}
 }
-function importPhotos(input, target) {
-  Array.from(input.files).forEach(file => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      if (target === 'epi') { pendingEpiPhotos.push(e.target.result); renderPhotoPreview('f-photos-preview', pendingEpiPhotos, 'epi'); }
-      else { pendingBatchPhotos.push(e.target.result); renderPhotoPreview('b-photos-preview', pendingBatchPhotos, 'batch'); }
+function importPhotos(input,target){
+  Array.from(input.files).forEach(function(file){
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      if(target==='epi'){pendingEpiPhotos.push(ev.target.result);renderPhotoPreview('f-photos-preview',pendingEpiPhotos,'epi');}
+      else{pendingBatchPhotos.push(ev.target.result);renderPhotoPreview('b-photos-preview',pendingBatchPhotos,'batch');}
     };
     reader.readAsDataURL(file);
   });
-  input.value = '';
+  input.value='';
 }
-function renderPhotoPreview(containerId, photos, target) {
-  document.getElementById(containerId).innerHTML = photos.map((p,i) =>
-    `<div style="position:relative;display:inline-block">
-      <img src="${p}" class="photo-thumb">
-      <button onclick="removePhoto(${i},'${target}')" style="position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--danger);color:#fff;border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center">×</button>
-    </div>`).join('');
+function renderPhotoPreview(containerId,photos){
+  var el=document.getElementById(containerId); if(!el) return;
+  var target=containerId.indexOf('f-')===0?'epi':'batch';
+  el.innerHTML=photos.map(function(p,i){
+    return '<div style="position:relative;display:inline-block">'
+      +'<img src="'+p+'" class="photo-thumb">'
+      +'<button onclick="removePhoto('+i+',\''+target+'\')" style="position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--danger);color:#fff;border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center">&times;</button>'
+      +'</div>';
+  }).join('');
 }
-function removePhoto(idx, target) {
-  if (target === 'epi') { pendingEpiPhotos.splice(idx,1); renderPhotoPreview('f-photos-preview', pendingEpiPhotos, 'epi'); }
-  else { pendingBatchPhotos.splice(idx,1); renderPhotoPreview('b-photos-preview', pendingBatchPhotos, 'batch'); }
+function removePhoto(idx,target){
+  if(target==='epi'){pendingEpiPhotos.splice(idx,1);renderPhotoPreview('f-photos-preview',pendingEpiPhotos);}
+  else{pendingBatchPhotos.splice(idx,1);renderPhotoPreview('b-photos-preview',pendingBatchPhotos);}
 }
 
 // ==================== HISTORY ====================
-function openHistory(type, id) {
+function openHistory(type,id){
   showModal('modal-history');
-  const statusText  = { ok:'✓ Conforme', warn:'⚠ Réserve', danger:'✖ Non-conforme', retired:'— Réformé', lost:'? Introuvable' };
-  const statusColor = { ok:'var(--accent)', warn:'var(--warn)', danger:'var(--danger)', retired:'var(--text2)', lost:'#5b21b6' };
-  const yearBlock = (yearControls) => Object.keys(
-    yearControls.reduce((acc,c) => { (acc[c.date?.slice(0,4)]||=[]).push(c); return acc; }, {})
-  ).sort((a,b)=>b-a).map(year => {
-    const yc = yearControls.filter(c => c.date?.startsWith(year));
-    return `<div style="margin-bottom:18px">
-      <div style="font-size:14px;font-weight:700;color:var(--text2);margin-bottom:8px">${year} — ${yc.length} contrôle${yc.length>1?'s':''}</div>
-      <div class="table-wrap" style="margin-bottom:0"><table>
-        <thead><tr><th>Date</th><th>Contrôleur</th><th>Résultat</th><th>Observations</th></tr></thead>
-        <tbody>${yc.map(c => `<tr>
-          <td style="font-size:13px">${c.date}</td><td>${c.who}</td>
-          <td><span style="font-weight:600;color:${statusColor[c.result]||'var(--text2)'}">${statusText[c.result]||c.result}</span></td>
-          <td style="font-size:13px;color:var(--text2)">${c.notes||'—'}</td>
-        </tr>`).join('')}</tbody>
-      </table></div>
-    </div>`;
-  }).join('');
-
-  if (type === 'epi') {
-    const epi = epis.find(e => e.ref === id);
-    if (!epi) return;
-    document.getElementById('hist-title').textContent = `${epi.ref} — Historique`;
-    document.getElementById('hist-subtitle').textContent = `${epi.type} ${epi.brand} ${epi.model} — Achat : ${epi.buy}`;
-    const photos = epi.photos || [];
-    document.getElementById('hist-photos').innerHTML = photos.length ? `<div style="margin-bottom:14px"><div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Photos</div><div class="photo-grid">${photos.map(p=>`<img src="${p}" class="photo-thumb" onclick="this.style.width=this.style.width?'':'100%'">`).join('')}</div></div>` : '';
-    const epiCtrl = controls.filter(c => c.ref === id).sort((a,b) => b.date?.localeCompare(a.date));
-    document.getElementById('hist-years').innerHTML = epiCtrl.length ? yearBlock(epiCtrl) : `<div style="text-align:center;padding:32px;color:var(--text2)">Aucun contrôle enregistré.</div>`;
+  var sText={ok:'Conforme',warn:'Reserve',danger:'Non-conforme',retired:'Reforme',lost:'Introuvable'};
+  var sColor={ok:'var(--accent)',warn:'var(--warn)',danger:'var(--danger)',retired:'var(--text2)',lost:'#5b21b6'};
+  function yearBlock(ctrlList){
+    var byYear={};
+    ctrlList.forEach(function(c){var y=(c.date||'????').slice(0,4);if(!byYear[y])byYear[y]=[];byYear[y].push(c);});
+    return Object.keys(byYear).sort(function(a,b){return b-a;}).map(function(year){
+      var yc=byYear[year];
+      return '<div style="margin-bottom:18px"><div style="font-size:14px;font-weight:700;color:var(--text2);margin-bottom:8px">'+year+' &mdash; '+yc.length+' controle'+(yc.length>1?'s':'')+'</div>'
+        +'<div class="table-wrap" style="margin-bottom:0"><table><thead><tr><th>Date</th><th>Controleur</th><th>Resultat</th><th>Observations</th></tr></thead><tbody>'
+        +yc.map(function(c){
+          return '<tr><td style="font-size:13px">'+c.date+'</td><td>'+c.who+'</td>'
+            +'<td><span style="font-weight:600;color:'+(sColor[c.result]||'var(--text2)')+';">'+(sText[c.result]||c.result)+'</span></td>'
+            +'<td style="font-size:13px;color:var(--text2)">'+(c.notes||'&mdash;')+'</td></tr>';
+        }).join('')+'</tbody></table></div></div>';
+    }).join('');
+  }
+  if(type==='epi'){
+    var epi=epis.find(function(e){return e.ref===id;});
+    if(!epi) return;
+    document.getElementById('hist-title').textContent=epi.ref+' \u2014 Historique';
+    document.getElementById('hist-subtitle').textContent=epi.type+' '+epi.brand+' '+epi.model+' \u2014 Achat: '+epi.buy;
+    var photos=epi.photos||[];
+    document.getElementById('hist-photos').innerHTML=photos.length?'<div style="margin-bottom:14px"><div class="photo-grid">'+photos.map(function(p){return '<img src="'+p+'" class="photo-thumb">';}).join('')+'</div></div>':'';
+    var epiCtrl=controls.filter(function(c){return c.ref===id;}).slice().sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
+    document.getElementById('hist-years').innerHTML=epiCtrl.length?yearBlock(epiCtrl):'<div style="text-align:center;padding:32px;color:var(--text2)">Aucun controle enregistre.</div>';
   } else {
-    const batch = batches.find(b => b.id === id);
-    if (!batch) return;
-    document.getElementById('hist-title').textContent = `Lot ${batch.name} — Historique`;
-    document.getElementById('hist-subtitle').textContent = `${batch.type} ${batch.brand} ${batch.model} — ${batch.id}`;
-    const photos = batch.photos || [];
-    document.getElementById('hist-photos').innerHTML = photos.length ? `<div style="margin-bottom:14px"><div class="photo-grid">${photos.map(p=>`<img src="${p}" class="photo-thumb">`).join('')}</div></div>` : '';
-    const bRefs = epis.filter(e => e.batchId === id).map(e => e.ref);
-    const bCtrl = controls.filter(c => bRefs.includes(c.ref)).sort((a,b) => b.date?.localeCompare(a.date));
-    document.getElementById('hist-years').innerHTML = bCtrl.length ? yearBlock(bCtrl) : `<div style="text-align:center;padding:32px;color:var(--text2)">Aucun contrôle pour ce lot.</div>`;
+    var batch=batches.find(function(b){return b.id===id;});
+    if(!batch) return;
+    document.getElementById('hist-title').textContent='Lot '+batch.name+' \u2014 Historique';
+    document.getElementById('hist-subtitle').textContent=batch.type+' '+batch.brand+' '+batch.model+' \u2014 '+batch.id;
+    var bPhotos=batch.photos||[];
+    document.getElementById('hist-photos').innerHTML=bPhotos.length?'<div style="margin-bottom:14px"><div class="photo-grid">'+bPhotos.map(function(p){return '<img src="'+p+'" class="photo-thumb">';}).join('')+'</div></div>':'';
+    var bRefs=epis.filter(function(e){return e.batchId===id;}).map(function(e){return e.ref;});
+    var bCtrl=controls.filter(function(c){return bRefs.indexOf(c.ref)!==-1;}).slice().sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
+    document.getElementById('hist-years').innerHTML=bCtrl.length?yearBlock(bCtrl):'<div style="text-align:center;padding:32px;color:var(--text2)">Aucun controle pour ce lot.</div>';
   }
 }
 
 // ==================== CHECKS ====================
-function renderChecks() {
-  document.getElementById('checks-grid').innerHTML = Object.entries(EPI_CHECKS).map(([type, chk]) => {
-    const cfg = EPI_CONFIG[type];
-    const typeEpis = epis.filter(e => e.type === type && e.status !== 'retired' && e.status !== 'lost');
-    const issues = typeEpis.filter(e => getStatus(e) !== 'ok').length;
-    return `<div style="background:var(--surface);border-radius:var(--rad-lg);border:1px solid var(--border);overflow:hidden;cursor:pointer;transition:box-shadow 0.15s;box-shadow:var(--shadow)" onclick="openCheckSheet('${type}')" onmouseover="this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.boxShadow='var(--shadow)'">
-      <div style="background:var(--accent-light);padding:16px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border)">
-        <span style="font-size:30px">${chk.icon}</span>
-        <div style="flex:1"><div style="font-size:15px;font-weight:700;color:var(--accent-text)">${type}</div>
-          <div style="font-size:12px;color:var(--accent-text);margin-top:2px">Norme ${cfg?.norm||'—'} · max ${cfg?.lifeMax||'?'} ans</div>
-        </div>
-        ${typeEpis.length ? `<div style="text-align:right"><div style="font-size:18px;font-weight:700;color:${issues?'var(--warn)':'var(--accent)'}">${typeEpis.length}</div><div style="font-size:11px;color:var(--text2)">EPI</div></div>` : ''}
-      </div>
-      <div style="padding:14px 18px">
-        <div style="font-size:13px;color:var(--text2);line-height:1.55;margin-bottom:12px;font-style:italic">${chk.resume.substring(0,90)}…</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
-          <span style="font-size:12px;background:var(--accent-light);color:var(--accent-text);padding:3px 10px;border-radius:999px;font-weight:600">${chk.points.length} points de contrôle</span>
-          <span style="font-size:12px;background:var(--danger-bg);color:var(--danger);padding:3px 10px;border-radius:999px;font-weight:600">${chk.retirement.length} critères de réforme</span>
-        </div>
-        <div style="font-size:13px;color:var(--accent);font-weight:600">📋 Voir la fiche →</div>
-      </div>
-    </div>`;
+function renderChecks(){
+  document.getElementById('checks-grid').innerHTML=Object.keys(EPI_CHECKS).map(function(type){
+    var chk=EPI_CHECKS[type]; var cfg=EPI_CONFIG[type];
+    var typeEpis=epis.filter(function(e){return e.type===type&&e.status!=='retired'&&e.status!=='lost';});
+    var issues=typeEpis.filter(function(e){return getStatus(e)!=='ok';}).length;
+    return '<div style="background:var(--surface);border-radius:var(--rad-lg);border:1px solid var(--border);overflow:hidden;cursor:pointer;box-shadow:var(--shadow)" onclick="openCheckSheet(\''+type+'\')">'
+      +'<div style="background:var(--accent-light);padding:16px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border)">'
+      +'<span style="font-size:22px">'+chk.icon+'</span>'
+      +'<div style="flex:1"><div style="font-size:15px;font-weight:700;color:var(--accent-text)">'+type+'</div>'
+      +'<div style="font-size:12px;color:var(--accent-text);margin-top:2px">Norme '+(cfg?cfg.norm:'&mdash;')+' &middot; max '+(cfg?cfg.lifeMax:'?')+' ans</div></div>'
+      +(typeEpis.length?'<div style="text-align:right"><div style="font-size:18px;font-weight:700;color:'+(issues?'var(--warn)':'var(--accent)')+'">'+typeEpis.length+'</div><div style="font-size:11px;color:var(--text2)">EPI</div></div>':'')
+      +'</div>'
+      +'<div style="padding:14px 18px">'
+      +'<div style="font-size:13px;color:var(--text2);margin-bottom:12px;font-style:italic">'+chk.resume.substring(0,90)+'...</div>'
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">'
+      +'<span style="font-size:12px;background:var(--accent-light);color:var(--accent-text);padding:3px 10px;border-radius:999px;font-weight:600">'+chk.points.length+' points de controle</span>'
+      +'<span style="font-size:12px;background:var(--danger-bg);color:var(--danger);padding:3px 10px;border-radius:999px;font-weight:600">'+chk.retirement.length+' criteres de reforme</span>'
+      +'</div>'
+      +'<div style="font-size:13px;color:var(--accent);font-weight:600">&#128203; Voir la fiche &rarr;</div>'
+      +'</div></div>';
   }).join('');
 }
 
-function openCheckSheet(type) {
-  const cfg = EPI_CONFIG[type], chk = EPI_CHECKS[type];
-  if (!chk) { alert('Fiche non disponible pour ce type.'); return; }
-  document.getElementById('check-title').textContent = `${chk.icon} Fiche de contrôle — ${type}`;
-  document.getElementById('check-subtitle').textContent = `Norme ${cfg?.norm||''} — Contrôle tous les ${cfg?.ctrlMonths||12} mois — Durée vie max ${cfg?.lifeMax||'?'} ans`;
-  document.getElementById('check-body').innerHTML = `
-    <div class="check-resume">${chk.resume}</div>
-    <div class="check-norm-badge">${chk.icon} Norme ${cfg?.norm||'—'} &nbsp;·&nbsp; /${cfg?.ctrlMonths||12} mois &nbsp;·&nbsp; Max ${cfg?.lifeMax||'?'} ans</div>
-    <div class="check-section">
-      <div class="check-section-title ok-title">✓ Points de contrôle (${chk.points.length})</div>
-      ${chk.points.map(p=>`<div class="check-item"><div class="check-bullet check-bullet-ok"></div><div>${p}</div></div>`).join('')}
-    </div>
-    <div class="check-section">
-      <div class="check-section-title danger-title">✖ Conditions de mise au rebut (${chk.retirement.length})</div>
-      ${chk.retirement.map(r=>`<div class="check-item"><div class="check-bullet check-bullet-danger"></div><div>${r}</div></div>`).join('')}
-    </div>
-    <div class="check-section">
-      <div class="check-section-title doc-title">📄 Notices & documentation fabricant</div>
-      ${chk.docLinks.map(d=>`<a href="${d.url}" target="_blank" rel="noopener" class="doc-link"><span class="doc-link-icon">↗</span><span>${d.label}</span></a>`).join('')}
-      <div style="font-size:12px;color:var(--text3);margin-top:6px">⚠ Consultez toujours la notice spécifique à votre modèle.</div>
-    </div>`;
+function openCheckSheet(type){
+  var chk=EPI_CHECKS[type]; var cfg=EPI_CONFIG[type];
+  if(!chk){alert('Fiche non disponible pour ce type.');return;}
+  document.getElementById('check-title').textContent=chk.icon+' Fiche de controle \u2014 '+type;
+  document.getElementById('check-subtitle').textContent='Norme '+(cfg?cfg.norm:'')+' \u2014 Controle tous les '+(cfg?cfg.ctrlMonths:12)+' mois \u2014 Duree vie max '+(cfg?cfg.lifeMax:'?')+' ans';
+  document.getElementById('check-body').innerHTML=
+    '<div class="check-resume">'+chk.resume+'</div>'
+    +'<div class="check-norm-badge">'+chk.icon+' Norme '+(cfg?cfg.norm:'&mdash;')+' &nbsp;&middot;&nbsp; /'+(cfg?cfg.ctrlMonths:12)+' mois &nbsp;&middot;&nbsp; Max '+(cfg?cfg.lifeMax:'?')+' ans</div>'
+    +'<div class="check-section"><div class="check-section-title ok-title">&#10003; Points de controle ('+chk.points.length+')</div>'
+    +chk.points.map(function(p){return '<div class="check-item"><div class="check-bullet check-bullet-ok"></div><div>'+p+'</div></div>';}).join('')+'</div>'
+    +'<div class="check-section"><div class="check-section-title danger-title">&#10007; Conditions de mise au rebut ('+chk.retirement.length+')</div>'
+    +chk.retirement.map(function(r){return '<div class="check-item"><div class="check-bullet check-bullet-danger"></div><div>'+r+'</div></div>';}).join('')+'</div>'
+    +'<div class="check-section"><div class="check-section-title doc-title">&#128196; Notices fabricant</div>'
+    +chk.docLinks.map(function(d){return '<a href="'+d.url+'" target="_blank" rel="noopener" class="doc-link"><span class="doc-link-icon">&#8599;</span><span>'+d.label+'</span></a>';}).join('')
+    +'<div style="font-size:12px;color:var(--text3);margin-top:6px">&#9888; Consultez toujours la notice specifique a votre modele.</div>'
+    +'</div>';
   showModal('modal-check');
 }
 
 // ==================== BULK SELECT ====================
-let selectedRefs2 = new Set(); // renamed to avoid conflict
-function onEpiCheckChange() {
+function onEpiCheckChange(){
   selectedRefs2.clear();
-  document.querySelectorAll('.epi-chk:checked').forEach(chk => selectedRefs2.add(chk.dataset.ref));
+  document.querySelectorAll('.epi-chk:checked').forEach(function(chk){selectedRefs2.add(chk.dataset.ref);});
   updateBulkBar();
 }
-function toggleSelectAll(masterChk) {
-  document.querySelectorAll('.epi-chk:not(:disabled)').forEach(chk => chk.checked = masterChk.checked);
+function toggleSelectAll(masterChk){
+  document.querySelectorAll('.epi-chk:not(:disabled)').forEach(function(chk){chk.checked=masterChk.checked;});
   onEpiCheckChange();
 }
-function clearSelection() {
+function clearSelection(){
   selectedRefs2.clear();
-  document.querySelectorAll('.epi-chk').forEach(chk => chk.checked = false);
-  const master = document.getElementById('select-all-chk');
-  if (master) master.checked = false;
+  document.querySelectorAll('.epi-chk').forEach(function(chk){chk.checked=false;});
+  var m=document.getElementById('select-all-chk'); if(m) m.checked=false;
   updateBulkBar();
 }
-function updateBulkBar() {
-  const bar = document.getElementById('bulk-bar'), n = selectedRefs2.size;
-  const txt = document.getElementById('bulk-bar-text');
-  bar?.classList.toggle('visible', n > 0);
-  if (txt) txt.textContent = `${n} EPI sélectionné${n>1?'s':''}`;
+function updateBulkBar(){
+  var bar=document.getElementById('bulk-bar'),n=selectedRefs2.size;
+  var txt=document.getElementById('bulk-bar-text');
+  if(bar) bar.classList.toggle('visible',n>0);
+  if(txt) txt.textContent=n+' EPI selectionne'+(n>1?'s':'');
 }
-function openBulkControl() {
-  if (!selectedRefs2.size) return;
-  document.getElementById('bulk-ctrl-title').textContent = `Contrôle groupé — ${selectedRefs2.size} EPI`;
-  document.getElementById('bulk-ctrl-desc').textContent  = 'Tous les EPI cochés seront marqués Conformes.';
-  document.getElementById('blk-date').value = todayStr;
-  document.getElementById('blk-who').value  = currentUser?.name || '';
-  document.getElementById('blk-notes').value = '';
+function openBulkControl(){
+  if(!selectedRefs2.size) return;
+  document.getElementById('bulk-ctrl-title').textContent='Controle groupe \u2014 '+selectedRefs2.size+' EPI';
+  document.getElementById('bulk-ctrl-desc').textContent='Tous les EPI coches seront marques Conformes.';
+  document.getElementById('blk-date').value=todayStr;
+  document.getElementById('blk-who').value=currentUser?currentUser.name:'';
+  document.getElementById('blk-notes').value='';
   renderBulkItems(true); showModal('modal-bulk-ctrl');
 }
-function openBulkControlCustom() {
-  if (!selectedRefs2.size) return;
-  document.getElementById('bulk-ctrl-title').textContent = `Contrôle groupé personnalisé — ${selectedRefs2.size} EPI`;
-  document.getElementById('bulk-ctrl-desc').textContent  = 'Ajustez le résultat individuellement.';
-  document.getElementById('blk-date').value = todayStr;
-  document.getElementById('blk-who').value  = currentUser?.name || '';
-  document.getElementById('blk-notes').value = '';
+function openBulkControlCustom(){
+  if(!selectedRefs2.size) return;
+  document.getElementById('bulk-ctrl-title').textContent='Controle groupe personnalise \u2014 '+selectedRefs2.size+' EPI';
+  document.getElementById('bulk-ctrl-desc').textContent='Ajustez le resultat individuellement.';
+  document.getElementById('blk-date').value=todayStr;
+  document.getElementById('blk-who').value=currentUser?currentUser.name:'';
+  document.getElementById('blk-notes').value='';
   renderBulkItems(false); showModal('modal-bulk-ctrl');
 }
-function renderBulkItems(allOk) {
-  const refs = Array.from(selectedRefs2);
-  const wrap = document.getElementById('bulk-items-wrap');
-  if (allOk) {
-    wrap.innerHTML = `
-      <div style="background:var(--accent-light);border-radius:var(--rad);padding:12px 16px;margin-bottom:8px;font-size:14px;color:var(--accent-text);font-weight:600">✓ ${refs.length} EPI → Conformes</div>
-      <div class="table-wrap" style="margin-bottom:0"><table><thead><tr><th>Référence</th><th>Type</th><th>Marque / Modèle</th></tr></thead>
-      <tbody>${refs.map(ref => { const e=epis.find(x=>x.ref===ref); return `<tr><td style="font-weight:700">${ref}</td><td class="muted">${e?.type||'—'}</td><td class="muted">${e?e.brand+' '+e.model:'—'}</td></tr>`; }).join('')}</tbody></table></div>`;
+function renderBulkItems(allOk){
+  var refs=Array.from(selectedRefs2);
+  var wrap=document.getElementById('bulk-items-wrap');
+  if(allOk){
+    wrap.innerHTML='<div style="background:var(--accent-light);border-radius:var(--rad);padding:12px 16px;margin-bottom:8px;font-size:14px;color:var(--accent-text);font-weight:600">&#10003; '+refs.length+' EPI &rarr; Conformes</div>'
+      +'<div class="table-wrap" style="margin-bottom:0"><table><thead><tr><th>Reference</th><th>Type</th><th>Modele</th></tr></thead><tbody>'
+      +refs.map(function(ref){var e=epis.find(function(x){return x.ref===ref;});return '<tr><td style="font-weight:700">'+ref+'</td><td class="muted">'+(e?e.type:'&mdash;')+'</td><td class="muted">'+(e?e.brand+' '+e.model:'&mdash;')+'</td></tr>';}).join('')
+      +'</tbody></table></div>';
   } else {
-    wrap.innerHTML = `
-      <div style="display:flex;gap:8px;padding:8px 0;margin-bottom:10px;border-bottom:1px solid var(--border);flex-wrap:wrap">
-        <span style="font-size:13px;color:var(--text2);flex:1;align-self:center">Appliquer à tous :</span>
-        <button class="btn btn-sm" onclick="setBulkAll('ok')">✓ Conformes</button>
-        <button class="btn btn-sm btn-warn" onclick="setBulkAll('warn')">⚠ Réserve</button>
-        <button class="btn btn-sm btn-danger" onclick="setBulkAll('retired')">✖ Réformer</button>
-      </div>
-      <div class="table-wrap" style="margin-bottom:0"><table>
-        <thead><tr><th>Référence</th><th>Modèle</th><th>Résultat</th></tr></thead>
-        <tbody>${refs.map((ref, idx) => {
-          const e = epis.find(x => x.ref === ref);
-          return `<tr>
-            <td style="font-weight:700">${ref}</td>
-            <td class="muted">${e?e.brand+' '+e.model:'—'}</td>
-            <td><select onchange="updateBulkRowColor(${idx},this)" style="padding:6px 8px;border-radius:8px;border:1px solid var(--border2);font-size:13px;color:var(--accent);font-weight:600;font-family:var(--font)">
-              <option value="ok">✓ Conforme</option>
-              <option value="warn">⚠ Réserve</option>
-              <option value="danger">✖ Non-conforme</option>
-              <option value="retired">— Réformer</option>
-              <option value="lost">? Introuvable</option>
-            </select></td>
-          </tr>`;
-        }).join('')}</tbody>
-      </table></div>`;
+    wrap.innerHTML='<div style="display:flex;gap:8px;padding:8px 0;margin-bottom:10px;border-bottom:1px solid var(--border);flex-wrap:wrap">'
+      +'<span style="font-size:13px;color:var(--text2);flex:1;align-self:center">Appliquer a tous :</span>'
+      +'<button class="btn btn-sm" onclick="setBulkAll(\'ok\')">&#10003; Conformes</button>'
+      +'<button class="btn btn-sm btn-warn" onclick="setBulkAll(\'warn\')">&#9888; Reserve</button>'
+      +'<button class="btn btn-sm btn-danger" onclick="setBulkAll(\'retired\')">&#10007; Reformer</button>'
+      +'</div>'
+      +'<div class="table-wrap" style="margin-bottom:0"><table><thead><tr><th>Reference</th><th>Modele</th><th>Resultat</th></tr></thead><tbody>'
+      +refs.map(function(ref,idx){
+        var e=epis.find(function(x){return x.ref===ref;});
+        return '<tr><td style="font-weight:700">'+ref+'</td><td class="muted">'+(e?e.brand+' '+e.model:'&mdash;')+'</td>'
+          +'<td><select onchange="updateBulkRowColor('+idx+',this)" style="padding:6px 8px;border-radius:8px;border:1px solid var(--border2);font-size:13px;color:var(--accent);font-weight:600;font-family:var(--font)">'
+          +'<option value="ok">&#10003; Conforme</option><option value="warn">&#9888; Reserve</option>'
+          +'<option value="danger">&#10007; Non-conforme</option><option value="retired">&mdash; Reformer</option>'
+          +'<option value="lost">? Introuvable</option></select></td></tr>';
+      }).join('')+'</tbody></table></div>';
   }
 }
-function updateBulkRowColor(idx, sel) {
-  const c={ok:'var(--accent)',warn:'var(--warn)',danger:'var(--danger)',retired:'var(--text2)',lost:'#5b21b6'};
-  sel.style.color = c[sel.value]||'var(--text2)';
+function updateBulkRowColor(idx,sel){
+  var c={ok:'var(--accent)',warn:'var(--warn)',danger:'var(--danger)',retired:'var(--text2)',lost:'#5b21b6'};
+  sel.style.color=c[sel.value]||'var(--text2)';
 }
-function setBulkAll(result) {
-  document.querySelectorAll('#bulk-items-wrap select').forEach(sel => { sel.value=result; updateBulkRowColor(0,sel); });
-}
-async function saveBulkControl() {
-  const date  = document.getElementById('blk-date').value;
-  const who   = document.getElementById('blk-who').value.trim();
-  const notes = document.getElementById('blk-notes').value;
-  if (!date || !who) { alert('Date et contrôleur obligatoires'); return; }
-  const selects = document.querySelectorAll('#bulk-items-wrap select');
-  const refs    = Array.from(selectedRefs2);
-  showLoading('Enregistrement…');
-  for (let i = 0; i < refs.length; i++) {
-    const result = selects.length > 0 ? (selects[i]?.value || 'ok') : 'ok';
-    const ctrl   = { id:uid(), date, ref:refs[i], who, result, notes: notes||'Contrôle groupé' };
-    controls.push(ctrl);
-    const epi = epis.find(e => e.ref === refs[i]);
-    if (epi) { epi.lastCtrl = date; epi.status = result; await fsSet('epis', refs[i], epi); }
-    await fsSet('controls', ctrl.id, ctrl);
-  }
-  hideLoading(); closeModal(); clearSelection();
-  renderInventory(); renderDashboard(); updateAlertBadge();
-  showToast(`${refs.length} contrôle${refs.length>1?'s':''} enregistré${refs.length>1?'s':''}`);
+function setBulkAll(result){document.querySelectorAll('#bulk-items-wrap select').forEach(function(sel,i){sel.value=result;updateBulkRowColor(i,sel);});}
+function saveBulkControl(){
+  var date=document.getElementById('blk-date').value;
+  var who=document.getElementById('blk-who').value.trim();
+  var notes=document.getElementById('blk-notes').value;
+  if(!date||!who){alert('Date et controleur obligatoires');return;}
+  var sels=document.querySelectorAll('#bulk-items-wrap select');
+  var refs=Array.from(selectedRefs2);
+  showLoading('Enregistrement...');
+  var promises=[];
+  refs.forEach(function(ref,i){
+    var result=sels.length>0?(sels[i]?sels[i].value:'ok'):'ok';
+    var ctrl={id:uid(),date:date,ref:ref,who:who,result:result,notes:notes||'Controle groupe'};
+    controls.unshift(ctrl);
+    var epi=epis.find(function(e){return e.ref===ref;});
+    if(epi){epi.lastCtrl=date;epi.status=result;promises.push(fsSet('epis',ref,epi));}
+    promises.push(fsSet('controls',ctrl.id,ctrl));
+  });
+  Promise.all(promises).then(function(){
+    hideLoading(); closeModal(); clearSelection(); renderInventory(); renderDashboard(); updateAlertBadge();
+    showToast(refs.length+' controle'+(refs.length>1?'s':'')+' enregistre'+(refs.length>1?'s':''));
+  }).catch(function(e){hideLoading();showToast('Erreur: '+e.message,'err');});
 }
 
 // ==================== PDF EXPORT ====================
-function exportPDF(type) {
+function exportPDF(type){
   closeModal();
-  const w = window.open('','_blank');
-  const date = new Date().toLocaleDateString('fr-FR');
-  const header = title => `<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #16a34a;padding-bottom:12px;margin-bottom:24px"><div><h1 style="font-size:20px;color:#16a34a;margin:0">🧗 Gestion des EPI AGORA</h1><div style="font-size:13px;color:#666;margin-top:4px">${title} — ${date}</div></div></div>`;
-  const TS = `width:100%;border-collapse:collapse;font-size:12px;font-family:sans-serif;margin-bottom:20px`;
-  const TH = `background:#16a34a;color:#fff;padding:8px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.05em`;
-  const TD = `padding:7px 10px;border-bottom:0.5px solid #ddd`;
-  const AR = `background:#f7f8fa`;
-  const ST = { ok:'✓ Conforme', warn:'⚠ À contrôler', danger:'✖ En alerte', retired:'— Réformé', lost:'? Introuvable' };
-  let html = '';
-  if (type === 'inventory') {
-    html = header('Inventaire complet') + `<table style="${TS}"><thead><tr><th style="${TH}">Ref</th><th style="${TH}">Type</th><th style="${TH}">Marque/Modèle</th><th style="${TH}">Achat</th><th style="${TH}">Âge</th><th style="${TH}">Dernier ctrl</th><th style="${TH}">Prochain</th><th style="${TH}">État</th></tr></thead><tbody>` +
-      epis.map((e,i) => { const s=getStatus(e),cfg=EPI_CONFIG[e.type],fab=e.fab||e.buy,ageM=fab?Math.max(0,diffMonths(todayStr,fab)):0,c=s==='danger'?'#dc2626':s==='warn'?'#b45309':s==='retired'?'#999':'#16a34a'; return `<tr style="${i%2?AR:''}"><td style="${TD}">${e.ref}</td><td style="${TD}">${e.type}</td><td style="${TD}">${e.brand} ${e.model}</td><td style="${TD}">${e.buy}</td><td style="${TD}">${Math.floor(ageM/12)}a ${ageM%12}m${cfg?' / '+cfg.lifeMax+'a max':''}</td><td style="${TD}">${e.lastCtrl||'—'}</td><td style="${TD}">${getNextCtrl(e)||'—'}</td><td style="${TD};color:${c};font-weight:600">${ST[s]||s}</td></tr>`; }).join('') + '</tbody></table>';
-  } else if (type === 'alerts') {
-    const dan=epis.filter(e=>getStatus(e)==='danger'), war=epis.filter(e=>getStatus(e)==='warn'), lat=loans.filter(l=>l.status==='late');
-    html = header('Rapport d'alertes') +
-      `<h2 style="font-size:15px;color:#dc2626;margin:0 0 10px">En alerte (${dan.length})</h2><table style="${TS}"><thead><tr><th style="${TH}">Ref</th><th style="${TH}">Type</th><th style="${TH}">Modèle</th><th style="${TH}">Raison</th></tr></thead><tbody>${dan.map((e,i)=>{const cfg=EPI_CONFIG[e.type],ls=getLifeStatus(e),r=ls==='danger'?`Max ${cfg?.lifeMax}a dépassée`:`Retard ${Math.abs(diffDays(getNextCtrl(e)||todayStr,todayStr))}j`;return`<tr style="${i%2?AR:''}"><td style="${TD}">${e.ref}</td><td style="${TD}">${e.type}</td><td style="${TD}">${e.brand} ${e.model}</td><td style="${TD};color:#dc2626;font-weight:600">${r}</td></tr>`}).join('')}</tbody></table>` +
-      `<h2 style="font-size:15px;color:#b45309;margin:0 0 10px">À contrôler (${war.length})</h2><table style="${TS}"><thead><tr><th style="${TH}">Ref</th><th style="${TH}">Type</th><th style="${TH}">Modèle</th><th style="${TH}">Date</th></tr></thead><tbody>${war.map((e,i)=>`<tr style="${i%2?AR:''}"><td style="${TD}">${e.ref}</td><td style="${TD}">${e.type}</td><td style="${TD}">${e.brand} ${e.model}</td><td style="${TD};color:#b45309">${getNextCtrl(e)}</td></tr>`).join('')}</tbody></table>`;
-    if (lat.length) html += `<h2 style="font-size:15px;color:#dc2626;margin:0 0 10px">Prêts en retard (${lat.length})</h2><table style="${TS}"><thead><tr><th style="${TH}">Adhérent</th><th style="${TH}">EPI</th><th style="${TH}">Retour prévu</th></tr></thead><tbody>${lat.map((l,i)=>`<tr style="${i%2?AR:''}"><td style="${TD}">${l.member}</td><td style="${TD}">${l.ref}</td><td style="${TD};color:#dc2626">${l.returnDate}</td></tr>`).join('')}</tbody></table>`;
-  } else if (type === 'controls') {
-    const em={}; epis.forEach(e=>em[e.ref]=e.type);
-    html = header('Historique des contrôles') + `<table style="${TS}"><thead><tr><th style="${TH}">Date</th><th style="${TH}">Ref</th><th style="${TH}">Type</th><th style="${TH}">Contrôleur</th><th style="${TH}">Résultat</th><th style="${TH}">Observations</th></tr></thead><tbody>` +
-      [...controls].sort((a,b)=>b.date.localeCompare(a.date)).map((c,i)=>{const col=c.result==='danger'?'#dc2626':c.result==='warn'?'#b45309':c.result==='retired'?'#999':'#16a34a';return`<tr style="${i%2?AR:''}"><td style="${TD}">${c.date}</td><td style="${TD}">${c.ref}</td><td style="${TD}">${em[c.ref]||'—'}</td><td style="${TD}">${c.who}</td><td style="${TD};color:${col};font-weight:600">${ST[c.result]||c.result}</td><td style="${TD}">${c.notes||'—'}</td></tr>`;}).join('') + '</tbody></table>';
-  } else if (type === 'loans') {
-    const em={}; epis.forEach(e=>em[e.ref]=e.type);
-    const sl={active:'En cours',returned:'Rendu',late:'En retard'};
-    html = header('Registre des prêts') + `<table style="${TS}"><thead><tr><th style="${TH}">Date</th><th style="${TH}">Adhérent</th><th style="${TH}">EPI</th><th style="${TH}">Type</th><th style="${TH}">Retour prévu</th><th style="${TH}">Statut</th></tr></thead><tbody>` +
-      loans.map((l,i)=>{const col=l.status==='late'?'#dc2626':l.status==='active'?'#b45309':'#16a34a';return`<tr style="${i%2?AR:''}"><td style="${TD}">${l.date}</td><td style="${TD}">${l.member}</td><td style="${TD}">${l.ref}</td><td style="${TD}">${em[l.ref]||'—'}</td><td style="${TD}">${l.returnDate}</td><td style="${TD};color:${col};font-weight:600">${sl[l.status]}</td></tr>`;}).join('') + '</tbody></table>';
-  } else if (type === 'epi_labels') {
-    html = header('Étiquettes EPI — QR Codes') + '<div>' + epis.filter(e=>e.status!=='retired').map(e=>`<div style="display:inline-block;width:180px;height:120px;border:1px solid #ccc;border-radius:8px;padding:8px;margin:6px;vertical-align:top;font-family:sans-serif;page-break-inside:avoid"><div style="display:flex;gap:6px;align-items:center"><img src="https://api.qrserver.com/v1/create-qr-code/?size=70x70&data=${encodeURIComponent('EPI:'+e.ref+':'+e.type+':'+e.brand+':'+e.model+':'+e.norm+':'+e.lot)}" width="70" height="70" style="border-radius:4px"><div><div style="font-size:11px;font-weight:700;color:#16a34a">${e.ref}</div><div style="font-size:10px;color:#666;margin-top:2px">${e.type}</div><div style="font-size:9px;color:#999">${e.brand} ${e.model}</div><div style="font-size:9px;color:#999">Achat: ${e.buy}</div></div></div></div>`).join('') + '</div>';
+  var w=window.open('','_blank');
+  var date=new Date().toLocaleDateString('fr-FR');
+  var header=function(title){return '<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #16a34a;padding-bottom:12px;margin-bottom:24px"><div><h1 style="font-size:20px;color:#16a34a;margin:0">Gestion des EPI AGORA</h1><div style="font-size:13px;color:#666;margin-top:4px">'+title+' &mdash; '+date+'</div></div></div>';};
+  var TS='width:100%;border-collapse:collapse;font-size:12px;font-family:sans-serif;margin-bottom:20px';
+  var TH='background:#16a34a;color:#fff;padding:8px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.05em';
+  var TD='padding:7px 10px;border-bottom:0.5px solid #ddd'; var AR='background:#f7f8fa';
+  var ST={ok:'Conforme',warn:'A controler',danger:'En alerte',retired:'Reforme',lost:'Introuvable'};
+  var html='';
+  if(type==='inventory'){
+    html=header('Inventaire complet')+'<table style="'+TS+'"><thead><tr><th style="'+TH+'">Ref</th><th style="'+TH+'">Type</th><th style="'+TH+'">Modele</th><th style="'+TH+'">Achat</th><th style="'+TH+'">Age</th><th style="'+TH+'">Dernier ctrl</th><th style="'+TH+'">Prochain</th><th style="'+TH+'">Etat</th></tr></thead><tbody>'
+      +epis.map(function(e,i){var s=getStatus(e),cfg=EPI_CONFIG[e.type],fab=e.fab||e.buy,ageM=fab?Math.max(0,diffMonths(todayStr,fab)):0,c=s==='danger'?'#dc2626':s==='warn'?'#b45309':s==='retired'?'#999':'#16a34a';
+        return '<tr style="'+(i%2?AR:'')+'"><td style="'+TD+'">'+e.ref+'</td><td style="'+TD+'">'+e.type+'</td><td style="'+TD+'">'+e.brand+' '+e.model+'</td><td style="'+TD+'">'+e.buy+'</td><td style="'+TD+'">'+Math.floor(ageM/12)+'a '+(ageM%12)+'m'+(cfg?' / '+cfg.lifeMax+'a max':'')+'</td><td style="'+TD+'">'+(e.lastCtrl||'&mdash;')+'</td><td style="'+TD+'">'+(getNextCtrl(e)||'&mdash;')+'</td><td style="'+TD+';color:'+c+';font-weight:600">'+(ST[s]||s)+'</td></tr>';}).join('')
+      +'</tbody></table>';
+  } else if(type==='alerts'){
+    var dan=epis.filter(function(e){return getStatus(e)==='danger';}),war=epis.filter(function(e){return getStatus(e)==='warn';}),lat=loans.filter(function(l){return l.status==='late';});
+    html=header('Rapport d\'alertes')
+      +'<h2 style="font-size:15px;color:#dc2626;margin:0 0 10px">En alerte ('+dan.length+')</h2><table style="'+TS+'"><thead><tr><th style="'+TH+'">Ref</th><th style="'+TH+'">Type</th><th style="'+TH+'">Modele</th><th style="'+TH+'">Raison</th></tr></thead><tbody>'
+      +dan.map(function(e,i){var cfg=EPI_CONFIG[e.type],ls=getLifeStatus(e),r=ls==='danger'?'Max '+(cfg?cfg.lifeMax:'?')+'a depassee':'Retard '+Math.abs(diffDays(getNextCtrl(e)||todayStr,todayStr))+'j';return'<tr style="'+(i%2?AR:'')+'"><td style="'+TD+'">'+e.ref+'</td><td style="'+TD+'">'+e.type+'</td><td style="'+TD+'">'+e.brand+' '+e.model+'</td><td style="'+TD+';color:#dc2626;font-weight:600">'+r+'</td></tr>';}).join('')
+      +'</tbody></table>'
+      +'<h2 style="font-size:15px;color:#b45309;margin:0 0 10px">A controler ('+war.length+')</h2><table style="'+TS+'"><thead><tr><th style="'+TH+'">Ref</th><th style="'+TH+'">Type</th><th style="'+TH+'">Modele</th><th style="'+TH+'">Date</th></tr></thead><tbody>'
+      +war.map(function(e,i){return'<tr style="'+(i%2?AR:'')+'"><td style="'+TD+'">'+e.ref+'</td><td style="'+TD+'">'+e.type+'</td><td style="'+TD+'">'+e.brand+' '+e.model+'</td><td style="'+TD+';color:#b45309">'+(getNextCtrl(e)||'')+'</td></tr>';}).join('')+'</tbody></table>';
+    if(lat.length) html+='<h2 style="font-size:15px;color:#dc2626;margin:0 0 10px">Prets en retard ('+lat.length+')</h2><table style="'+TS+'"><thead><tr><th style="'+TH+'">Adherent</th><th style="'+TH+'">EPI</th><th style="'+TH+'">Retour prevu</th></tr></thead><tbody>'+lat.map(function(l,i){return'<tr style="'+(i%2?AR:'')+'"><td style="'+TD+'">'+l.member+'</td><td style="'+TD+'">'+l.ref+'</td><td style="'+TD+';color:#dc2626">'+l.returnDate+'</td></tr>';}).join('')+'</tbody></table>';
+  } else if(type==='controls'){
+    var em={}; epis.forEach(function(e){em[e.ref]=e.type;});
+    html=header('Historique des controles')+'<table style="'+TS+'"><thead><tr><th style="'+TH+'">Date</th><th style="'+TH+'">Ref</th><th style="'+TH+'">Type</th><th style="'+TH+'">Controleur</th><th style="'+TH+'">Resultat</th><th style="'+TH+'">Observations</th></tr></thead><tbody>'
+      +controls.slice().sort(function(a,b){return b.date.localeCompare(a.date);}).map(function(c,i){var col=c.result==='danger'?'#dc2626':c.result==='warn'?'#b45309':c.result==='retired'?'#999':'#16a34a';return'<tr style="'+(i%2?AR:'')+'"><td style="'+TD+'">'+c.date+'</td><td style="'+TD+'">'+c.ref+'</td><td style="'+TD+'">'+(em[c.ref]||'&mdash;')+'</td><td style="'+TD+'">'+c.who+'</td><td style="'+TD+';color:'+col+';font-weight:600">'+(ST[c.result]||c.result)+'</td><td style="'+TD+'">'+(c.notes||'&mdash;')+'</td></tr>';}).join('')+'</tbody></table>';
+  } else if(type==='loans'){
+    var em2={}; epis.forEach(function(e){em2[e.ref]=e.type;});
+    var sl={active:'En cours',returned:'Rendu',late:'En retard'};
+    html=header('Registre des prets')+'<table style="'+TS+'"><thead><tr><th style="'+TH+'">Date</th><th style="'+TH+'">Adherent</th><th style="'+TH+'">EPI</th><th style="'+TH+'">Type</th><th style="'+TH+'">Retour prevu</th><th style="'+TH+'">Statut</th></tr></thead><tbody>'
+      +loans.map(function(l,i){var col=l.status==='late'?'#dc2626':l.status==='active'?'#b45309':'#16a34a';return'<tr style="'+(i%2?AR:'')+'"><td style="'+TD+'">'+l.date+'</td><td style="'+TD+'">'+l.member+'</td><td style="'+TD+'">'+l.ref+'</td><td style="'+TD+'">'+(em2[l.ref]||'&mdash;')+'</td><td style="'+TD+'">'+l.returnDate+'</td><td style="'+TD+';color:'+col+';font-weight:600">'+sl[l.status]+'</td></tr>';}).join('')+'</tbody></table>';
+  } else if(type==='epi_labels'){
+    html=header('Etiquettes EPI')+'<div>'+epis.filter(function(e){return e.status!=='retired';}).map(function(e){
+      var qrData=encodeURIComponent('EPI:'+e.ref+':'+e.type+':'+e.brand+':'+e.model+':'+e.norm+':'+e.lot);
+      return '<div style="display:inline-block;width:180px;height:120px;border:1px solid #ccc;border-radius:8px;padding:8px;margin:6px;vertical-align:top;font-family:sans-serif;page-break-inside:avoid"><div style="display:flex;gap:6px;align-items:center"><img src="https://api.qrserver.com/v1/create-qr-code/?size=70x70&data='+qrData+'" width="70" height="70" style="border-radius:4px"><div><div style="font-size:11px;font-weight:700;color:#16a34a">'+e.ref+'</div><div style="font-size:10px;color:#666;margin-top:2px">'+e.type+'</div><div style="font-size:9px;color:#999">'+e.brand+' '+e.model+'</div><div style="font-size:9px;color:#999">Achat: '+e.buy+'</div></div></div></div>';
+    }).join('')+'</div>';
   }
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>EPI AGORA — Export</title><style>body{font-family:Georgia,serif;padding:32px;max-width:1000px;margin:0 auto;color:#111827}@media print{.no-print{display:none}}</style></head><body>${html}<button class="no-print" onclick="window.print()" style="position:fixed;bottom:20px;right:20px;background:#16a34a;color:#fff;border:none;padding:12px 20px;border-radius:8px;font-size:14px;cursor:pointer">🖨 Imprimer / PDF</button></body></html>`);
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>EPI AGORA \u2014 Export</title><style>body{font-family:Georgia,serif;padding:32px;max-width:1000px;margin:0 auto;color:#111827}@media print{.no-print{display:none}}</style></head><body>'+html+'<button class="no-print" onclick="window.print()" style="position:fixed;bottom:20px;right:20px;background:#16a34a;color:#fff;border:none;padding:12px 20px;border-radius:8px;font-size:14px;cursor:pointer">Imprimer / PDF</button></body></html>');
   w.document.close();
 }
 
 // ==================== INIT ====================
-(async () => {
-  await loadAllData();
-  // Auto-try login from localStorage session
-  const saved = localStorage.getItem('epi_session');
-  if (saved) {
+window.addEventListener('load', function() {
+  loadAllData().then(function() {
+    // Try auto-login from saved session
     try {
-      const sess = JSON.parse(saved);
-      const user = members.find(m => m.login === sess.login && m.pass === sess.pass);
-      if (user) { loginSuccess(user); return; }
+      var saved = localStorage.getItem('epi_session');
+      if (saved) {
+        var sess = JSON.parse(saved);
+        var user = members.find(function(m){ return m.login===sess.login && m.pass===sess.pass; });
+        if (user) { loginSuccess(user); return; }
+        localStorage.removeItem('epi_session');
+      }
     } catch(e) {}
-    localStorage.removeItem('epi_session');
-  }
-})();
-updateAlertBadge();
-updateBatchBadge();
-
+    updateAlertBadge();
+    updateBatchBadge();
+  });
+});
 </script>
+
 
 </body>
 </html>
