@@ -1076,14 +1076,24 @@ var TABLE_KEY = {epis:'ref',controls:'ctrl_id',loans:'loan_id',batches:'batch_id
 function fsSet(table, rowId, obj) {
   var key = TABLE_KEY[table];
   var clean = JSON.parse(JSON.stringify(obj));
-  return dbUpsert(table, {[key]: String(rowId), data: clean});
+  var row = {};
+  row[key] = String(rowId);
+  row['data'] = clean;
+  return dbUpsert(table, row);
 }
 function fsUpdate(table, rowId, patch) {
   var key = TABLE_KEY[table];
   return dbSelect(table, key + '=eq.' + encodeURIComponent(rowId)).then(function(rows) {
     if (rows && rows.length > 0) {
-      var merged = Object.assign({}, rows[0].data, patch);
-      return dbUpsert(table, {[key]: String(rowId), data: merged});
+      var existing = rows[0].data || {};
+      var merged = {};
+      var k;
+      for (k in existing) { if (existing.hasOwnProperty(k)) merged[k] = existing[k]; }
+      for (k in patch)    { if (patch.hasOwnProperty(k))    merged[k] = patch[k]; }
+      var row = {};
+      row[key] = String(rowId);
+      row['data'] = merged;
+      return dbUpsert(table, row);
     }
   }).catch(function(e){ console.warn('fsUpdate:', e.message); });
 }
@@ -1106,15 +1116,27 @@ function loadAllData() {
     controls = rControls.map(function(r){ return Object.assign({},r.data,{id:r.ctrl_id}); });
     loans    = rLoans.map(function(r){ return Object.assign({},r.data,{id:r.loan_id}); });
     batches  = rBatches.map(function(r){ return Object.assign({},r.data,{id:r.batch_id}); });
-    members  = rMembers.map(function(r){ return Object.assign({},r.data,{id:r.member_id}); });
+    members  = rMembers.map(function(r) {
+      var m = Object.assign({}, r.data, {id: r.member_id});
+      // Ensure perms is always an array
+      if (!m.perms || !Array.isArray(m.perms)) m.perms = [];
+      return m;
+    });
     hideLoading();
     if (members.length === 0) {
       return seedInitialAdmin();
     }
   }).catch(function(e) {
     hideLoading();
-    console.error('Supabase error:', e);
-    showToast('Supabase inaccessible - mode demo active', 'warn');
+    console.error('Supabase loadAllData error:', e);
+    var msg = e.message || 'Erreur inconnue';
+    if (msg.indexOf('401') !== -1) {
+      showToast('Erreur 401: cle API invalide. Verifiez SUPABASE_ANON dans le code.', 'err');
+    } else if (msg.indexOf('Failed to fetch') !== -1) {
+      showToast('Impossible de joindre Supabase. Verifiez l\'URL et vos CORS.', 'err');
+    } else {
+      showToast('Supabase: ' + msg, 'err');
+    }
     loadDemoData();
   });
 }
@@ -1123,7 +1145,11 @@ function seedInitialAdmin() {
   var admin = {id:'1',name:'Admin Club',login:'admin',pass:'admin123',
     role:'admin',perms:ROLE_PERMS.admin,lastAccess:todayStr,email:''};
   members = [admin];
-  return fsSet('members','1',admin);
+  return fsSet('members','1',admin).then(function(){
+    console.log('Admin seede avec succes');
+  }).catch(function(e){
+    console.error('Erreur seed admin:', e.message);
+  });
 }
 
 // ==================== PHOTO UPLOAD ====================
@@ -1141,10 +1167,16 @@ function uploadPhotoToStorage(dataUrl, path) {
                'Content-Type':mime,'x-upsert':'true'},
       body: new Blob([u8],{type:mime})
     }).then(function(res){
-      if (!res.ok) throw new Error('upload '+res.status);
+      if (!res.ok) {
+        console.warn('Storage upload failed ('+res.status+') - storing image inline');
+        return dataUrl; // fallback: keep base64 inline in JSON
+      }
       return SUPABASE_URL+'/storage/v1/object/public/epi-photos/'+path;
+    }).catch(function(e){
+      console.warn('Storage upload error:', e.message, '- storing inline');
+      return dataUrl;
     });
-  } catch(e) { console.warn('Photo upload failed:',e.message); return Promise.resolve(dataUrl); }
+  } catch(e) { console.warn('Photo processing error:',e.message); return Promise.resolve(dataUrl); }
 }
 
 // ==================== AUTH ====================
@@ -1157,7 +1189,10 @@ function doLogin() {
     errEl.textContent='Renseignez identifiant et mot de passe.';
     return;
   }
-  var user = members.find(function(m){ return m.login===login && m.pass===pass; });
+  var user = null;
+  for (var i=0; i<members.length; i++) {
+    if (members[i].login === login && members[i].pass === pass) { user = members[i]; break; }
+  }
   if (!user) {
     errEl.style.display='block';
     errEl.textContent = members.length===0
@@ -1192,7 +1227,13 @@ function doLogout() {
   document.getElementById('login-error').style.display='none';
 }
 
-function hasPerm(p){ return currentUser && currentUser.perms && currentUser.perms.indexOf(p)!==-1; }
+function hasPerm(p) {
+  if (!currentUser) return false;
+  var perms = currentUser.perms;
+  if (!perms || !perms.length) return false;
+  for (var i=0; i<perms.length; i++) { if (perms[i]===p) return true; }
+  return false;
+}
 
 function applyPermissions() {
   document.querySelectorAll('[data-perm]').forEach(function(el){
@@ -1456,18 +1497,26 @@ function saveMember() {
   var allPerms=['view_epi','add_epi','view_controls','add_controls','view_loans','manage_loans','export_pdf','manage_members'];
   var perms=allPerms.filter(function(p){var el=document.getElementById('p-'+p);return el&&el.checked;});
   if(editingMemberId) {
-    var m=members.find(function(x){return String(x.id)===String(editingMemberId);});
-    if(m){Object.assign(m,{name:name,login:login,role:role,perms:perms,email:email});if(pass)m.pass=pass;}
+    var m=null;
+    for(var i=0;i<members.length;i++){if(String(members[i].id)===String(editingMemberId)){m=members[i];break;}}
+    if(m){
+      m.name=name; m.login=login; m.role=role; m.perms=perms; m.email=email;
+      if(pass) m.pass=pass;
+    }
     if(currentUser&&String(currentUser.id)===String(editingMemberId)){currentUser=m;applyPermissions();}
-    fsSet('members',String(editingMemberId),m).catch(function(){});
+    if(m) fsSet('members',String(editingMemberId),m).catch(function(e){showToast('Erreur sauvegarde: '+e.message,'err');});
   } else {
-    if(members.find(function(m){return m.login===login;})){alert('Identifiant deja utilise');return;}
+    var exists=false;
+    for(var j=0;j<members.length;j++){if(members[j].login===login){exists=true;break;}}
+    if(exists){alert('Identifiant deja utilise');return;}
     var newId=String(Date.now());
-    var nm={id:newId,name:name,login:login,pass:pass,email:email,role:role,perms:perms,lastAccess:'&mdash;'};
+    var nm={id:newId,name:name,login:login,pass:pass,email:email,role:role,perms:perms,lastAccess:'-'};
     members.push(nm);
-    fsSet('members',newId,nm).catch(function(){});
+    fsSet('members',newId,nm).then(function(){
+      showToast('Membre cree - il peut maintenant se connecter');
+    }).catch(function(e){showToast('Erreur sauvegarde: '+e.message,'err');});
   }
-  closeModal(); renderMembers(); showToast('Membre enregistre');
+  closeModal(); renderMembers();
 }
 function updateRolePerms() {
   var role=document.getElementById('m-role').value;
