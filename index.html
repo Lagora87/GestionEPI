@@ -387,17 +387,17 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
             <input type="text" id="search-input" placeholder="Rechercher…" oninput="renderInventory()">
             <select id="filter-type" onchange="renderInventory()">
               <option value="">Toutes categories</option>
-              <optgroup label="Cordes"><option>Cordes SAE</option><option>Cordes statiques</option><option>Cordes falaise</option><option>Cordes a double</option></optgroup>
-              <optgroup label="Baudriers"><option>Baudriers adultes</option><option>Baudriers enfants</option></optgroup>
-              <optgroup label="Casques"><option>Casques escalade</option><option>Casques canyoning</option></optgroup>
-              <optgroup label="Degaines"><option>Sangles</option><option>Mousquetons coudes</option><option>Mousquetons droits</option></optgroup>
+              <optgroup label="Corde"><option>Cordes SAE</option><option>Cordes statiques</option><option>Cordes falaise</option><option>Cordes a double</option></optgroup>
+              <optgroup label="Baudriers"><option>Baudriers</option></optgroup>
+              <optgroup label="Casques"><option>Casques</option></optgroup>
+              <optgroup label="Degaines"><option value="Sangles deg">Sangles</option><option>Mousquetons droits</option><option>Mousquetons coudes</option></optgroup>
               <optgroup label="Systemes assurage"><option>Tubes</option><option>Autobloquants</option></optgroup>
-              <optgroup label="Longes"><option>Longes simples</option><option>Longes doubles</option><option>Longes reglables</option></optgroup>
-              <optgroup label="Sangles"><option>Sangles anneau</option><option>Sangles expres</option><option>Sangles plates</option></optgroup>
-              <optgroup label="Bloqueurs"><option>Bloqueurs de poing</option><option>Bloqueurs de poitrine</option><option>Bloqueurs ventral</option></optgroup>
-              <optgroup label="Canyoning"><option>Combinaisons</option><option>Descendeurs</option><option>Protections</option></optgroup>
-              <optgroup label="Via Ferrata"><option>Longes via ferrata</option><option>Casques via ferrata</option></optgroup>
-              <optgroup label="Dry Tooling"><option>Piolets</option><option>Crampons</option><option>Baudriers dry</option></optgroup>
+              <optgroup label="Longes"><option>Longes</option></optgroup>
+              <optgroup label="Sangles"><option>Sangles</option></optgroup>
+              <optgroup label="Bloqueurs"><option>Bloqueurs</option></optgroup>
+              <optgroup label="Canyoning"><option>Canyoning</option></optgroup>
+              <optgroup label="Via Ferrata"><option>Via Ferrata</option></optgroup>
+              <optgroup label="Dry Tooling"><option>Dry Tooling</option></optgroup>
             </select>
             <select id="filter-status" onchange="renderInventory()">
               <option value="">Tous les états</option>
@@ -496,17 +496,17 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
       <div class="form-group"><label>Type *</label>
         <select id="f-type" onchange="updateLifespanHint()">
           <option value="">Choisir...</option>
-          <optgroup label="Cordes"><option>Cordes SAE</option><option>Cordes statiques</option><option>Cordes falaise</option><option>Cordes a double</option></optgroup>
-          <optgroup label="Baudriers"><option>Baudriers adultes</option><option>Baudriers enfants</option></optgroup>
-          <optgroup label="Casques"><option>Casques escalade</option><option>Casques canyoning</option></optgroup>
-          <optgroup label="Degaines"><option>Sangles</option><option>Mousquetons coudes</option><option>Mousquetons droits</option></optgroup>
+          <optgroup label="Corde"><option>Cordes SAE</option><option>Cordes statiques</option><option>Cordes falaise</option><option>Cordes a double</option></optgroup>
+          <optgroup label="Baudriers"><option>Baudriers</option></optgroup>
+          <optgroup label="Casques"><option>Casques</option></optgroup>
+          <optgroup label="Degaines"><option value="Sangles deg">Sangles</option><option>Mousquetons droits</option><option>Mousquetons coudes</option></optgroup>
           <optgroup label="Systemes assurage"><option>Tubes</option><option>Autobloquants</option></optgroup>
-          <optgroup label="Longes"><option>Longes simples</option><option>Longes doubles</option><option>Longes reglables</option></optgroup>
-          <optgroup label="Sangles"><option>Sangles anneau</option><option>Sangles expres</option><option>Sangles plates</option></optgroup>
-          <optgroup label="Bloqueurs"><option>Bloqueurs de poing</option><option>Bloqueurs de poitrine</option><option>Bloqueurs ventral</option></optgroup>
-          <optgroup label="Canyoning"><option>Combinaisons</option><option>Descendeurs</option><option>Protections</option></optgroup>
-          <optgroup label="Via Ferrata"><option>Longes via ferrata</option><option>Casques via ferrata</option></optgroup>
-          <optgroup label="Dry Tooling"><option>Piolets</option><option>Crampons</option><option>Baudriers dry</option></optgroup>
+          <optgroup label="Longes"><option>Longes</option></optgroup>
+          <optgroup label="Sangles"><option>Sangles</option></optgroup>
+          <optgroup label="Bloqueurs"><option>Bloqueurs</option></optgroup>
+          <optgroup label="Canyoning"><option>Canyoning</option></optgroup>
+          <optgroup label="Via Ferrata"><option>Via Ferrata</option></optgroup>
+          <optgroup label="Dry Tooling"><option>Dry Tooling</option></optgroup>
         </select>
       </div>
       <div class="form-group"><label>Marque</label><input type="text" id="f-brand" placeholder="ex: Petzl"></div>
@@ -643,17 +643,17 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
       <div class="form-group"><label>Type d'EPI *</label>
         <select id="b-type" onchange="updateBatchLifespanHint()">
           <option value="">Choisir...</option>
-          <optgroup label="Cordes"><option>Cordes SAE</option><option>Cordes statiques</option><option>Cordes falaise</option><option>Cordes a double</option></optgroup>
-          <optgroup label="Baudriers"><option>Baudriers adultes</option><option>Baudriers enfants</option></optgroup>
-          <optgroup label="Casques"><option>Casques escalade</option><option>Casques canyoning</option></optgroup>
-          <optgroup label="Degaines"><option>Sangles</option><option>Mousquetons coudes</option><option>Mousquetons droits</option></optgroup>
+          <optgroup label="Corde"><option>Cordes SAE</option><option>Cordes statiques</option><option>Cordes falaise</option><option>Cordes a double</option></optgroup>
+          <optgroup label="Baudriers"><option>Baudriers</option></optgroup>
+          <optgroup label="Casques"><option>Casques</option></optgroup>
+          <optgroup label="Degaines"><option value="Sangles deg">Sangles</option><option>Mousquetons droits</option><option>Mousquetons coudes</option></optgroup>
           <optgroup label="Systemes assurage"><option>Tubes</option><option>Autobloquants</option></optgroup>
-          <optgroup label="Longes"><option>Longes simples</option><option>Longes doubles</option><option>Longes reglables</option></optgroup>
-          <optgroup label="Sangles"><option>Sangles anneau</option><option>Sangles expres</option><option>Sangles plates</option></optgroup>
-          <optgroup label="Bloqueurs"><option>Bloqueurs de poing</option><option>Bloqueurs de poitrine</option><option>Bloqueurs ventral</option></optgroup>
-          <optgroup label="Canyoning"><option>Combinaisons</option><option>Descendeurs</option><option>Protections</option></optgroup>
-          <optgroup label="Via Ferrata"><option>Longes via ferrata</option><option>Casques via ferrata</option></optgroup>
-          <optgroup label="Dry Tooling"><option>Piolets</option><option>Crampons</option><option>Baudriers dry</option></optgroup>
+          <optgroup label="Longes"><option>Longes</option></optgroup>
+          <optgroup label="Sangles"><option>Sangles</option></optgroup>
+          <optgroup label="Bloqueurs"><option>Bloqueurs</option></optgroup>
+          <optgroup label="Canyoning"><option>Canyoning</option></optgroup>
+          <optgroup label="Via Ferrata"><option>Via Ferrata</option></optgroup>
+          <optgroup label="Dry Tooling"><option>Dry Tooling</option></optgroup>
         </select>
       </div>
       <div class="form-group"><label>Quantité *</label><input type="text" id="b-qty" placeholder="ex: 10" oninput="updateBatchPreview()"></div>
@@ -792,100 +792,73 @@ function diffMonths(a,b){ return Math.floor(diffDays(a,b)/30.5); }
 function uid()         { return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
 
 // ==================== STATIC CONFIG ====================
-// Hierarchie: categories et sous-categories
+// Categories et sous-categories - exactement comme demande
 var EPI_CATEGORIES = {
-  'Cordes': {
+  'Corde': {
     icon: '&#129682;',
     subs: ['Cordes SAE','Cordes statiques','Cordes falaise','Cordes a double']
   },
   'Baudriers': {
     icon: '&#128288;',
-    subs: ['Baudriers adultes','Baudriers enfants']
+    subs: []
   },
   'Casques': {
-    icon: '&#9937;&#65039;',
-    subs: ['Casques escalade','Casques canyoning']
+    icon: '&#9937;',
+    subs: []
   },
   'Degaines': {
     icon: '&#128279;',
-    subs: ['Sangles','Mousquetons coudes','Mousquetons droits']
+    subs: ['Sangles','Mousquetons droits','Mousquetons coudes']
   },
-  "Systemes d'assurage": {
-    icon: '&#127897;&#65039;',
+  'Systemes assurage': {
+    icon: '&#127897;',
     subs: ['Tubes','Autobloquants']
   },
   'Longes': {
     icon: '&#129525;',
-    subs: ['Longes simples','Longes doubles','Longes reglables']
+    subs: []
   },
   'Sangles': {
     icon: '&#128308;',
-    subs: ['Sangles anneau','Sangles expres','Sangles plates']
+    subs: []
   },
   'Bloqueurs': {
     icon: '&#128200;',
-    subs: ['Bloqueurs de poing','Bloqueurs de poitrine','Bloqueurs ventral']
+    subs: []
   },
   'Canyoning': {
     icon: '&#127754;',
-    subs: ['Combinaisons','Descendeurs','Protections']
+    subs: []
   },
   'Via Ferrata': {
-    icon: '&#9968;&#65039;',
-    subs: ['Longes via ferrata','Casques via ferrata']
+    icon: '&#9968;',
+    subs: []
   },
   'Dry Tooling': {
-    icon: '&#129483;',
-    subs: ['Piolets','Crampons','Baudriers dry']
+    icon: '&#127979;',
+    subs: []
   }
 };
-
-// Config par type (cle = sous-categorie ou categorie)
+// EPI types - sous-categories ont cat= leur categorie parente
 var EPI_CONFIG = {
-  // Cordes
-  'Cordes SAE':       { lifeMax:10, lifeUse:5, ctrlMonths:12, norm:'EN892', cat:'Cordes' },
-  'Cordes statiques': { lifeMax:10, lifeUse:5, ctrlMonths:12, norm:'EN1891', cat:'Cordes' },
-  'Cordes falaise':   { lifeMax:10, lifeUse:5, ctrlMonths:12, norm:'EN892', cat:'Cordes' },
-  'Cordes a double':  { lifeMax:10, lifeUse:5, ctrlMonths:12, norm:'EN892', cat:'Cordes' },
-  // Baudriers
-  'Baudriers adultes':{ lifeMax:10, lifeUse:5, ctrlMonths:12, norm:'EN12277', cat:'Baudriers' },
-  'Baudriers enfants':{ lifeMax:5,  lifeUse:3, ctrlMonths:6,  norm:'EN12277', cat:'Baudriers' },
-  // Casques
-  'Casques escalade': { lifeMax:10, lifeUse:5, ctrlMonths:12, norm:'EN12492', cat:'Casques' },
-  'Casques canyoning':{ lifeMax:10, lifeUse:5, ctrlMonths:12, norm:'EN12492', cat:'Casques' },
-  // Degaines
-  'Sangles':              { lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN566', cat:'Degaines' },
-  'Mousquetons coudes':   { lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN12275', cat:'Degaines' },
-  'Mousquetons droits':   { lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN12275', cat:'Degaines' },
-  // Systemes assurage
-  'Tubes':           { lifeMax:10, lifeUse:5, ctrlMonths:12, norm:'EN15151', cat:"Systemes d'assurage" },
-  'Autobloquants':   { lifeMax:10, lifeUse:5, ctrlMonths:12, norm:'EN15151', cat:"Systemes d'assurage" },
-  // Longes
-  'Longes simples':    { lifeMax:10, lifeUse:5, ctrlMonths:12, norm:'EN354', cat:'Longes' },
-  'Longes doubles':    { lifeMax:10, lifeUse:5, ctrlMonths:12, norm:'EN354', cat:'Longes' },
-  'Longes reglables':  { lifeMax:10, lifeUse:5, ctrlMonths:12, norm:'EN354', cat:'Longes' },
-  // Sangles
-  'Sangles anneau':  { lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN566', cat:'Sangles' },
-  'Sangles expres':  { lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN566', cat:'Sangles' },
-  'Sangles plates':  { lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN566', cat:'Sangles' },
-  // Bloqueurs
-  'Bloqueurs de poing':    { lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN567', cat:'Bloqueurs' },
-  'Bloqueurs de poitrine': { lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN567', cat:'Bloqueurs' },
-  'Bloqueurs ventral':     { lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN567', cat:'Bloqueurs' },
-  // Canyoning
-  'Combinaisons':  { lifeMax:5, lifeUse:3, ctrlMonths:6, norm:'Fabricant', cat:'Canyoning' },
-  'Descendeurs':   { lifeMax:10, lifeUse:5, ctrlMonths:12, norm:'EN15151', cat:'Canyoning' },
-  'Protections':   { lifeMax:5, lifeUse:3, ctrlMonths:6, norm:'Fabricant', cat:'Canyoning' },
-  // Via Ferrata
-  'Longes via ferrata':  { lifeMax:5, lifeUse:3, ctrlMonths:6, norm:'EN958', cat:'Via Ferrata' },
-  'Casques via ferrata': { lifeMax:10, lifeUse:5, ctrlMonths:12, norm:'EN12492', cat:'Via Ferrata' },
-  // Dry Tooling
-  'Piolets':   { lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN13089', cat:'Dry Tooling' },
-  'Crampons':  { lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN893', cat:'Dry Tooling' },
-  'Baudriers dry':{ lifeMax:10, lifeUse:5, ctrlMonths:12, norm:'EN12277', cat:'Dry Tooling' },
+  'Cordes SAE':        { lifeMax:10, lifeUse:5,  ctrlMonths:12, norm:'EN892',   cat:'Corde' },
+  'Cordes statiques':  { lifeMax:10, lifeUse:5,  ctrlMonths:12, norm:'EN1891',  cat:'Corde' },
+  'Cordes falaise':    { lifeMax:10, lifeUse:5,  ctrlMonths:12, norm:'EN892',   cat:'Corde' },
+  'Cordes a double':   { lifeMax:10, lifeUse:5,  ctrlMonths:12, norm:'EN892',   cat:'Corde' },
+  'Baudriers':         { lifeMax:10, lifeUse:5,  ctrlMonths:12, norm:'EN12277', cat:'Baudriers' },
+  'Casques':           { lifeMax:10, lifeUse:5,  ctrlMonths:12, norm:'EN12492', cat:'Casques' },
+  'Sangles deg':       { lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN566',   cat:'Degaines' },
+  'Mousquetons droits':{ lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN12275', cat:'Degaines' },
+  'Mousquetons coudes':{ lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN12275', cat:'Degaines' },
+  'Tubes':             { lifeMax:10, lifeUse:5,  ctrlMonths:12, norm:'EN15151', cat:'Systemes assurage' },
+  'Autobloquants':     { lifeMax:10, lifeUse:5,  ctrlMonths:12, norm:'EN15151', cat:'Systemes assurage' },
+  'Longes':            { lifeMax:10, lifeUse:5,  ctrlMonths:12, norm:'EN354',   cat:'Longes' },
+  'Sangles':           { lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN566',   cat:'Sangles' },
+  'Bloqueurs':         { lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN567',   cat:'Bloqueurs' },
+  'Canyoning':         { lifeMax:10, lifeUse:5,  ctrlMonths:6,  norm:'Fabricant', cat:'Canyoning' },
+  'Via Ferrata':       { lifeMax:5,  lifeUse:3,  ctrlMonths:6,  norm:'EN958',   cat:'Via Ferrata' },
+  'Dry Tooling':       { lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN13089', cat:'Dry Tooling' }
 };
-
-// Helper: retourne la categorie parente d'un type
 function getCat(type) {
   var cfg = EPI_CONFIG[type];
   return cfg ? cfg.cat : type;
@@ -896,784 +869,141 @@ function getCat(type) {
 var EPI_CHECKS = {
   'Cordes SAE': {
     icon:'&#129682;',
-    resume:"Corde dynamique. Absorbe l'energie de chute.",
+    resume:'Corde dynamique pour escalade en salle. Absorbe l energie de chute.',
     points:[
       'Gaine : absence de coupures, effilochages, zones dures ou molles',
-      'Ame : pas de zones molles, plates ou torsadees (signe de choc absorbe)',
+      'Ame : pas de zones molles, plates ou torsadees',
       'Extremites : manchons non decollees, marquage lisible',
-      'Pas de contamination chimique (acide, solvant)',
+      'Pas de contamination chimique',
       'Souplesse homogene sur toute la longueur',
-      'Etiquette centrale lisible (serie, date fabrication, norme)'
+      'Etiquette centrale lisible'
     ],
     retirement:[
-      'Chute facteur 2 ou chute importante ayant sollicite fortement la corde',
-      'Coupure ou entaille visible dans la gaine ou l\'ame',
-      'Zone molle, plate ou dure localisee sur l\'ame',
-      'Diametre reduit de plus de 20% sur une section',
+      'Chute importante ayant sollicite fortement la corde',
+      'Coupure ou entaille visible dans la gaine ou l ame',
+      'Zone molle ou dure localisee sur l ame',
       'Contamination chimique averee',
-      'Duree de vie max atteinte (10 ans fabrication, 5 ans usage intensif)',
-      'Toute corde de plus de 10 ans'
+      'Duree de vie max atteinte'
     ],
     docLinks:[
-      {label:'Notice Petzl (cordes)',url:'https://www.petzl.com/fr/Sport/Cordes'},
+      {label:'Notice Petzl cordes',url:'https://www.petzl.com/fr/Sport/Cordes'},
       {label:'Notice Mammut',url:'https://www.mammut.com/fr/fr/c/cordes'},
       {label:'Notice Beal',url:'https://www.beal-planet.com/fr/cordes-escalade'},
-      {label:'Norme EN 892 - FFME',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}
+      {label:'FFME securite EPI',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}
     ]
   },
-  'Baudriers adultes': {
+  'Baudriers': {
     icon:'&#128288;',
-    resume:"Harnais d'encordement reliant le grimpeur a la corde.",
+    resume:'Harnais d encordement reliant le grimpeur a la corde.',
     points:[
-      'Sangles : pas de coupures, effilochages, zones rigides ou decolorees',
-      'Coutures de charge (point ventral, sous-cuisses) : aucun fil coupe',
+      'Sangles : pas de coupures, effilochages, zones rigides',
+      'Coutures de charge : aucun fil coupe',
       'Boucles de reglage : fonctionnement correct, blocage effectif',
-      'Point ventral : pas de deformation ni usure de l\'anneau',
-      'Sous-cuisses et ceinture : elasticite normale, rembourrage intact',
-      'Etiquette lisible (reference, taille, norme, date)'
+      'Point ventral : pas de deformation ni usure',
+      'Etiquette lisible'
     ],
     retirement:[
       'Chute ayant genere un choc violent',
-      'Coupure ou entaille dans une sangle, meme partielle',
-      'Couture de charge endommagee ou decousue',
-      'Deformation ou usure marquee du point ventral',
-      'Boucle de reglage bloquee ou ne verrouillant plus',
+      'Coupure dans une sangle',
+      'Couture de charge endommagee',
+      'Boucle de reglage defaillante',
       'Contamination chimique',
-      'Duree de vie max atteinte (10 ans fabrication, 5 ans usage intensif)'
+      'Duree de vie max atteinte'
     ],
     docLinks:[
-      {label:'Notice Petzl (harnais)',url:'https://www.petzl.com/fr/Sport/Harnais'},
+      {label:'Notice Petzl harnais',url:'https://www.petzl.com/fr/Sport/Harnais'},
       {label:'Notice Black Diamond',url:'https://www.blackdiamondequipment.com/fr_FR/harnesses'},
-      {label:'Notice Edelrid',url:'https://www.edelrid.com/fr/sport/harnais'},
-      {label:'Norme EN 12277 - FFME',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}
+      {label:'FFME securite EPI',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}
     ]
   },
-  'Casques escalade': {
-    icon:'&#9937;&#65039;',
-    resume:'Casque escalade protegeant la tete contre les chutes de pierres.',
+  'Casques': {
+    icon:'&#9937;',
+    resume:'Casque protegeant la tete contre les chutes de pierres et impacts.',
     points:[
-      'Coque externe : pas de fissures, craquelures, eclats ou deformation',
-      'Mousse interne (EPS) : pas d\'enfoncement, compression ou fissure',
-      'Systeme de reglage : fonctionnement fluide, blocage efficace',
-      'Jugulaire et boucle : sangle intacte, fermeture operationnelle',
-      'Reseau de sangles internes : pas de rupture ni decollement',
-      'Etiquette lisible (normes, taille, date de fabrication)'
+      'Coque externe : pas de fissures, craquelures ou deformation',
+      'Mousse interne : pas d enfoncement ni fissure',
+      'Systeme de reglage : fonctionnement fluide',
+      'Jugulaire et boucle : fermeture operationnelle',
+      'Etiquette lisible'
     ],
     retirement:[
       'Apres tout impact significatif, meme sans degat visible',
-      'Fissure ou craquelure sur la coque, meme superficielle',
-      'Deformation ou enfoncement de la mousse interne',
-      'Jugulaire ou boucle defectueuse ou cassee',
-      'Exposition a des produits chimiques (solvants)',
-      'Duree de vie max atteinte (10 ans fabrication, 5 ans usage intensif)'
+      'Fissure sur la coque',
+      'Deformation de la mousse interne',
+      'Jugulaire defectueuse',
+      'Exposition a des solvants',
+      'Duree de vie max atteinte'
     ],
     docLinks:[
-      {label:'Notice Petzl (casques)',url:'https://www.petzl.com/fr/Sport/Casques'},
+      {label:'Notice Petzl casques',url:'https://www.petzl.com/fr/Sport/Casques'},
       {label:'Notice Edelrid',url:'https://www.edelrid.com/fr/sport/casques'},
-      {label:'Norme EN 12492 - FFME',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}
+      {label:'FFME securite EPI',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}
     ]
   },
   'Sangles': {
     icon:'&#128279;',
-    resume:'Ensemble de deux mousquetons relies par une sangle cousue.',
+    resume:'Sangles cousues et mousquetons pour relier les points d ancrage.',
     points:[
-      'Mousquetons : ouverture/fermeture fluide, doigt revenant seul ferme',
-      'Mousquetons : absence de criques, fissures, deformation',
-      'Sangle cousue : pas de coupures, effilochages ni traces de choc',
-      'Axe et ressort du doigt : pas de jeu excessif',
-      'Marquage lisible : charge de rupture (kN), norme, fabricant'
+      'Sangle : pas de coupures, effilochages ni traces de choc',
+      'Coutures : aucun fil rompu',
+      'Mousquetons : doigt fonctionnel, retour automatique',
+      'Marquage lisible'
     ],
     retirement:[
-      'Mousqueton ouvert lors d\'une chute',
-      'Fissure ou deformation visible sur corps ou doigt',
-      'Doigt ne revenant pas seul en position fermee',
-      'Entaille dans la sangle cousue',
-      'Coutures effilochees ou decousues',
-      'Duree de vie max atteinte (10 ans)'
+      'Coupure ou entaille dans la sangle',
+      'Coutures effilochees',
+      'Doigt ne revenant pas en position fermee',
+      'Duree de vie max atteinte'
     ],
     docLinks:[
-      {label:'Notice Petzl (degaines)',url:'https://www.petzl.com/fr/Sport/Degaines'},
-      {label:'Normes EN 566/12275 - FFME',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}
-    ]
-  },
-  'Mousquetons droits': {
-    icon:'&#128274;',
-    resume:'Connecteur metallique pour relier differents elements du systeme.',
-    points:[
-      'Corps : absence de fissures, criques, deformation ou corrosion',
-      'Doigt : ouverture facile, retour automatique ferme et verrouille',
-      'Verrouillage : vissage/devissage correct ou systeme auto fonctionnel',
-      'Gorge interieure : absence de rainure d\'usure profonde',
-      'Marquage lisible : resistance (kN), norme, fabricant'
-    ],
-    retirement:[
-      'Fissure ou crique visible sur corps ou doigt',
-      'Deformation visible du corps',
-      'Doigt ne revenant pas seul en position fermee',
-      'Systeme de verrouillage defaillant',
-      'Rainure d\'usure profonde dans la gorge',
-      'Duree de vie max atteinte (10 ans)'
-    ],
-    docLinks:[
-      {label:'Notice Petzl',url:'https://www.petzl.com/fr/Sport/Mousquetons'},
-      {label:'Notice Black Diamond',url:'https://www.blackdiamondequipment.com/fr_FR/carabiners-and-quickdraws'},
-      {label:'Norme EN 12275 - FFME',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}
+      {label:'Notice Petzl degaines',url:'https://www.petzl.com/fr/Sport/Degaines'},
+      {label:'FFME securite EPI',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}
     ]
   },
   'Tubes': {
-    icon:'&#127897;&#65039;',
-    resume:'Dispositif mecanique pour assurer et/ou descendre en rappel.',
+    icon:'&#127897;',
+    resume:'Dispositif mecanique pour assurer et descendre en rappel.',
     points:[
-      'Corps : pas de fissures, deformation, usure excessive',
-      'Mecanisme assiste : came ou levier fonctionnel, pas de jeu anormal',
-      'Ressort interne : retour correct en position de blocage',
-      'Gorge(s) de friction : absence de rainure d\'usure profonde',
-      'Poignee ou levier : retour automatique correct'
+      'Corps : pas de fissures ni deformation',
+      'Gorge de friction : absence de rainure profonde',
+      'Mousqueton associe : fonctionnel',
+      'Etiquette lisible'
     ],
     retirement:[
-      'Mecanisme assiste ne bloquant plus la corde en cas de lacher',
       'Fissure ou deformation du corps',
-      'Usure profonde de la gorge de friction',
-      'Ressort ou came interne defaillant',
-      'Duree de vie max atteinte (10 ans, 5 ans usage intensif)'
+      'Rainure d usure profonde dans la gorge',
+      'Duree de vie max atteinte'
     ],
     docLinks:[
-      {label:'Notice Petzl Grigri',url:'https://www.petzl.com/fr/Sport/Assureurs-et-descendeurs/GRIGRI'},
-      {label:'Norme EN 15151 - FFME',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}
+      {label:'Notice Petzl assureurs',url:'https://www.petzl.com/fr/Sport/Assureurs-et-descendeurs'},
+      {label:'FFME securite EPI',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}
     ]
   },
-  'Longes simples': {
+  'Longes': {
     icon:'&#129525;',
     resume:'Sangle ou corde cousue reliant le grimpeur a un ancrage.',
     points:[
-      'Sangles : absence de coupures, effilochages, abrasions profondes',
-      'Coutures de charge aux extremites : aucun fil rompu',
-      'Absorbeur de choc (si integre) : non declenche, protege intact',
-      'Absence de noeuds permanents dans la sangle'
+      'Sangles : absence de coupures, effilochages, abrasions',
+      'Coutures de charge : aucun fil rompu',
+      'Absorbeur de choc si integre : non declenche',
+      'Absence de noeuds permanents'
     ],
     retirement:[
-      'Absorbeur de choc declenche (longe ayant arrete une chute)',
-      'Coupure ou entaille dans la sangle',
-      'Couture de charge endommagee ou decousue',
+      'Absorbeur de choc declenche',
+      'Coupure dans la sangle',
+      'Couture de charge endommagee',
       'Contamination chimique',
-      'Duree de vie max atteinte (10 ans fabrication, 5 ans usage intensif)'
+      'Duree de vie max atteinte'
     ],
     docLinks:[
-      {label:'Notice Petzl (longes)',url:'https://www.petzl.com/fr/Sport/Longes'},
-      {label:'Notice Beal',url:'https://www.beal-planet.com/fr/longes'},
-      {label:'Norme EN 354 - FFME',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}
-    ]
-  },
-  'Baudriers enfants': {
-    icon:'&#128118;',
-    resume:'Harnais adapte aux morphologies enfants. Duree de vie reduite.',
-    points:[
-      'Sangles : pas de coupures, effilochages ni zones rigides',
-      'Coutures de charge : verification minutieuse des points de jonction',
-      'Boucles de reglage : fonctionnement correct et blocage fiable',
-      'Ajustement taille : compatibilite avec la morphologie actuelle',
-      'Point ventral : pas de deformation ni usure'
-    ],
-    retirement:[
-      'Chute ayant genere un choc violent',
-      'Coupure ou entaille dans une sangle',
-      'Couture de charge endommagee ou decousue',
-      'Boucle de reglage defaillante',
-      'Harnais devenu trop petit - ne jamais forcer l\'ajustement',
-      'Contamination chimique',
-      'Duree de vie max atteinte (5 ans fabrication, 3 ans usage intensif)'
-    ],
-    docLinks:[
-      {label:'Notice Petzl harnais enfant',url:'https://www.petzl.com/fr/Sport/Harnais'},
-      {label:'Guide FFME securite',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}
+      {label:'Notice Petzl longes',url:'https://www.petzl.com/fr/Sport/Longes'},
+      {label:'FFME securite EPI',url:'https://www.ffme.fr/minisite-securite/page/equipements-de-protection.html'}
     ]
   }
 };
 
-var ROLE_PERMS = {
-  admin:   ['view_epi','add_epi','view_controls','add_controls','view_loans','manage_loans','export_pdf','manage_members'],
-  referent:['view_epi','add_epi','view_controls','add_controls','view_loans','manage_loans','export_pdf'],
-  member:  ['view_epi','view_loans']
-};
-
-// ==================== IN-MEMORY STORE ====================
-var epis=[], controls=[], loans=[], batches=[], members=[];
-var currentUser=null, editingMemberId=null;
-var qrStream=null, qrInterval=null, qrParsed=null;
-var nextBatchNum=2;
-var photoStream=null, photoTarget=null, photoCameraIndex=0, photoCameras=[];
-var pendingEpiPhotos=[], pendingBatchPhotos=[];
-var selectedRefs2=new Set();
-var batchCtrlTarget=null;
-
-// ==================== UI HELPERS ====================
-function showLoading(msg) {
-  var el = document.getElementById('loading-overlay');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'loading-overlay';
-    el.style.cssText = 'position:fixed;inset:0;background:rgba(255,255,255,0.9);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-family:var(--font)';
-    el.innerHTML = '<div style="width:36px;height:36px;border:3px solid #e5e7eb;border-top-color:#16a34a;border-radius:50%;animation:spin 0.7s linear infinite"></div><div id="loading-msg" style="font-size:15px;color:#6b7280"></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>';
-    document.body.appendChild(el);
-  }
-  document.getElementById('loading-msg').textContent = msg || 'Chargement...';
-  el.style.display = 'flex';
-}
-function hideLoading() {
-  var el = document.getElementById('loading-overlay');
-  if (el) el.style.display = 'none';
-}
-function showToast(msg, type) {
-  var el = document.getElementById('toast');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'toast';
-    el.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9998;font-size:14px;font-weight:600;padding:12px 20px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.12);transition:opacity 0.3s;pointer-events:none;font-family:var(--font)';
-    document.body.appendChild(el);
-  }
-  el.textContent = msg;
-  el.style.background = type==='err' ? '#fee2e2' : type==='warn' ? '#fef3c7' : '#dcfce7';
-  el.style.color       = type==='err' ? '#dc2626' : type==='warn' ? '#b45309' : '#14532d';
-  el.style.opacity = '1';
-  clearTimeout(el._t);
-  el._t = setTimeout(function(){ el.style.opacity='0'; }, 3000);
-}
-
-// ==================== DEMO FALLBACK DATA ====================
-function loadDemoData() {
-  members = [
-    {id:'1',name:'Admin Club',login:'admin',pass:'admin123',role:'admin',perms:ROLE_PERMS.admin,lastAccess:todayStr,email:''},
-    {id:'2',name:'Marie Dupont',login:'marie',pass:'marie123',role:'referent',perms:ROLE_PERMS.referent,lastAccess:todayStr,email:''},
-    {id:'3',name:'Jean Martin',login:'jean',pass:'jean123',role:'member',perms:ROLE_PERMS.member,lastAccess:todayStr,email:''}
-  ];
-  epis = [
-    {ref:'CRD-001',type:'Cordes SAE',brand:'Petzl',model:'Arial 10.0',buy:'2022-03-15',fab:'2022-01-01',norm:'EN892',lot:'LOT220315',status:'ok',lastCtrl:'2024-09-10',notes:'',photos:[]},
-    {ref:'HRN-001',type:'Baudriers adultes',brand:'Petzl',model:'Adjama',buy:'2023-01-10',fab:'2022-12-01',norm:'EN12277',lot:'LOT230110',status:'ok',lastCtrl:'2024-11-20',notes:'',photos:[]},
-    {ref:'CSQ-001',type:'Casques escalade',brand:'Petzl',model:'Boreo',buy:'2022-11-30',fab:'2022-10-01',norm:'EN12492',lot:'LOT221130',status:'ok',lastCtrl:'2024-10-15',notes:'',photos:[]},
-    {ref:'ASS-001',type:'Tubes',brand:'Petzl',model:'Grigri+',buy:'2023-07-01',fab:'2023-05-01',norm:'EN15151',lot:'LOT230701',status:'ok',lastCtrl:'2024-12-01',notes:'',photos:[]},
-    {ref:'HRN-002',type:'Baudriers adultes',brand:'Black Diamond',model:'Momentum',buy:'2020-05-05',fab:'2020-03-01',norm:'EN12277',lot:'LOT200505',status:'danger',lastCtrl:'2023-05-05',notes:'Sangle ventrale a remplacer',photos:[]}
-  ];
-  controls = [
-    {id:'c1',date:'2024-12-01',ref:'ASS-001',who:'Marie Dupont',result:'ok',notes:'Mecanisme parfait'},
-    {id:'c2',date:'2024-11-20',ref:'HRN-001',who:'Jean Martin',result:'ok',notes:'RAS'},
-    {id:'c3',date:'2024-09-10',ref:'CRD-001',who:'Marie Dupont',result:'ok',notes:'Gaine saine'}
-  ];
-  loans = [
-    {id:'l1',date:fmt(addDays(today,-3)),member:'Sophie Laurent',ref:'CRD-001',returnDate:fmt(addDays(today,4)),status:'active'}
-  ];
-  batches = [];
-}
-
-// ==================== SUPABASE REST ====================
-function sbFetch(path, method, body, extraHeaders) {
-  var headers = {
-    'apikey': SUPABASE_ANON,
-    'Authorization': 'Bearer ' + SUPABASE_ANON,
-    'Content-Type': 'application/json'
-  };
-  if (extraHeaders) {
-    Object.keys(extraHeaders).forEach(function(k){ headers[k] = extraHeaders[k]; });
-  }
-  var opts = { method: method || 'GET', headers: headers };
-  if (body !== undefined && body !== null) opts.body = JSON.stringify(body);
-  return fetch(SUPABASE_URL + '/rest/v1/' + path, opts).then(function(res) {
-    return res.text().then(function(txt) {
-      if (!res.ok) throw new Error('Supabase ' + res.status + ' [' + path + ']: ' + txt);
-      return txt ? JSON.parse(txt) : [];
-    });
-  });
-}
-
-function dbSelect(table, filter) {
-  var qs = 'select=*' + (filter ? '&' + filter : '');
-  return sbFetch(table + '?' + qs);
-}
-function dbUpsert(table, row) {
-  var keyCol = ({epis:'ref',controls:'ctrl_id',loans:'loan_id',batches:'batch_id',members:'member_id'})[table] || 'id';
-  return sbFetch(table + '?on_conflict=' + keyCol, 'POST', row, {
-    'Prefer': 'resolution=merge-duplicates,return=minimal'
-  });
-}
-function dbPatch(table, key, val, patch) {
-  return sbFetch(table + '?' + key + '=eq.' + encodeURIComponent(val), 'PATCH', patch, {
-    'Prefer': 'return=minimal'
-  });
-}
-function dbDel(table, key, val) {
-  return sbFetch(table + '?' + key + '=eq.' + encodeURIComponent(val), 'DELETE', null, {
-    'Prefer': 'return=minimal'
-  });
-}
-
-var TABLE_KEY = {epis:'ref',controls:'ctrl_id',loans:'loan_id',batches:'batch_id',members:'member_id'};
-
-function fsSet(table, rowId, obj) {
-  var key = TABLE_KEY[table];
-  var clean = JSON.parse(JSON.stringify(obj));
-  var row = {};
-  row[key] = String(rowId);
-  row['data'] = clean;
-  return dbUpsert(table, row);
-}
-function fsUpdate(table, rowId, patch) {
-  var key = TABLE_KEY[table];
-  return dbSelect(table, key + '=eq.' + encodeURIComponent(rowId)).then(function(rows) {
-    if (rows && rows.length > 0) {
-      var existing = rows[0].data || {};
-      var merged = {};
-      var k;
-      for (k in existing) { if (existing.hasOwnProperty(k)) merged[k] = existing[k]; }
-      for (k in patch)    { if (patch.hasOwnProperty(k))    merged[k] = patch[k]; }
-      var row = {};
-      row[key] = String(rowId);
-      row['data'] = merged;
-      return dbUpsert(table, row);
-    }
-  }).catch(function(e){ console.warn('fsUpdate:', e.message); });
-}
-function fsDelete(table, rowId) {
-  return dbDel(table, TABLE_KEY[table], rowId);
-}
-
-// ==================== LOAD DATA ====================
-function loadAllData() {
-  showLoading('Connexion a Supabase...');
-  return Promise.all([
-    dbSelect('epis'),
-    dbSelect('controls','order=created_at.desc'),
-    dbSelect('loans'),
-    dbSelect('batches'),
-    dbSelect('members')
-  ]).then(function(results) {
-    var rEpis=results[0], rControls=results[1], rLoans=results[2], rBatches=results[3], rMembers=results[4];
-    epis     = rEpis.map(function(r){ return Object.assign({},r.data,{ref:r.ref}); });
-    controls = rControls.map(function(r){ return Object.assign({},r.data,{id:r.ctrl_id}); });
-    loans    = rLoans.map(function(r){ return Object.assign({},r.data,{id:r.loan_id}); });
-    batches  = rBatches.map(function(r){ return Object.assign({},r.data,{id:r.batch_id}); });
-    members  = rMembers.map(function(r) {
-      var m = Object.assign({}, r.data, {id: r.member_id});
-      // Ensure perms is always an array
-      if (!m.perms || !Array.isArray(m.perms)) m.perms = [];
-      return m;
-    });
-    hideLoading();
-    if (members.length === 0) {
-      return seedInitialAdmin();
-    }
-  }).catch(function(e) {
-    hideLoading();
-    console.error('Supabase loadAllData error:', e);
-    var msg = e.message || 'Erreur inconnue';
-    if (msg.indexOf('401') !== -1) {
-      showToast('Erreur 401: cle API invalide. Verifiez SUPABASE_ANON dans le code.', 'err');
-    } else if (msg.indexOf('Failed to fetch') !== -1) {
-      showToast('Impossible de joindre Supabase. Verifiez l\'URL et vos CORS.', 'err');
-    } else {
-      showToast('Supabase: ' + msg, 'err');
-    }
-    loadDemoData();
-  });
-}
-
-function seedInitialAdmin() {
-  var admin = {id:'1',name:'Admin Club',login:'admin',pass:'admin123',
-    role:'admin',perms:ROLE_PERMS.admin,lastAccess:todayStr,email:''};
-  members = [admin];
-  return fsSet('members','1',admin).then(function(){
-    console.log('Admin seede avec succes');
-  }).catch(function(e){
-    console.error('Erreur seed admin:', e.message);
-  });
-}
-
-// ==================== PHOTO UPLOAD ====================
-function uploadPhotoToStorage(dataUrl, path) {
-  if (!dataUrl || dataUrl.indexOf('http') === 0) return Promise.resolve(dataUrl);
-  try {
-    var parts = dataUrl.split(',');
-    var mime  = parts[0].match(/:(.*?);/)[1];
-    var bin   = atob(parts[1]);
-    var u8    = new Uint8Array(bin.length);
-    for (var i=0;i<bin.length;i++) u8[i]=bin.charCodeAt(i);
-    return fetch(SUPABASE_URL+'/storage/v1/object/epi-photos/'+path, {
-      method:'POST',
-      headers:{'apikey':SUPABASE_ANON,'Authorization':'Bearer '+SUPABASE_ANON,
-               'Content-Type':mime,'x-upsert':'true'},
-      body: new Blob([u8],{type:mime})
-    }).then(function(res){
-      if (!res.ok) {
-        console.warn('Storage upload failed ('+res.status+') - storing image inline');
-        return dataUrl; // fallback: keep base64 inline in JSON
-      }
-      return SUPABASE_URL+'/storage/v1/object/public/epi-photos/'+path;
-    }).catch(function(e){
-      console.warn('Storage upload error:', e.message, '- storing inline');
-      return dataUrl;
-    });
-  } catch(e) { console.warn('Photo processing error:',e.message); return Promise.resolve(dataUrl); }
-}
-
-// ==================== AUTH ====================
-function doLogin() {
-  var login = document.getElementById('login-user').value.trim();
-  var pass  = document.getElementById('login-pass').value;
-  var errEl = document.getElementById('login-error');
-  if (!login || !pass) {
-    errEl.style.display='block';
-    errEl.textContent='Renseignez identifiant et mot de passe.';
-    return;
-  }
-  var user = null;
-  for (var i=0; i<members.length; i++) {
-    if (members[i].login === login && members[i].pass === pass) { user = members[i]; break; }
-  }
-  if (!user) {
-    errEl.style.display='block';
-    errEl.textContent = members.length===0
-      ? 'Donnees pas encore chargees. Attendez quelques secondes et reessayez.'
-      : 'Identifiant ou mot de passe incorrect.';
-    return;
-  }
-  errEl.style.display='none';
-  loginSuccess(user);
-}
-
-function loginSuccess(user) {
-  currentUser = user;
-  fsUpdate('members', String(user.id), {lastAccess:todayStr}).catch(function(){});
-  document.getElementById('login-screen').style.display='none';
-  document.getElementById('app').style.display='block';
-  document.getElementById('sidebar-username').textContent=user.name;
-  var roleLabel={admin:'Administrateur',referent:'Referent EPI',member:'Membre'};
-  document.getElementById('sidebar-userrole').textContent=roleLabel[user.role]||user.role;
-  try { localStorage.setItem('epi_session',JSON.stringify({login:user.login,pass:user.pass})); } catch(e){}
-  applyPermissions();
-  renderDashboard();
-}
-
-function doLogout() {
-  currentUser=null;
-  try { localStorage.removeItem('epi_session'); } catch(e){}
-  document.getElementById('app').style.display='none';
-  document.getElementById('login-screen').style.display='flex';
-  document.getElementById('login-user').value='';
-  document.getElementById('login-pass').value='';
-  document.getElementById('login-error').style.display='none';
-}
-
-function hasPerm(p) {
-  if (!currentUser) return false;
-  var perms = currentUser.perms;
-  if (!perms || !perms.length) return false;
-  for (var i=0; i<perms.length; i++) { if (perms[i]===p) return true; }
-  return false;
-}
-
-function applyPermissions() {
-  document.querySelectorAll('[data-perm]').forEach(function(el){
-    el.classList.toggle('hidden',!hasPerm(el.getAttribute('data-perm')));
-  });
-  ['btn-add-epi','btn-qr-scan','btn-add-batch'].forEach(function(id){
-    var el=document.getElementById(id); if(el) el.classList.toggle('hidden',!hasPerm('add_epi'));
-  });
-  var ctrl=document.getElementById('btn-add-ctrl');
-  if(ctrl) ctrl.classList.toggle('hidden',!hasPerm('add_controls'));
-}
-
-// ==================== NAVIGATION ====================
-var currentPage='dashboard';
-function showPage(id, el) {
-  currentPage=id;
-  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
-  document.querySelectorAll('.nav-btn').forEach(function(n){ n.classList.remove('active'); });
-  var pg=document.getElementById('page-'+id); if(pg) pg.classList.add('active');
-  if(el) el.classList.add('active');
-  var titles={dashboard:'Tableau de bord',inventory:'Inventaire EPI',controls:'Historique des controles',
-    loans:'Gestion des prets',alerts:'Alertes',members:'Gestion des membres',
-    batches:'Lots d\'EPI',checks:'Fiches de controle'};
-  document.getElementById('topbar-title').textContent=titles[id]||id;
-  var renders={dashboard:renderDashboard,inventory:renderInventory,controls:renderControls,
-    loans:renderLoans,alerts:renderAlerts,members:renderMembers,batches:renderBatches,checks:renderChecks};
-  if(renders[id]) renders[id]();
-}
-
-// ==================== STATUS CALC ====================
-function getNextCtrl(epi) {
-  if(!epi.lastCtrl) return null;
-  var cfg=EPI_CONFIG[epi.type]; var months=cfg?cfg.ctrlMonths:12;
-  return fmt(addMonths(new Date(epi.lastCtrl),months));
-}
-function getLifeStatus(epi) {
-  if(epi.status==='retired'||epi.status==='lost') return null;
-  var cfg=EPI_CONFIG[epi.type]; var fabDate=epi.fab||epi.buy;
-  if(!cfg||!fabDate) return null;
-  var ageYears=diffMonths(todayStr,fabDate)/12;
-  if(ageYears>=cfg.lifeMax) return 'danger';
-  if(ageYears>=cfg.lifeUse) return 'warn';
-  return null;
-}
-function getStatus(epi) {
-  if(epi.status==='retired') return 'retired';
-  if(epi.status==='lost') return 'lost';
-  var life=getLifeStatus(epi);
-  if(life==='danger') return 'danger';
-  var next=getNextCtrl(epi); if(!next) return 'warn';
-  var d=diffDays(next,todayStr);
-  if(d<0) return 'danger'; if(d<60) return 'warn';
-  if(life==='warn') return 'warn';
-  return (epi.status==='danger')?'danger':(epi.status==='warn')?'warn':'ok';
-}
-function badgeHtml(s) {
-  var map={ok:'badge-ok',warn:'badge-warn',danger:'badge-danger',retired:'badge-retired',lost:'badge-lost'};
-  var lbl={ok:'Conforme',warn:'A controler',danger:'En alerte',retired:'Reforme',lost:'Introuvable'};
-  return '<span class="badge '+(map[s]||'badge-retired')+'">'+(lbl[s]||s)+'</span>';
-}
-function lifespanBar(epi) {
-  var cfg=EPI_CONFIG[epi.type]; var fabDate=epi.fab||epi.buy;
-  if(!cfg||!fabDate) return '&mdash;';
-  var ageM=Math.max(0,diffMonths(todayStr,fabDate));
-  var maxM=cfg.lifeMax*12;
-  var pct=Math.min(100,Math.round(ageM/maxM*100));
-  var color=pct>=100?'#dc2626':pct>=70?'#b45309':'#16a34a';
-  return '<div style="font-size:12px;color:var(--text2)">'+Math.floor(ageM/12)+'a '+(ageM%12)+'m / '+cfg.lifeMax+'a max</div>'
-    +'<div class="lifespan-bar"><div class="lifespan-fill" style="width:'+pct+'%;background:'+color+'"></div></div>';
-}
-
-// ==================== DASHBOARD ====================
-function renderDashboard() {
-  var active=epis.filter(function(e){ return e.status!=='retired'&&e.status!=='lost'; });
-  document.getElementById('stat-total').textContent=active.length;
-  document.getElementById('stat-ok').textContent=active.filter(function(e){return getStatus(e)==='ok';}).length;
-  document.getElementById('stat-warn').textContent=active.filter(function(e){return getStatus(e)==='warn';}).length;
-  document.getElementById('stat-danger').textContent=active.filter(function(e){return getStatus(e)==='danger';}).length;
-  var types={};
-  epis.forEach(function(e){
-    if(!types[e.type]) types[e.type]={total:0,s:'ok'};
-    types[e.type].total++;
-    var s=getStatus(e);
-    if(s==='danger') types[e.type].s='danger';
-    else if(s==='warn'&&types[e.type].s!=='danger') types[e.type].s='warn';
-  });
-  // Group by category for dashboard display
-  var cats = {};
-  Object.keys(types).forEach(function(t) {
-    var cat = getCat(t);
-    if (!cats[cat]) cats[cat] = { total:0, s:'ok' };
-    cats[cat].total += types[t].total;
-    if (types[t].s === 'danger') cats[cat].s = 'danger';
-    else if (types[t].s === 'warn' && cats[cat].s !== 'danger') cats[cat].s = 'warn';
-  });
-  document.getElementById('type-summary').innerHTML=Object.keys(cats).map(function(cat){
-    var v=cats[cat];
-    var catObj = EPI_CATEGORIES[cat];
-    var icon = catObj ? catObj.icon : '';
-    return '<tr><td>'+icon+' <strong>'+cat+'</strong></td><td>'+v.total+'</td><td class="muted" style="font-size:12px">&mdash;</td><td>'+badgeHtml(v.s)+'</td></tr>';
-  }).join('');
-  var upcoming=epis.filter(function(e){ return e.status!=='retired'&&e.status!=='lost'&&getNextCtrl(e); })
-    .map(function(e){ return Object.assign({},e,{next:getNextCtrl(e)}); })
-    .sort(function(a,b){ return a.next.localeCompare(b.next); }).slice(0,6);
-  document.getElementById('upcoming-controls').innerHTML=upcoming.map(function(e){
-    var d=diffDays(e.next,todayStr);
-    var cls=d<0?'c-danger':d<60?'c-warn':'c-ok';
-    return '<tr><td><strong>'+e.ref+'</strong></td><td class="muted">'+e.type+'</td><td class="'+cls+'" style="font-size:13px">'+e.next+'</td></tr>';
-  }).join('');
-  updateAlertBadge();
-}
-function updateAlertBadge() {
-  var n=epis.filter(function(e){return getStatus(e)==='danger';}).length+loans.filter(function(l){return l.status==='late';}).length;
-  var b=document.getElementById('alert-badge'); if(b){b.textContent=n;b.classList.toggle('hidden',n===0);}
-}
-function updateBatchBadge() {
-  var b=document.getElementById('batch-badge'); if(b){b.textContent=batches.length;b.classList.toggle('hidden',batches.length===0);}
-}
-
-// ==================== INVENTORY ====================
-function renderInventory() {
-  var q=(document.getElementById('search-input')||{}).value||''; q=q.toLowerCase();
-  var ft=(document.getElementById('filter-type')||{}).value||'';
-  var fs=(document.getElementById('filter-status')||{}).value||'';
-  var filtered=epis.filter(function(e){
-    if(q&&[e.ref,e.brand,e.model,e.type,getCat(e.type)].join(' ').toLowerCase().indexOf(q)===-1) return false;
-    if(ft&&e.type!==ft&&getCat(e.type)!==ft) return false;
-    if(fs&&getStatus(e)!==fs) return false;
-    return true;
-  });
-  var canCtrl=hasPerm('add_controls');
-  document.getElementById('inventory-table').innerHTML=filtered.map(function(e){
-    var bTag=e.batchId?'<span style="font-size:11px;font-weight:700;background:var(--surface2);border:1px solid var(--border2);color:var(--text2);padding:2px 8px;border-radius:6px;cursor:pointer;margin-left:6px" onclick="showBatch(\''+e.batchId+'\')" title="Voir le lot">'+e.batchId+'</span>':'';
-    var isActive=e.status!=='retired'&&e.status!=='lost';
-    var photo=e.photos&&e.photos.length?'<img src="'+e.photos[0]+'" class="photo-thumb" onclick="openHistory(\'epi\',\''+e.ref+'\')">':'<div class="photo-placeholder" onclick="openHistory(\'epi\',\''+e.ref+'\')" title="Historique">&#128203;</div>';
-    return '<tr>'
-      +'<td style="width:40px"><input type="checkbox" class="epi-chk" data-ref="'+e.ref+'" onchange="onEpiCheckChange()"'+(isActive?'':' disabled style="opacity:0.3"')+'></td>'
-      +'<td><strong>'+e.ref+'</strong>'+bTag+'</td>'
-      +'<td>'+e.type+'</td>'
-      +'<td><div style="display:flex;align-items:center;gap:8px">'+photo+'<span>'+e.brand+' '+e.model+'</span></div></td>'
-      +'<td class="muted">'+e.buy+'</td>'
-      +'<td style="min-width:120px">'+lifespanBar(e)+'</td>'
-      +'<td class="muted">'+(e.lastCtrl||'&mdash;')+'</td>'
-      +'<td class="muted">'+(getNextCtrl(e)||'&mdash;')+'</td>'
-      +'<td>'+badgeHtml(getStatus(e))+'</td>'
-      +'<td style="white-space:nowrap"><button class="btn btn-sm" onclick="openCheckSheet(\''+e.type+'\')">&#128203; Fiche</button>'
-      +(canCtrl?'<button class="btn btn-sm" style="margin-left:4px" onclick="openModalControl(\''+e.ref+'\')">Controler</button>':'')
-      +'</td></tr>';
-  }).join('');
-}
-
-// ==================== CONTROLS ====================
-function renderControls() {
-  var q=((document.getElementById('ctrl-search')||{}).value||'').toLowerCase();
-  var epiMap={}; epis.forEach(function(e){epiMap[e.ref]=e.type;});
-  var sColor={ok:'var(--accent)',warn:'var(--warn)',danger:'var(--danger)',retired:'var(--text2)',lost:'#5b21b6'};
-  var sText={ok:'&#10003; Conforme',warn:'&#9888; Reserve',danger:'&#10007; Non-conforme',retired:'&mdash; Reforme',lost:'? Introuvable'};
-  var sorted=controls.filter(function(c){return !q||[c.ref,c.who].join(' ').toLowerCase().indexOf(q)!==-1;})
-    .slice().sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
-  document.getElementById('controls-table').innerHTML=sorted.map(function(c){
-    return '<tr><td style="font-size:13px">'+c.date+'</td><td><strong>'+c.ref+'</strong></td>'
-      +'<td class="muted">'+(epiMap[c.ref]||'&mdash;')+'</td><td>'+c.who+'</td>'
-      +'<td><span style="font-weight:600;color:'+(sColor[c.result]||'var(--text2)')+';">'+(sText[c.result]||c.result)+'</span></td>'
-      +'<td class="muted" style="font-size:13px">'+(c.notes||'&mdash;')+'</td></tr>';
-  }).join('');
-}
-
-// ==================== LOANS ====================
-function renderLoans() {
-  var epiMap={}; epis.forEach(function(e){epiMap[e.ref]=e.type;});
-  var slbl={active:'En cours',returned:'Rendu',late:'En retard'};
-  var scls={active:'badge-warn',returned:'badge-ok',late:'badge-danger'};
-  var canManage=hasPerm('manage_loans');
-  document.getElementById('loans-table').innerHTML=loans.map(function(l,i){
-    var retBtn=canManage&&l.status!=='returned'?'<button class="btn btn-sm" onclick="returnLoan(\''+l.id+'\')">Rendu</button>':'';
-    return '<tr><td style="font-size:13px">'+l.date+'</td><td>'+l.member+'</td>'
-      +'<td><strong>'+l.ref+'</strong></td><td class="muted">'+(epiMap[l.ref]||'&mdash;')+'</td>'
-      +'<td style="font-size:13px">'+l.returnDate+'</td>'
-      +'<td><span class="badge '+(scls[l.status]||'')+'">'+slbl[l.status]+'</span></td>'
-      +'<td>'+retBtn+'</td></tr>';
-  }).join('');
-}
-function returnLoan(loanId) {
-  var loan=loans.find(function(l){return l.id===loanId;});
-  if(!loan) return;
-  loan.status='returned';
-  fsUpdate('loans',loanId,{status:'returned'}).catch(function(){});
-  renderLoans(); updateAlertBadge();
-  showToast('Pret marque comme rendu');
-}
-
-// ==================== ALERTS ====================
-function renderAlerts() {
-  var alerts=[];
-  epis.forEach(function(e){
-    var s=getStatus(e); var next=getNextCtrl(e);
-    if(s==='danger'&&e.status!=='retired'){
-      var d=next?diffDays(next,todayStr):-999;
-      var ls=getLifeStatus(e);
-      var desc=e.type+' '+e.brand+' '+e.model;
-      if(ls==='danger'){var cfg=EPI_CONFIG[e.type];desc+=' &mdash; max ('+(cfg?cfg.lifeMax:'?')+'a) depassee';}
-      else if(d<0) desc+=' &mdash; retard de '+Math.abs(d)+'j';
-      alerts.push({type:'danger',icon:'&#9888;',title:e.ref+' &mdash; action requise',desc:desc,date:next||'&mdash;'});
-    } else if(s==='warn'){
-      var d2=diffDays(next,todayStr);
-      alerts.push({type:'warn',icon:'&#9675;',title:e.ref+' &mdash; controle a prevoir',
-        desc:e.type+' '+e.brand+' '+e.model+' &mdash; dans '+d2+'j',date:next});
-    }
-  });
-  loans.filter(function(l){return l.status==='late';}).forEach(function(l){
-    alerts.push({type:'danger',icon:'&#128230;',title:'Pret en retard &mdash; '+l.member,
-      desc:l.ref+' &mdash; retour prevu le '+l.returnDate,date:l.returnDate});
-  });
-  if(!alerts.length){document.getElementById('alerts-list').innerHTML='<div style="text-align:center;padding:48px;color:var(--text2)">&#10003; Aucune alerte active</div>';return;}
-  document.getElementById('alerts-list').innerHTML=alerts.map(function(a){
-    return '<div class="alert-item">'
-      +'<div class="alert-icon alert-icon-'+a.type+'">'+a.icon+'</div>'
-      +'<div class="alert-body"><div class="alert-title">'+a.title+'</div><div class="alert-desc">'+a.desc+'</div></div>'
-      +'<div style="font-size:12px;color:var(--text3);flex-shrink:0">'+a.date+'</div></div>';
-  }).join('');
-}
-
-// ==================== MEMBERS ====================
-function renderMembers() {
-  var rlbl={admin:'Administrateur',referent:'Referent EPI',member:'Membre'};
-  var rcls={admin:'badge-role-admin',referent:'badge-role-referent',member:'badge-role-member'};
-  document.getElementById('members-table').innerHTML=members.map(function(m){
-    var isMe=currentUser&&m.id===currentUser.id;
-    var delBtn=!isMe?'<button class="btn btn-sm btn-danger" onclick="deleteMember(\''+m.id+'\')">Supprimer</button>':'';
-    return '<tr>'
-      +'<td><strong>'+m.name+'</strong>'+(isMe?' <span style="font-size:11px;color:var(--text2)">(vous)</span>':'')+'</td>'
-      +'<td style="font-family:var(--font-mono);font-size:13px">'+m.login+'</td>'
-      +'<td><span class="badge '+(rcls[m.role]||'')+'">'+rlbl[m.role]+'</span></td>'
-      +'<td style="font-size:13px;color:var(--text2)">'+(m.perms?m.perms.length:0)+' perms</td>'
-      +'<td style="font-size:13px;color:var(--text2)">'+(m.lastAccess||'&mdash;')+'</td>'
-      +'<td style="display:flex;gap:6px"><button class="btn btn-sm" onclick="editMember(\''+m.id+'\')">Modifier</button>'+delBtn+'</td>'
-      +'</tr>';
-  }).join('');
-}
-function editMember(id) {
-  editingMemberId=id;
-  var m=members.find(function(x){return String(x.id)===String(id);});
-  if(!m) return;
-  document.getElementById('member-modal-title').textContent='Modifier le membre';
-  document.getElementById('member-save-btn').textContent='Enregistrer';
-  document.getElementById('m-name').value=m.name;
-  document.getElementById('m-login').value=m.login;
-  document.getElementById('m-pass').value='';
-  document.getElementById('m-pass').placeholder='Laisser vide pour conserver';
-  document.getElementById('m-email').value=m.email||'';
-  document.getElementById('m-role').value=m.role;
-  ['view_epi','add_epi','view_controls','add_controls','view_loans','manage_loans','export_pdf','manage_members'].forEach(function(p){
-    var el=document.getElementById('p-'+p); if(el) el.checked=m.perms&&m.perms.indexOf(p)!==-1;
-  });
-  openModal('member');
-}
-function deleteMember(id) {
-  if(!confirm('Supprimer ce membre ?')) return;
-  members=members.filter(function(m){return String(m.id)!==String(id);});
-  fsDelete('members',id).catch(function(){});
-  renderMembers();
-  showToast('Membre supprime');
-}
-function saveMember() {
-  var name=document.getElementById('m-name').value.trim();
-  var login=document.getElementById('m-login').value.trim();
-  var pass=document.getElementById('m-pass').value;
-  var email=document.getElementById('m-email').value.trim();
-  var role=document.getElementById('m-role').value;
-  if(!name||!login){alert('Nom et identifiant obligatoires');return;}
-  if(!editingMemberId&&!pass){alert('Mot de passe obligatoire');return;}
-  var allPerms=['view_epi','add_epi','view_controls','add_controls','view_loans','manage_loans','export_pdf','manage_members'];
-  var perms=allPerms.filter(function(p){var el=document.getElementById('p-'+p);return el&&el.checked;});
-  if(editingMemberId) {
-    var m=null;
-    for(var i=0;i<members.length;i++){if(String(members[i].id)===String(editingMemberId)){m=members[i];break;}}
-    if(m){
-      m.name=name; m.login=login; m.role=role; m.perms=perms; m.email=email;
-      if(pass) m.pass=pass;
-    }
-    if(currentUser&&String(currentUser.id)===String(editingMemberId)){currentUser=m;applyPermissions();}
-    if(m) fsSet('members',String(editingMemberId),m).catch(function(e){showToast('Erreur sauvegarde: '+e.message,'err');});
-  } else {
-    var exists=false;
-    for(var j=0;j<members.length;j++){if(members[j].login===login){exists=true;break;}}
-    if(exists){alert('Identifiant deja utilise');return;}
-    var newId=String(Date.now());
-    var nm={id:newId,name:name,login:login,pass:pass,email:email,role:role,perms:perms,lastAccess:'-'};
-    members.push(nm);
-    fsSet('members',newId,nm).then(function(){
-      showToast('Membre cree - il peut maintenant se connecter');
-    }).catch(function(e){showToast('Erreur sauvegarde: '+e.message,'err');});
-  }
-  closeModal(); renderMembers();
-}
-function updateRolePerms() {
-  var role=document.getElementById('m-role').value;
-  var p=ROLE_PERMS[role]||[];
-  ['view_epi','add_epi','view_controls','add_controls','view_loans','manage_loans','export_pdf','manage_members'].forEach(function(perm){
-    var el=document.getElementById('p-'+perm); if(el) el.checked=p.indexOf(perm)!==-1;
-  });
-}
-
-// ==================== MODALS ====================
 var ALL_MODALS=['modal-add','modal-qr','modal-control','modal-loan','modal-member','modal-pdf',
-  'modal-batch','modal-batch-ctrl','modal-photo','modal-history','modal-check','modal-bulk-ctrl'];
+    'modal-batch','modal-batch-ctrl','modal-photo','modal-history','modal-check','modal-bulk-ctrl'];
 function showModal(id) {
   ALL_MODALS.forEach(function(x){var el=document.getElementById(x);if(el)el.classList.add('hidden');});
   document.getElementById('modal-overlay').classList.add('open');
@@ -2153,7 +1483,7 @@ function renderChecks(){
     var catObj = EPI_CATEGORIES[cat];
     var catEpis = epis.filter(function(e){ return getCat(e.type) === cat && e.status !== 'retired' && e.status !== 'lost'; });
     var issues = catEpis.filter(function(e){ return getStatus(e) !== 'ok'; }).length;
-    // Find a check sheet for this category (use first sub that has one)
+    // Find a check sheet for this category [use first sub that has one]
     var checkType = null;
     catObj.subs.forEach(function(sub){ if (!checkType && EPI_CHECKS[sub]) checkType = sub; });
     var chk = checkType ? EPI_CHECKS[checkType] : null;
@@ -2368,8 +1698,28 @@ showPage = function(id, el) {
   origShowPage(id, el);
 };
 
+
+// ==================== SUPABASE KEEP-ALIVE ====================
+// Ping toutes les 4 jours pour eviter la mise en pause [inactivite > 7 jours]
+function startSupabasePing() {
+  function ping() {
+    fetch(SUPABASE_URL + '/rest/v1/members?select=member_id&limit=1', {
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON }
+    }).then(function() {
+      console.log('Supabase ping OK ' + new Date().toLocaleDateString());
+    }).catch(function(e) {
+      console.warn('Supabase ping failed:', e.message);
+    });
+  }
+  setTimeout(function() {
+    ping();
+    setInterval(ping, 4 * 24 * 60 * 60 * 1000);
+  }, 30000);
+}
+
 // ==================== INIT ====================
 window.addEventListener('load', function() {
+  startSupabasePing();
   loadAllData().then(function() {
     // Try auto-login from saved session
     try {
