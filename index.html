@@ -840,8 +840,7 @@ var EPI_CATEGORIES = {
   }
 };
 // EPI types - sous-categories ont cat= leur categorie parente
-var EPI_CONFIG = {
-  'Cordes SAE':        { lifeMax:10, lifeUse:5,  ctrlMonths:12, norm:'EN892',   cat:'Corde' },
+var EPI_CONFIG = {  'Cordes SAE':        { lifeMax:10, lifeUse:5,  ctrlMonths:12, norm:'EN892',   cat:'Corde' },
   'Cordes statiques':  { lifeMax:10, lifeUse:5,  ctrlMonths:12, norm:'EN1891',  cat:'Corde' },
   'Cordes falaise':    { lifeMax:10, lifeUse:5,  ctrlMonths:12, norm:'EN892',   cat:'Corde' },
   'Cordes a double':   { lifeMax:10, lifeUse:5,  ctrlMonths:12, norm:'EN892',   cat:'Corde' },
@@ -863,6 +862,12 @@ function getCat(type) {
   var cfg = EPI_CONFIG[type];
   return cfg ? cfg.cat : type;
 }
+
+var ROLE_PERMS = {
+  admin:   ['view_epi','add_epi','view_controls','add_controls','view_loans','manage_loans','export_pdf','manage_members'],
+  referent:['view_epi','add_epi','view_controls','add_controls','view_loans','manage_loans','export_pdf'],
+  member:  ['view_epi','view_loans']
+};
 
 // TYPE_KEYS removed - using EPI_CATEGORIES instead
 
@@ -1001,6 +1006,351 @@ var EPI_CHECKS = {
     ]
   }
 };
+
+// ==================== IN-MEMORY STORE ====================
+var epis=[], controls=[], loans=[], batches=[], members=[];
+var currentUser=null, editingMemberId=null;
+var qrStream=null, qrInterval=null, qrParsed=null;
+var nextBatchNum=2;
+var photoStream=null, photoTarget=null, photoCameraIndex=0, photoCameras=[];
+var pendingEpiPhotos=[], pendingBatchPhotos=[];
+var selectedRefs2=new Set();
+var batchCtrlTarget=null;
+
+// ==================== UI HELPERS ====================
+function showLoading(msg) {
+  var el=document.getElementById('loading-overlay');
+  if(!el){el=document.createElement('div');el.id='loading-overlay';el.style.cssText='position:fixed;inset:0;background:rgba(255,255,255,0.9);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-family:var(--font)';el.innerHTML='<div style="width:36px;height:36px;border:3px solid #e5e7eb;border-top-color:#16a34a;border-radius:50%;animation:spin 0.7s linear infinite"></div><div id="loading-msg" style="font-size:15px;color:#6b7280"></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>';document.body.appendChild(el);}
+  document.getElementById('loading-msg').textContent=msg||'Chargement...';el.style.display='flex';
+}
+function hideLoading(){var el=document.getElementById('loading-overlay');if(el)el.style.display='none';}
+function showToast(msg,type){
+  var el=document.getElementById('toast');
+  if(!el){el=document.createElement('div');el.id='toast';el.style.cssText='position:fixed;bottom:24px;right:24px;z-index:9998;font-size:14px;font-weight:600;padding:12px 20px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.12);transition:opacity 0.3s;pointer-events:none;font-family:var(--font)';document.body.appendChild(el);}
+  el.textContent=msg;el.style.background=type==='err'?'#fee2e2':type==='warn'?'#fef3c7':'#dcfce7';el.style.color=type==='err'?'#dc2626':type==='warn'?'#b45309':'#14532d';el.style.opacity='1';clearTimeout(el._t);el._t=setTimeout(function(){el.style.opacity='0';},3000);
+}
+
+// ==================== DEMO DATA ====================
+function loadDemoData(){
+  members=[
+    {id:'1',name:'Admin Club',login:'admin',pass:'admin123',role:'admin',perms:['view_epi','add_epi','view_controls','add_controls','view_loans','manage_loans','export_pdf','manage_members'],lastAccess:'',email:''},
+    {id:'2',name:'Marie Dupont',login:'marie',pass:'marie123',role:'referent',perms:['view_epi','add_epi','view_controls','add_controls','view_loans','manage_loans','export_pdf'],lastAccess:'',email:''}
+  ];
+  epis=[
+    {ref:'CRD-001',type:'Cordes SAE',brand:'Petzl',model:'Arial 10.0',buy:'2022-03-15',fab:'2022-01-01',norm:'EN892',lot:'LOT220315',status:'ok',lastCtrl:'2024-09-10',notes:'',photos:[]},
+    {ref:'HRN-001',type:'Baudriers',brand:'Petzl',model:'Adjama',buy:'2023-01-10',fab:'2022-12-01',norm:'EN12277',lot:'LOT230110',status:'ok',lastCtrl:'2024-11-20',notes:'',photos:[]},
+    {ref:'CSQ-001',type:'Casques',brand:'Petzl',model:'Boreo',buy:'2022-11-30',fab:'2022-10-01',norm:'EN12492',lot:'LOT221130',status:'ok',lastCtrl:'2024-10-15',notes:'',photos:[]},
+    {ref:'ASS-001',type:'Tubes',brand:'Petzl',model:'Grigri+',buy:'2023-07-01',fab:'2023-05-01',norm:'EN15151',lot:'LOT230701',status:'ok',lastCtrl:'2024-12-01',notes:'',photos:[]}
+  ];
+  controls=[
+    {id:'c1',date:'2024-12-01',ref:'ASS-001',who:'Marie Dupont',result:'ok',notes:'RAS'},
+    {id:'c2',date:'2024-11-20',ref:'HRN-001',who:'Admin Club',result:'ok',notes:'RAS'}
+  ];
+  loans=[{id:'l1',date:'2025-01-10',member:'Sophie Laurent',ref:'CRD-001',returnDate:'2025-01-20',status:'active'}];
+  batches=[];
+}
+
+// ==================== SUPABASE REST ====================
+function sbFetch(path, method, body, extraHeaders) {
+  var headers={'apikey':SUPABASE_ANON,'Authorization':'Bearer '+SUPABASE_ANON,'Content-Type':'application/json'};
+  if(extraHeaders){Object.keys(extraHeaders).forEach(function(k){headers[k]=extraHeaders[k];});}
+  var opts={method:method||'GET',headers:headers};
+  if(body!==undefined&&body!==null) opts.body=JSON.stringify(body);
+  return fetch(SUPABASE_URL+'/rest/v1/'+path,opts).then(function(res){
+    return res.text().then(function(txt){
+      if(!res.ok) throw new Error('Supabase '+res.status+' ['+path+']: '+txt);
+      return txt?JSON.parse(txt):[];
+    });
+  });
+}
+function dbSelect(table,filter){return sbFetch(table+'?select=*'+(filter?'&'+filter:''));}
+function dbUpsert(table,row){
+  var keyCol=({epis:'ref',controls:'ctrl_id',loans:'loan_id',batches:'batch_id',members:'member_id'})[table]||'id';
+  return sbFetch(table+'?on_conflict='+keyCol,'POST',row,{'Prefer':'resolution=merge-duplicates,return=minimal'});
+}
+function dbDel(table,key,val){return sbFetch(table+'?'+key+'=eq.'+encodeURIComponent(val),'DELETE',null,{'Prefer':'return=minimal'});}
+var TABLE_KEY={epis:'ref',controls:'ctrl_id',loans:'loan_id',batches:'batch_id',members:'member_id'};
+function fsSet(table,rowId,obj){
+  var key=TABLE_KEY[table];var clean=JSON.parse(JSON.stringify(obj));var row={};row[key]=String(rowId);row['data']=clean;return dbUpsert(table,row);
+}
+function fsUpdate(table,rowId,patch){
+  var key=TABLE_KEY[table];
+  return dbSelect(table,key+'=eq.'+encodeURIComponent(rowId)).then(function(rows){
+    if(rows&&rows.length>0){var merged={};var k;for(k in rows[0].data)if(rows[0].data.hasOwnProperty(k))merged[k]=rows[0].data[k];for(k in patch)if(patch.hasOwnProperty(k))merged[k]=patch[k];var r={};r[key]=String(rowId);r['data']=merged;return dbUpsert(table,r);}
+  }).catch(function(e){console.warn('fsUpdate:',e.message);});
+}
+function fsDelete(table,rowId){return dbDel(table,TABLE_KEY[table],rowId);}
+
+// ==================== PHOTO UPLOAD ====================
+function uploadPhotoToStorage(dataUrl,path){
+  if(!dataUrl||dataUrl.indexOf('http')===0) return Promise.resolve(dataUrl);
+  try{
+    var parts=dataUrl.split(','),mime=parts[0].match(/:(.*?);/)[1],bin=atob(parts[1]),u8=new Uint8Array(bin.length);
+    for(var i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
+    return fetch(SUPABASE_URL+'/storage/v1/object/epi-photos/'+path,{method:'POST',headers:{'apikey':SUPABASE_ANON,'Authorization':'Bearer '+SUPABASE_ANON,'Content-Type':mime,'x-upsert':'true'},body:new Blob([u8],{type:mime})})
+    .then(function(res){if(!res.ok){console.warn('Storage upload failed ('+res.status+') - storing inline');return dataUrl;}return SUPABASE_URL+'/storage/v1/object/public/epi-photos/'+path;})
+    .catch(function(e){console.warn('Photo upload error:',e.message);return dataUrl;});
+  }catch(e){return Promise.resolve(dataUrl);}
+}
+
+// ==================== LOAD DATA ====================
+function loadAllData(){
+  showLoading('Connexion a Supabase...');
+  return Promise.all([dbSelect('epis'),dbSelect('controls','order=created_at.desc'),dbSelect('loans'),dbSelect('batches'),dbSelect('members')])
+  .then(function(results){
+    epis=results[0].map(function(r){return Object.assign({},r.data,{ref:r.ref});});
+    controls=results[1].map(function(r){return Object.assign({},r.data,{id:r.ctrl_id});});
+    loans=results[2].map(function(r){return Object.assign({},r.data,{id:r.loan_id});});
+    batches=results[3].map(function(r){return Object.assign({},r.data,{id:r.batch_id});});
+    members=results[4].map(function(r){var m=Object.assign({},r.data,{id:r.member_id});if(!m.perms||!Array.isArray(m.perms))m.perms=[];return m;});
+    hideLoading();
+    if(members.length===0) return seedInitialAdmin();
+  }).catch(function(e){
+    hideLoading();
+    console.error('Supabase error:',e);
+    var msg=e.message||'';
+    if(msg.indexOf('401')!==-1) showToast('Erreur 401 - cle API invalide','err');
+    else if(msg.indexOf('Failed to fetch')!==-1) showToast('Impossible de joindre Supabase','err');
+    else showToast('Erreur: '+msg,'err');
+    loadDemoData();
+  });
+}
+function seedInitialAdmin(){
+  var admin={id:'1',name:'Admin Club',login:'admin',pass:'admin123',role:'admin',perms:['view_epi','add_epi','view_controls','add_controls','view_loans','manage_loans','export_pdf','manage_members'],lastAccess:'',email:''};
+  members=[admin];
+  return fsSet('members','1',admin).catch(function(e){console.error('Seed admin error:',e.message);});
+}
+
+// ==================== AUTH ====================
+function doLogin(){
+  var login=document.getElementById('login-user').value.trim();
+  var pass=document.getElementById('login-pass').value;
+  var errEl=document.getElementById('login-error');
+  if(!login||!pass){errEl.style.display='block';errEl.textContent='Renseignez identifiant et mot de passe.';return;}
+  var user=null;
+  for(var i=0;i<members.length;i++){if(members[i].login===login&&members[i].pass===pass){user=members[i];break;}}
+  if(!user){errEl.style.display='block';errEl.textContent=members.length===0?'Donnees pas encore chargees - attendez et reessayez.':'Identifiant ou mot de passe incorrect.';return;}
+  errEl.style.display='none';loginSuccess(user);
+}
+function loginSuccess(user){
+  currentUser=user;
+  fsUpdate('members',String(user.id),{lastAccess:todayStr}).catch(function(){});
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('sidebar-username').textContent=user.name;
+  document.getElementById('sidebar-userrole').textContent={admin:'Administrateur',referent:'Referent EPI',member:'Membre'}[user.role]||user.role;
+  try{localStorage.setItem('epi_session',JSON.stringify({login:user.login,pass:user.pass}));}catch(e){}
+  applyPermissions();renderDashboard();
+}
+function doLogout(){
+  currentUser=null;
+  try{localStorage.removeItem('epi_session');}catch(e){}
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-user').value='';
+  document.getElementById('login-pass').value='';
+  document.getElementById('login-error').style.display='none';
+}
+function hasPerm(p){
+  if(!currentUser||!currentUser.perms) return false;
+  for(var i=0;i<currentUser.perms.length;i++){if(currentUser.perms[i]===p)return true;}
+  return false;
+}
+function applyPermissions(){
+  document.querySelectorAll('[data-perm]').forEach(function(el){el.classList.toggle('hidden',!hasPerm(el.getAttribute('data-perm')));});
+  ['btn-add-epi','btn-qr-scan','btn-add-batch'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.toggle('hidden',!hasPerm('add_epi'));});
+  var c=document.getElementById('btn-add-ctrl');if(c)c.classList.toggle('hidden',!hasPerm('add_controls'));
+}
+
+// ==================== NAVIGATION ====================
+var currentPage='dashboard';
+function showPage(id,el){
+  currentPage=id;
+  if(window.innerWidth<=768) closeSidebar();
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.nav-btn').forEach(function(n){n.classList.remove('active');});
+  var pg=document.getElementById('page-'+id);if(pg)pg.classList.add('active');
+  if(el)el.classList.add('active');
+  var titles={dashboard:'Tableau de bord',inventory:'Inventaire EPI',controls:'Historique des controles',loans:'Gestion des prets',alerts:'Alertes',members:'Gestion des membres',batches:'Lots EPI',checks:'Fiches de controle'};
+  document.getElementById('topbar-title').textContent=titles[id]||id;
+  var renders={dashboard:renderDashboard,inventory:renderInventory,controls:renderControls,loans:renderLoans,alerts:renderAlerts,members:renderMembers,batches:renderBatches,checks:renderChecks};
+  if(renders[id])renders[id]();
+}
+
+// ==================== STATUS CALC ====================
+function getNextCtrl(epi){if(!epi.lastCtrl)return null;var cfg=EPI_CONFIG[epi.type];var months=cfg?cfg.ctrlMonths:12;return fmt(addMonths(new Date(epi.lastCtrl),months));}
+function getLifeStatus(epi){if(epi.status==='retired'||epi.status==='lost')return null;var cfg=EPI_CONFIG[epi.type];var fabDate=epi.fab||epi.buy;if(!cfg||!fabDate)return null;var ageYears=diffMonths(todayStr,fabDate)/12;if(ageYears>=cfg.lifeMax)return 'danger';if(ageYears>=cfg.lifeUse)return 'warn';return null;}
+function getStatus(epi){
+  if(epi.status==='retired')return 'retired';if(epi.status==='lost')return 'lost';
+  var life=getLifeStatus(epi);if(life==='danger')return 'danger';
+  var next=getNextCtrl(epi);if(!next)return 'warn';
+  var d=diffDays(next,todayStr);if(d<0)return 'danger';if(d<60)return 'warn';
+  if(life==='warn')return 'warn';
+  return (epi.status==='danger')?'danger':(epi.status==='warn')?'warn':'ok';
+}
+function badgeHtml(s){
+  var map={ok:'badge-ok',warn:'badge-warn',danger:'badge-danger',retired:'badge-retired',lost:'badge-lost'};
+  var lbl={ok:'Conforme',warn:'A controler',danger:'En alerte',retired:'Reforme',lost:'Introuvable'};
+  return '<span class="badge '+(map[s]||'badge-retired')+'">'+(lbl[s]||s)+'</span>';
+}
+function lifespanBar(epi){
+  var cfg=EPI_CONFIG[epi.type];var fabDate=epi.fab||epi.buy;if(!cfg||!fabDate)return '&mdash;';
+  var ageM=Math.max(0,diffMonths(todayStr,fabDate));var maxM=cfg.lifeMax*12;var pct=Math.min(100,Math.round(ageM/maxM*100));
+  var color=pct>=100?'#dc2626':pct>=70?'#b45309':'#16a34a';
+  return '<div style="font-size:12px;color:var(--text2)">'+Math.floor(ageM/12)+'a '+(ageM%12)+'m / '+cfg.lifeMax+'a max</div><div class="lifespan-bar"><div class="lifespan-fill" style="width:'+pct+'%;background:'+color+'"></div></div>';
+}
+
+// ==================== DASHBOARD ====================
+function renderDashboard(){
+  var active=epis.filter(function(e){return e.status!=='retired'&&e.status!=='lost';});
+  document.getElementById('stat-total').textContent=active.length;
+  document.getElementById('stat-ok').textContent=active.filter(function(e){return getStatus(e)==='ok';}).length;
+  document.getElementById('stat-warn').textContent=active.filter(function(e){return getStatus(e)==='warn';}).length;
+  document.getElementById('stat-danger').textContent=active.filter(function(e){return getStatus(e)==='danger';}).length;
+  var cats={};
+  epis.forEach(function(e){var cat=getCat(e.type);if(!cats[cat])cats[cat]={total:0,s:'ok'};cats[cat].total++;var s=getStatus(e);if(s==='danger')cats[cat].s='danger';else if(s==='warn'&&cats[cat].s!=='danger')cats[cat].s='warn';});
+  document.getElementById('type-summary').innerHTML=Object.keys(cats).map(function(cat){var v=cats[cat];return '<tr><td>'+cat+'</td><td>'+v.total+'</td><td class="muted" style="font-size:12px">&mdash;</td><td>'+badgeHtml(v.s)+'</td></tr>';}).join('');
+  var upcoming=epis.filter(function(e){return e.status!=='retired'&&e.status!=='lost'&&getNextCtrl(e);}).map(function(e){return Object.assign({},e,{next:getNextCtrl(e)});}).sort(function(a,b){return a.next.localeCompare(b.next);}).slice(0,6);
+  document.getElementById('upcoming-controls').innerHTML=upcoming.map(function(e){var d=diffDays(e.next,todayStr);return '<tr><td><strong>'+e.ref+'</strong></td><td class="muted">'+e.type+'</td><td class="'+(d<0?'c-danger':d<60?'c-warn':'c-ok')+'" style="font-size:13px">'+e.next+'</td></tr>';}).join('');
+  updateAlertBadge();
+}
+function updateAlertBadge(){var n=epis.filter(function(e){return getStatus(e)==='danger';}).length+loans.filter(function(l){return l.status==='late';}).length;var b=document.getElementById('alert-badge');if(b){b.textContent=n;b.classList.toggle('hidden',n===0);}}
+function updateBatchBadge(){var b=document.getElementById('batch-badge');if(b){b.textContent=batches.length;b.classList.toggle('hidden',batches.length===0);}}
+
+// ==================== INVENTORY ====================
+function renderInventory(){
+  var q=((document.getElementById('search-input')||{}).value||'').toLowerCase();
+  var ft=((document.getElementById('filter-type')||{}).value||'');
+  var fs=((document.getElementById('filter-status')||{}).value||'');
+  var filtered=epis.filter(function(e){
+    if(q&&[e.ref,e.brand,e.model,e.type,getCat(e.type)].join(' ').toLowerCase().indexOf(q)===-1)return false;
+    if(ft&&e.type!==ft&&getCat(e.type)!==ft)return false;
+    if(fs&&getStatus(e)!==fs)return false;
+    return true;
+  });
+  var canCtrl=hasPerm('add_controls');
+  document.getElementById('inventory-table').innerHTML=filtered.map(function(e){
+    var bTag=e.batchId?'<span style="font-size:11px;font-weight:700;background:var(--surface2);border:1px solid var(--border2);color:var(--text2);padding:2px 8px;border-radius:6px;cursor:pointer;margin-left:6px" onclick="showBatch(\''+e.batchId+'\')" title="Voir le lot">'+e.batchId+'</span>':'';
+    var isActive=e.status!=='retired'&&e.status!=='lost';
+    var photo=e.photos&&e.photos.length?'<img src="'+e.photos[0]+'" class="photo-thumb" onclick="openHistory(\'epi\',\''+e.ref+'\')">':'<div class="photo-placeholder" onclick="openHistory(\'epi\',\''+e.ref+'\')" title="Historique">&#128203;</div>';
+    return '<tr><td style="width:40px"><input type="checkbox" class="epi-chk" data-ref="'+e.ref+'" onchange="onEpiCheckChange()"'+(isActive?'':' disabled style="opacity:0.3"')+'></td>'
+      +'<td><strong>'+e.ref+'</strong>'+bTag+'</td><td>'+getCat(e.type)+'</td>'
+      +'<td><div style="display:flex;align-items:center;gap:8px">'+photo+'<span>'+e.brand+' '+e.model+'<br><small style="color:var(--text2)">'+e.type+'</small></span></div></td>'
+      +'<td class="muted">'+e.buy+'</td><td style="min-width:120px">'+lifespanBar(e)+'</td>'
+      +'<td class="muted">'+(e.lastCtrl||'&mdash;')+'</td><td class="muted">'+(getNextCtrl(e)||'&mdash;')+'</td>'
+      +'<td>'+badgeHtml(getStatus(e))+'</td>'
+      +'<td style="white-space:nowrap"><button class="btn btn-sm" onclick="openCheckSheet(\''+e.type+'\')">&#128203; Fiche</button>'+(canCtrl?'<button class="btn btn-sm" style="margin-left:4px" onclick="openModalControl(\''+e.ref+'\')">Controler</button>':'')+'</td></tr>';
+  }).join('');
+}
+
+// ==================== CONTROLS ====================
+function renderControls(){
+  var q=((document.getElementById('ctrl-search')||{}).value||'').toLowerCase();
+  var epiMap={};epis.forEach(function(e){epiMap[e.ref]=e.type;});
+  var sColor={ok:'var(--accent)',warn:'var(--warn)',danger:'var(--danger)',retired:'var(--text2)',lost:'#5b21b6'};
+  var sText={ok:'Conforme',warn:'Reserve',danger:'Non-conforme',retired:'Reforme',lost:'Introuvable'};
+  var sorted=controls.filter(function(c){return !q||[c.ref,c.who].join(' ').toLowerCase().indexOf(q)!==-1;}).slice().sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
+  document.getElementById('controls-table').innerHTML=sorted.map(function(c){return '<tr><td style="font-size:13px">'+c.date+'</td><td><strong>'+c.ref+'</strong></td><td class="muted">'+(epiMap[c.ref]||'&mdash;')+'</td><td>'+c.who+'</td><td><span style="font-weight:600;color:'+(sColor[c.result]||'var(--text2)')+';">'+(sText[c.result]||c.result)+'</span></td><td class="muted" style="font-size:13px">'+(c.notes||'&mdash;')+'</td></tr>';}).join('');
+}
+
+// ==================== LOANS ====================
+function renderLoans(){
+  var epiMap={};epis.forEach(function(e){epiMap[e.ref]=e.type;});
+  var slbl={active:'En cours',returned:'Rendu',late:'En retard'};var scls={active:'badge-warn',returned:'badge-ok',late:'badge-danger'};
+  var canManage=hasPerm('manage_loans');
+  document.getElementById('loans-table').innerHTML=loans.map(function(l){return '<tr><td style="font-size:13px">'+l.date+'</td><td>'+l.member+'</td><td><strong>'+l.ref+'</strong></td><td class="muted">'+(epiMap[l.ref]||'&mdash;')+'</td><td style="font-size:13px">'+l.returnDate+'</td><td><span class="badge '+(scls[l.status]||'')+'">'+slbl[l.status]+'</span></td><td>'+(canManage&&l.status!=='returned'?'<button class="btn btn-sm" onclick="returnLoan(\''+l.id+'\')">Rendu</button>':'')+'</td></tr>';}).join('');
+}
+function returnLoan(loanId){var loan=null;for(var i=0;i<loans.length;i++)if(loans[i].id===loanId){loan=loans[i];break;}if(!loan)return;loan.status='returned';fsUpdate('loans',loanId,{status:'returned'}).catch(function(){});renderLoans();updateAlertBadge();showToast('Pret marque comme rendu');}
+
+// ==================== ALERTS ====================
+function renderAlerts(){
+  var alerts=[];
+  epis.forEach(function(e){var s=getStatus(e);var next=getNextCtrl(e);if(s==='danger'&&e.status!=='retired'){var d=next?diffDays(next,todayStr):-999;var desc=e.type+' '+e.brand+' '+e.model;if(d<0)desc+=' - retard de '+Math.abs(d)+'j';alerts.push({type:'danger',icon:'&#9888;',title:e.ref+' - action requise',desc:desc,date:next||'&mdash;'});}else if(s==='warn'){var d2=diffDays(next,todayStr);alerts.push({type:'warn',icon:'&#9675;',title:e.ref+' - controle a prevoir',desc:e.type+' '+e.brand+' '+e.model+' - dans '+d2+'j',date:next});}});
+  loans.filter(function(l){return l.status==='late';}).forEach(function(l){alerts.push({type:'danger',icon:'&#128230;',title:'Pret en retard - '+l.member,desc:l.ref+' - retour prevu le '+l.returnDate,date:l.returnDate});});
+  if(!alerts.length){document.getElementById('alerts-list').innerHTML='<div style="text-align:center;padding:48px;color:var(--text2)">Aucune alerte active</div>';return;}
+  document.getElementById('alerts-list').innerHTML=alerts.map(function(a){return '<div class="alert-item"><div class="alert-icon alert-icon-'+a.type+'">'+a.icon+'</div><div class="alert-body"><div class="alert-title">'+a.title+'</div><div class="alert-desc">'+a.desc+'</div></div><div style="font-size:12px;color:var(--text3);flex-shrink:0">'+a.date+'</div></div>';}).join('');
+}
+
+// ==================== MEMBERS ====================
+function renderMembers(){
+  var rlbl={admin:'Administrateur',referent:'Referent EPI',member:'Membre'};
+  var rcls={admin:'badge-role-admin',referent:'badge-role-referent',member:'badge-role-member'};
+  document.getElementById('members-table').innerHTML=members.map(function(m){var isMe=currentUser&&String(m.id)===String(currentUser.id);return '<tr><td><strong>'+m.name+'</strong>'+(isMe?' <span style="font-size:11px;color:var(--text2)">(vous)</span>':'')+'</td><td style="font-family:var(--font-mono);font-size:13px">'+m.login+'</td><td><span class="badge '+(rcls[m.role]||'')+'">'+rlbl[m.role]+'</span></td><td style="font-size:13px;color:var(--text2)">'+(m.perms?m.perms.length:0)+' perms</td><td style="font-size:13px;color:var(--text2)">'+(m.lastAccess||'&mdash;')+'</td><td style="display:flex;gap:6px"><button class="btn btn-sm" onclick="editMember(\''+m.id+'\')">Modifier</button>'+(!isMe?'<button class="btn btn-sm btn-danger" onclick="deleteMember(\''+m.id+'\')">Supprimer</button>':'')+'</td></tr>';}).join('');
+}
+function editMember(id){
+  editingMemberId=id;var m=null;for(var i=0;i<members.length;i++)if(String(members[i].id)===String(id)){m=members[i];break;}
+  if(!m)return;
+  document.getElementById('member-modal-title').textContent='Modifier le membre';document.getElementById('member-save-btn').textContent='Enregistrer';
+  document.getElementById('m-name').value=m.name;document.getElementById('m-login').value=m.login;document.getElementById('m-pass').value='';document.getElementById('m-pass').placeholder='Laisser vide pour conserver';document.getElementById('m-email').value=m.email||'';document.getElementById('m-role').value=m.role;
+  ['view_epi','add_epi','view_controls','add_controls','view_loans','manage_loans','export_pdf','manage_members'].forEach(function(p){var el=document.getElementById('p-'+p);if(el)el.checked=m.perms&&m.perms.indexOf(p)!==-1;});
+  openModal('member');
+}
+function deleteMember(id){if(!confirm('Supprimer ce membre ?'))return;members=members.filter(function(m){return String(m.id)!==String(id);});fsDelete('members',id).catch(function(){});renderMembers();showToast('Membre supprime');}
+function saveMember(){
+  var name=document.getElementById('m-name').value.trim();var login=document.getElementById('m-login').value.trim();var pass=document.getElementById('m-pass').value;var email=document.getElementById('m-email').value.trim();var role=document.getElementById('m-role').value;
+  if(!name||!login){alert('Nom et identifiant obligatoires');return;}if(!editingMemberId&&!pass){alert('Mot de passe obligatoire');return;}
+  var allPerms=['view_epi','add_epi','view_controls','add_controls','view_loans','manage_loans','export_pdf','manage_members'];
+  var perms=allPerms.filter(function(p){var el=document.getElementById('p-'+p);return el&&el.checked;});
+  if(editingMemberId){
+    var m=null;for(var i=0;i<members.length;i++)if(String(members[i].id)===String(editingMemberId)){m=members[i];break;}
+    if(m){m.name=name;m.login=login;m.role=role;m.perms=perms;m.email=email;if(pass)m.pass=pass;}
+    if(currentUser&&String(currentUser.id)===String(editingMemberId)){currentUser=m;applyPermissions();}
+    if(m)fsSet('members',String(editingMemberId),m).catch(function(e){showToast('Erreur: '+e.message,'err');});
+  }else{
+    var exists=false;for(var j=0;j<members.length;j++)if(members[j].login===login){exists=true;break;}
+    if(exists){alert('Identifiant deja utilise');return;}
+    var newId=String(Date.now());var nm={id:newId,name:name,login:login,pass:pass,email:email,role:role,perms:perms,lastAccess:'-'};
+    members.push(nm);fsSet('members',newId,nm).then(function(){showToast('Membre cree');}).catch(function(e){showToast('Erreur: '+e.message,'err');});
+  }
+  closeModal();renderMembers();
+}
+function updateRolePerms(){
+  var role=document.getElementById('m-role').value;var p=ROLE_PERMS[role]||[];
+  ['view_epi','add_epi','view_controls','add_controls','view_loans','manage_loans','export_pdf','manage_members'].forEach(function(perm){var el=document.getElementById('p-'+perm);if(el)el.checked=p.indexOf(perm)!==-1;});
+}
+
+// ==================== ADD EPI ====================
+function addEPI(prefill){
+  var data=prefill||{};var ref=(data.ref||document.getElementById('f-ref').value).trim();var type=data.type||document.getElementById('f-type').value;
+  if(!ref||!type){alert('Reference et type obligatoires');return;}if(epis.find(function(e){return e.ref===ref;})){alert('Reference deja existante');return;}
+  showLoading('Enregistrement...');
+  var photos=pendingEpiPhotos.slice();
+  Promise.all(photos.map(function(p,i){return uploadPhotoToStorage(p,'epis/'+ref+'/photo_'+i+'.jpg');}))
+  .then(function(up){
+    var epi={ref:ref,type:type,brand:data.brand||document.getElementById('f-brand').value,model:data.model||document.getElementById('f-model').value,buy:document.getElementById('f-buy').value||todayStr,fab:document.getElementById('f-fab').value||'',norm:data.norm||document.getElementById('f-norm').value,lot:data.lot||document.getElementById('f-lot').value,status:'ok',lastCtrl:'',notes:document.getElementById('f-notes').value,photos:up};
+    epis.push(epi);pendingEpiPhotos=[];return fsSet('epis',ref,epi);
+  }).then(function(){hideLoading();closeModal();renderInventory();renderDashboard();showToast('EPI ajoute');})
+  .catch(function(e){hideLoading();showToast('Erreur: '+e.message,'err');console.error(e);});
+}
+
+// ==================== ADD CONTROL ====================
+function addControl(){
+  var ref=document.getElementById('c-ref').value;var date=document.getElementById('c-date').value;var who=document.getElementById('c-who').value.trim();var result=document.getElementById('c-result').value;
+  if(!ref||!date||!who){alert('Champs obligatoires manquants');return;}
+  var ctrl={id:uid(),date:date,ref:ref,who:who,result:result,notes:document.getElementById('c-notes').value};
+  controls.unshift(ctrl);var epi=epis.find(function(e){return e.ref===ref;});if(epi){epi.lastCtrl=date;epi.status=result;}
+  fsSet('controls',ctrl.id,ctrl).catch(function(){});if(epi)fsSet('epis',ref,epi).catch(function(){});
+  closeModal();renderControls();renderDashboard();updateAlertBadge();showToast('Controle enregistre');
+}
+
+// ==================== ADD LOAN ====================
+function addLoan(){
+  var member=document.getElementById('l-member').value.trim();var ref=document.getElementById('l-ref').value;
+  if(!member||!ref){alert('Adherent et EPI obligatoires');return;}
+  var loan={id:uid(),date:document.getElementById('l-date').value,member:member,ref:ref,returnDate:document.getElementById('l-return').value,status:'active'};
+  loans.push(loan);fsSet('loans',loan.id,loan).catch(function(){});closeModal();renderLoans();showToast('Pret cree');
+}
+
+// ==================== LIFESPAN HINT ====================
+function updateLifespanHint(){
+  var type=document.getElementById('f-type').value;var cfg=EPI_CONFIG[type];var wrap=document.getElementById('lifespan-hint-wrap');
+  if(cfg){document.getElementById('lifespan-hint').textContent='Max: '+cfg.lifeMax+' ans - Usage: '+cfg.lifeUse+' ans - Controle /'+cfg.ctrlMonths+' mois - Norme '+cfg.norm;wrap.style.display='block';var btn=document.getElementById('lifespan-check-btn');if(!btn){btn=document.createElement('button');btn.id='lifespan-check-btn';btn.type='button';btn.className='btn btn-sm';btn.style.marginTop='6px';btn.textContent='Voir la fiche de controle';wrap.querySelector('div').appendChild(btn);}btn.onclick=function(){openCheckSheet(type);};}else{wrap.style.display='none';}
+}
+function updateBatchLifespanHint(){
+  var type=document.getElementById('b-type').value;var cfg=EPI_CONFIG[type];var wrap=document.getElementById('batch-lifespan-hint-wrap');
+  if(cfg){document.getElementById('batch-lifespan-hint').textContent='Max: '+cfg.lifeMax+'a - /'+cfg.ctrlMonths+' mois - '+cfg.norm;wrap.style.display='block';}else{wrap.style.display='none';}
+}
+
 
 var ALL_MODALS=['modal-add','modal-qr','modal-control','modal-loan','modal-member','modal-pdf',
     'modal-batch','modal-batch-ctrl','modal-photo','modal-history','modal-check','modal-bulk-ctrl'];
