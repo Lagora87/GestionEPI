@@ -1239,7 +1239,7 @@ function renderInventory(){
       +'<td class="muted">'+e.buy+'</td><td style="min-width:120px">'+lifespanBar(e)+'</td>'
       +'<td class="muted">'+(e.lastCtrl||'&mdash;')+'</td><td class="muted">'+(getNextCtrl(e)||'&mdash;')+'</td>'
       +'<td>'+badgeHtml(getStatus(e))+'</td>'
-      +'<td style="white-space:nowrap"><button class="btn btn-sm" onclick="openCheckSheet(\''+e.type+'\')">&#128203; Fiche</button>'+(canCtrl?'<button class="btn btn-sm" style="margin-left:4px" onclick="openModalControl(\''+e.ref+'\')">Controler</button>':'')+'</td></tr>';
+      +'<td style="white-space:nowrap"><button class="btn btn-sm" onclick="openCheckSheet(\''+e.type+'\')">&#128203; Fiche</button>'+(canCtrl?'<button class="btn btn-sm" style="margin-left:4px" onclick="openModalControl(\''+e.ref+'\')">Controler</button>':'')+(hasPerm('add_epi')?'<button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="deleteEPI(\''+e.ref+'\')" title="Supprimer definitivement">&#128465;</button>':'')+'</td></tr>';
   }).join('');
 }
 
@@ -1339,6 +1339,31 @@ function addLoan(){
   if(!member||!ref){alert('Adherent et EPI obligatoires');return;}
   var loan={id:uid(),date:document.getElementById('l-date').value,member:member,ref:ref,returnDate:document.getElementById('l-return').value,status:'active'};
   loans.push(loan);fsSet('loans',loan.id,loan).catch(function(){});closeModal();renderLoans();showToast('Pret cree');
+}
+
+// ==================== DELETE EPI ====================
+function deleteEPI(ref) {
+  var epi = null;
+  for (var i = 0; i < epis.length; i++) { if (epis[i].ref === ref) { epi = epis[i]; break; } }
+  if (!epi) return;
+  var msg = 'Supprimer definitivement ' + ref + ' (' + epi.brand + ' ' + epi.model + ') ?\n\nATTENTION : irreversible. L\'EPI et tout son historique de controles seront supprimes.';
+  if (!confirm(msg)) return;
+  var batchId = epi.batchId || null;
+  epis = epis.filter(function(e) { return e.ref !== ref; });
+  controls = controls.filter(function(c) { return c.ref !== ref; });
+  // Supabase : delete EPI
+  fsDelete('epis', ref).catch(function(e) { console.warn('Delete EPI:', e.message); });
+  // Supabase : delete associated controls
+  dbSelect('controls', 'select=ctrl_id,data').then(function(rows) {
+    if (!rows) return;
+    rows.forEach(function(r) {
+      if (r.data && r.data.ref === ref) {
+        fsDelete('controls', r.ctrl_id).catch(function(){});
+      }
+    });
+  }).catch(function(){});
+  renderInventory(); renderDashboard(); updateAlertBadge();
+  showToast(ref + ' supprime' + (batchId ? ' (lot ' + batchId + ')' : ''), batchId ? 'warn' : 'ok');
 }
 
 // ==================== LIFESPAN HINT ====================
