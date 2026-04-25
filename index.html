@@ -120,7 +120,6 @@ thead th { padding: 12px 16px; text-align: left; font-size: 11px; font-weight: 7
 tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
 tbody tr:last-child { border-bottom: none; }
 tbody tr:hover { background: var(--surface2); }
-tbody tr[onclick]:hover { background: var(--accent-light); }
 td { padding: 12px 16px; color: var(--text); vertical-align: middle; }
 td.muted { color: var(--text2); font-size: 13px; }
 
@@ -399,7 +398,6 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
               <optgroup label="Canyoning"><option>Canyoning</option></optgroup>
               <optgroup label="Via Ferrata"><option>Via Ferrata</option></optgroup>
               <optgroup label="Dry Tooling"><option>Dry Tooling</option></optgroup>
-              <optgroup label="Crash-Pad"><option>Crash-Pad</option></optgroup>
             </select>
             <select id="filter-status" onchange="renderInventory()">
               <option value="">Tous les états</option>
@@ -509,7 +507,6 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
           <optgroup label="Canyoning"><option>Canyoning</option></optgroup>
           <optgroup label="Via Ferrata"><option>Via Ferrata</option></optgroup>
           <optgroup label="Dry Tooling"><option>Dry Tooling</option></optgroup>
-          <optgroup label="Crash-Pad"><option>Crash-Pad</option></optgroup>
         </select>
       </div>
       <div class="form-group"><label>Marque</label><input type="text" id="f-brand" placeholder="ex: Petzl"></div>
@@ -657,13 +654,13 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
           <optgroup label="Canyoning"><option>Canyoning</option></optgroup>
           <optgroup label="Via Ferrata"><option>Via Ferrata</option></optgroup>
           <optgroup label="Dry Tooling"><option>Dry Tooling</option></optgroup>
-          <optgroup label="Crash-Pad"><option>Crash-Pad</option></optgroup>
         </select>
       </div>
       <div class="form-group"><label>Quantité *</label><input type="text" id="b-qty" placeholder="ex: 10" oninput="updateBatchPreview()"></div>
-      <div class="form-group"><label>Préfixe de référence *</label><input type="text" id="b-prefix" placeholder="ex: BDE" oninput="updateBatchPreview()"></div>      <div class="form-group"><label>Marque</label><input type="text" id="b-brand" placeholder="ex: Petzl"></div>
+      <div class="form-group"><label>Préfixe de référence *</label><input type="text" id="b-prefix" placeholder="ex: BDE" oninput="updateBatchPreview()"></div>
+      <div class="form-group"><label>Marque</label><input type="text" id="b-brand" placeholder="ex: Petzl"></div>
       <div class="form-group"><label>Modèle</label><input type="text" id="b-model" placeholder="ex: Corax C051AA"></div>
-      <div class="form-group"><label>Date de mise en service (commune)</label><input type="date" id="b-buy"></div>
+      <div class="form-group"><label>Date de mise en service</label><input type="date" id="b-buy"></div>
       <div class="form-group"><label>Date de fabrication</label><input type="date" id="b-fab"></div>
       <div class="form-group"><label>Norme</label><input type="text" id="b-norm"></div>
       <div class="form-group"><label>N° de lot fournisseur</label><input type="text" id="b-lot"></div>
@@ -675,13 +672,6 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
       <div class="form-group form-full">
         <label>Aperçu des références générées</label>
         <div id="batch-preview" style="font-size:12px;font-family:monospace;color:var(--text2);background:var(--surface2);padding:9px 12px;border-radius:8px;border:0.5px solid var(--border);min-height:32px;margin-top:4px;word-break:break-all">—</div>
-      </div>
-      <div class="form-group form-full">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-          <label style="margin:0">Identifiants et dates individuels</label>
-          <span style="font-size:12px;color:var(--text2)">Optionnel — pour personnaliser chaque EPI</span>
-        </div>
-        <button type="button" class="btn btn-sm" onclick="openBatchPerEpi()" id="btn-bperepi" style="width:100%;justify-content:center">⚙ Personnaliser les identifiants / dates de mise en service</button>
       </div>
       <div class="form-group form-full">
         <label>Photo(s) du lot</label>
@@ -784,55 +774,6 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
     <div id="check-body"></div>
   </div>
 
-  <!-- EPI DETAIL -->
-  <div class="modal hidden" id="modal-epi-detail" style="width:720px">
-    <div class="modal-header">
-      <div class="modal-title">Fiche EPI</div>
-      <button class="close-btn" onclick="closeModal()">×</button>
-    </div>
-    <div id="epi-detail-body"></div>
-    <div class="modal-actions" id="epi-detail-actions"></div>
-  </div>
-
-  <!-- EPI LIFESPAN EDIT -->
-  <div class="modal hidden" id="modal-epi-lifespan" style="width:500px">
-    <div class="modal-header">
-      <div class="modal-title">Durée de vie — EPI</div>
-      <button class="close-btn" onclick="closeModal()">×</button>
-    </div>
-    <input type="hidden" id="els-ref">
-    <div style="font-size:13px;color:var(--text2);background:var(--surface2);border-radius:8px;padding:10px 14px;margin-bottom:18px;border-left:3px solid var(--accent)">
-      Laissez un champ vide pour utiliser la valeur par défaut du type d'EPI. Mettez <strong>0</strong> pour indiquer une durée illimitée.
-    </div>
-    <div class="form-grid">
-      <div class="form-group"><label>Durée max (années)</label><input type="number" id="els-lifemax" min="0" step="0.5" placeholder="Par défaut"></div>
-      <div class="form-group"><label>Usage recommandé (années)</label><input type="number" id="els-lifeuse" min="0" step="0.5" placeholder="Par défaut"></div>
-      <div class="form-group"><label>Périodicité contrôle (mois)</label><input type="number" id="els-ctrlmonths" min="1" step="1" placeholder="Par défaut"></div>
-      <div class="form-group"><label>Date mise en service</label><input type="date" id="els-buy"></div>
-      <div class="form-group"><label>Date fabrication</label><input type="date" id="els-fab"></div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn" onclick="closeModal()">Annuler</button>
-      <button class="btn btn-primary" onclick="saveEPILifespan()">Enregistrer</button>
-    </div>
-  </div>
-
-  <!-- BATCH PER-EPI DATES -->
-  <div class="modal hidden" id="modal-batch-per-epi" style="width:700px">
-    <div class="modal-header">
-      <div class="modal-title" id="bperepi-title">Identifiants et dates par EPI</div>
-      <button class="close-btn" onclick="closeModal()">×</button>
-    </div>
-    <div style="font-size:13px;color:var(--text2);background:var(--surface2);border-radius:8px;padding:10px 14px;margin-bottom:18px;border-left:3px solid var(--accent)">
-      Personnalisez l'identifiant et la date de mise en service de chaque EPI du lot. Laissez vide pour utiliser les valeurs communes.
-    </div>
-    <div style="max-height:400px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--rad);margin-bottom:8px" id="bperepi-items"></div>
-    <div class="modal-actions">
-      <button class="btn" onclick="closeModal()">Annuler</button>
-      <button class="btn btn-primary" onclick="saveBatchPerEpi()">Créer le lot</button>
-    </div>
-  </div>
-
 </div>
 
 <script>
@@ -896,10 +837,6 @@ var EPI_CATEGORIES = {
   'Dry Tooling': {
     icon: '&#127979;',
     subs: []
-  },
-  'Crash-Pad': {
-    icon: '&#129681;',
-    subs: []
   }
 };
 // EPI types - sous-categories ont cat= leur categorie parente
@@ -919,8 +856,7 @@ var EPI_CONFIG = {  'Cordes SAE':        { lifeMax:10, lifeUse:5,  ctrlMonths:12
   'Bloqueurs':         { lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN567',   cat:'Bloqueurs' },
   'Canyoning':         { lifeMax:10, lifeUse:5,  ctrlMonths:6,  norm:'Fabricant', cat:'Canyoning' },
   'Via Ferrata':       { lifeMax:5,  lifeUse:3,  ctrlMonths:6,  norm:'EN958',   cat:'Via Ferrata' },
-  'Dry Tooling':       { lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN13089', cat:'Dry Tooling' },
-  'Crash-Pad':         { lifeMax:null, lifeUse:null, ctrlMonths:12, norm:'Fabricant', cat:'Crash-Pad' }
+  'Dry Tooling':       { lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN13089', cat:'Dry Tooling' }
 };
 function getCat(type) {
   var cfg = EPI_CONFIG[type];
@@ -1242,8 +1178,8 @@ function showPage(id,el){
 }
 
 // ==================== STATUS CALC ====================
-function getNextCtrl(epi){if(!epi.lastCtrl)return null;var cfg=EPI_CONFIG[epi.type];var months=(epi.customCtrlMonths!==undefined&&epi.customCtrlMonths!==null)?epi.customCtrlMonths:(cfg?cfg.ctrlMonths:12);return fmt(addMonths(new Date(epi.lastCtrl),months));}
-function getLifeStatus(epi){if(epi.status==='retired'||epi.status==='lost')return null;var cfg=EPI_CONFIG[epi.type];var fabDate=epi.fab||epi.buy;if(!cfg||!fabDate)return null;var lifeMax=(epi.customLifeMax!==undefined&&epi.customLifeMax!==null)?epi.customLifeMax:cfg.lifeMax;var lifeUse=(epi.customLifeUse!==undefined&&epi.customLifeUse!==null)?epi.customLifeUse:cfg.lifeUse;if(lifeMax===null)return null;var ageYears=diffMonths(todayStr,fabDate)/12;if(ageYears>=lifeMax)return 'danger';if(lifeUse!==null&&ageYears>=lifeUse)return 'warn';return null;}
+function getNextCtrl(epi){if(!epi.lastCtrl)return null;var cfg=EPI_CONFIG[epi.type];var months=cfg?cfg.ctrlMonths:12;return fmt(addMonths(new Date(epi.lastCtrl),months));}
+function getLifeStatus(epi){if(epi.status==='retired'||epi.status==='lost')return null;var cfg=EPI_CONFIG[epi.type];var fabDate=epi.fab||epi.buy;if(!cfg||!fabDate)return null;var ageYears=diffMonths(todayStr,fabDate)/12;if(ageYears>=cfg.lifeMax)return 'danger';if(ageYears>=cfg.lifeUse)return 'warn';return null;}
 function getStatus(epi){
   if(epi.status==='retired')return 'retired';if(epi.status==='lost')return 'lost';
   var life=getLifeStatus(epi);if(life==='danger')return 'danger';
@@ -1259,12 +1195,9 @@ function badgeHtml(s){
 }
 function lifespanBar(epi){
   var cfg=EPI_CONFIG[epi.type];var fabDate=epi.fab||epi.buy;if(!cfg||!fabDate)return '&mdash;';
-  var lifeMax=(epi.customLifeMax!==undefined&&epi.customLifeMax!==null)?epi.customLifeMax:cfg.lifeMax;
-  var ageM=Math.max(0,diffMonths(todayStr,fabDate));
-  if(lifeMax===null){return '<div style="font-size:12px;color:var(--text2)">'+Math.floor(ageM/12)+'a '+(ageM%12)+'m / illimitee</div><div class="lifespan-bar"><div class="lifespan-fill" style="width:20%;background:#16a34a"></div></div>';}
-  var maxM=lifeMax*12;var pct=Math.min(100,Math.round(ageM/maxM*100));
+  var ageM=Math.max(0,diffMonths(todayStr,fabDate));var maxM=cfg.lifeMax*12;var pct=Math.min(100,Math.round(ageM/maxM*100));
   var color=pct>=100?'#dc2626':pct>=70?'#b45309':'#16a34a';
-  return '<div style="font-size:12px;color:var(--text2)">'+Math.floor(ageM/12)+'a '+(ageM%12)+'m / '+lifeMax+'a max</div><div class="lifespan-bar"><div class="lifespan-fill" style="width:'+pct+'%;background:'+color+'"></div></div>';
+  return '<div style="font-size:12px;color:var(--text2)">'+Math.floor(ageM/12)+'a '+(ageM%12)+'m / '+cfg.lifeMax+'a max</div><div class="lifespan-bar"><div class="lifespan-fill" style="width:'+pct+'%;background:'+color+'"></div></div>';
 }
 
 // ==================== DASHBOARD ====================
@@ -1297,21 +1230,16 @@ function renderInventory(){
   });
   var canCtrl=hasPerm('add_controls');
   document.getElementById('inventory-table').innerHTML=filtered.map(function(e){
-    var bTag=e.batchId?'<span style="font-size:11px;font-weight:700;background:var(--surface2);border:1px solid var(--border2);color:var(--text2);padding:2px 8px;border-radius:6px;cursor:pointer;margin-left:6px" onclick="event.stopPropagation();showBatch(\''+e.batchId+'\')" title="Voir le lot">'+e.batchId+'</span>':'';
+    var bTag=e.batchId?'<span style="font-size:11px;font-weight:700;background:var(--surface2);border:1px solid var(--border2);color:var(--text2);padding:2px 8px;border-radius:6px;cursor:pointer;margin-left:6px" onclick="showBatch(\''+e.batchId+'\')" title="Voir le lot">'+e.batchId+'</span>':'';
     var isActive=e.status!=='retired'&&e.status!=='lost';
-    var photo=e.photos&&e.photos.length?'<img src="'+e.photos[0]+'" class="photo-thumb" onclick="event.stopPropagation();openEPIDetail(\''+e.ref+'\')" style="cursor:pointer">':'<div class="photo-placeholder" onclick="event.stopPropagation();openEPIDetail(\''+e.ref+'\')" title="Fiche EPI">&#128203;</div>';
-    return '<tr style="cursor:pointer" onclick="openEPIDetail(\''+e.ref+'\')" title="Voir la fiche EPI">'
-      +'<td style="width:40px" onclick="event.stopPropagation()"><input type="checkbox" class="epi-chk" data-ref="'+e.ref+'" onchange="onEpiCheckChange()"'+(isActive?'':' disabled style="opacity:0.3"')+'></td>'
+    var photo=e.photos&&e.photos.length?'<img src="'+e.photos[0]+'" class="photo-thumb" onclick="openHistory(\'epi\',\''+e.ref+'\')">':'<div class="photo-placeholder" onclick="openHistory(\'epi\',\''+e.ref+'\')" title="Historique">&#128203;</div>';
+    return '<tr><td style="width:40px"><input type="checkbox" class="epi-chk" data-ref="'+e.ref+'" onchange="onEpiCheckChange()"'+(isActive?'':' disabled style="opacity:0.3"')+'></td>'
       +'<td><strong>'+e.ref+'</strong>'+bTag+'</td><td>'+getCat(e.type)+'</td>'
       +'<td><div style="display:flex;align-items:center;gap:8px">'+photo+'<span>'+e.brand+' '+e.model+'<br><small style="color:var(--text2)">'+e.type+'</small></span></div></td>'
       +'<td class="muted">'+e.buy+'</td><td style="min-width:120px">'+lifespanBar(e)+'</td>'
       +'<td class="muted">'+(e.lastCtrl||'&mdash;')+'</td><td class="muted">'+(getNextCtrl(e)||'&mdash;')+'</td>'
       +'<td>'+badgeHtml(getStatus(e))+'</td>'
-      +'<td style="white-space:nowrap" onclick="event.stopPropagation()">'
-      +'<button class="btn btn-sm" onclick="openCheckSheet(\''+e.type+'\')">&#128203; Fiche</button>'
-      +(canCtrl?'<button class="btn btn-sm" style="margin-left:4px" onclick="openModalControl(\''+e.ref+'\')">Controler</button>':'')
-      +(hasPerm('add_epi')?'<button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="deleteEPI(\''+e.ref+'\')" title="Supprimer">&#128465;</button>':'')
-      +'</td></tr>';
+      +'<td style="white-space:nowrap"><button class="btn btn-sm" onclick="openCheckSheet(\''+e.type+'\')">&#128203; Fiche</button>'+(canCtrl?'<button class="btn btn-sm" style="margin-left:4px" onclick="openModalControl(\''+e.ref+'\')">Controler</button>':'')+(hasPerm('add_epi')?'<button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="deleteEPI(\''+e.ref+'\')" title="Supprimer definitivement">&#128465;</button>':'')+'</td></tr>';
   }).join('');
 }
 
@@ -1445,13 +1373,12 @@ function updateLifespanHint(){
 }
 function updateBatchLifespanHint(){
   var type=document.getElementById('b-type').value;var cfg=EPI_CONFIG[type];var wrap=document.getElementById('batch-lifespan-hint-wrap');
-  if(cfg){var ms=cfg.lifeMax===null?'Illimitee':cfg.lifeMax+'a';document.getElementById('batch-lifespan-hint').textContent='Max: '+ms+' - /'+cfg.ctrlMonths+' mois - '+cfg.norm;wrap.style.display='block';}else{wrap.style.display='none';}
+  if(cfg){document.getElementById('batch-lifespan-hint').textContent='Max: '+cfg.lifeMax+'a - /'+cfg.ctrlMonths+' mois - '+cfg.norm;wrap.style.display='block';}else{wrap.style.display='none';}
 }
 
 
 var ALL_MODALS=['modal-add','modal-qr','modal-control','modal-loan','modal-member','modal-pdf',
-    'modal-batch','modal-batch-ctrl','modal-photo','modal-history','modal-check','modal-bulk-ctrl',
-    'modal-epi-detail','modal-epi-lifespan','modal-batch-per-epi'];
+    'modal-batch','modal-batch-ctrl','modal-photo','modal-history','modal-check','modal-bulk-ctrl'];
 function showModal(id) {
   ALL_MODALS.forEach(function(x){var el=document.getElementById(x);if(el)el.classList.add('hidden');});
   document.getElementById('modal-overlay').classList.add('open');
@@ -1583,9 +1510,7 @@ function updateLifespanHint() {
   var cfg=EPI_CONFIG[type] || EPI_CONFIG[getCat(type)];
   var wrap=document.getElementById('lifespan-hint-wrap');
   if(cfg){
-    var ms=cfg.lifeMax===null?'Illimitee':cfg.lifeMax+' ans';
-    var us=cfg.lifeUse===null?'Illimitee':cfg.lifeUse+' ans';
-    document.getElementById('lifespan-hint').textContent='Max: '+ms+' \u2014 Usage: '+us+' \u2014 Controle /'+cfg.ctrlMonths+' mois \u2014 Norme '+cfg.norm;
+    document.getElementById('lifespan-hint').textContent='Max: '+cfg.lifeMax+' ans \u2014 Usage: '+cfg.lifeUse+' ans \u2014 Controle /'+cfg.ctrlMonths+' mois \u2014 Norme '+cfg.norm;
     wrap.style.display='block';
     var btn=document.getElementById('lifespan-check-btn');
     if(!btn){
@@ -1646,67 +1571,22 @@ function confirmQRAdd(){
 }
 
 // ==================== BATCH ====================
-var batchPerEpiData = []; // [{ref, buy}] per EPI override
-
 function updateBatchPreview(){
   var prefix=(document.getElementById('b-prefix').value||'').trim().toUpperCase();
   var qty=parseInt(document.getElementById('b-qty').value)||0;
   var el=document.getElementById('batch-preview');
-  if(!prefix||qty<1){el.textContent='—';return;}
+  if(!prefix||qty<1){el.textContent='&mdash;';return;}
   var refs=[];
   for(var i=1;i<=Math.min(qty,5);i++) refs.push(prefix+'-'+String(i).padStart(3,'0'));
   el.textContent=refs.join(', ')+(qty>5?' ... '+prefix+'-'+String(qty).padStart(3,'0')+' ('+qty+' au total)':'');
-  // Reset per-EPI overrides when prefix/qty changes
-  batchPerEpiData=[];
 }
-
-function openBatchPerEpi(){
-  var prefix=(document.getElementById('b-prefix').value||'').trim().toUpperCase();
-  var qty=parseInt(document.getElementById('b-qty').value)||0;
-  var commonBuy=document.getElementById('b-buy').value||todayStr;
-  if(!prefix||qty<1){alert('Renseignez le préfixe et la quantité d\'abord');return;}
-  document.getElementById('bperepi-title').textContent='Identifiants et dates — '+qty+' EPI';
-  // Init data if empty
-  if(batchPerEpiData.length!==qty){
-    batchPerEpiData=[];
-    for(var i=1;i<=qty;i++){
-      batchPerEpiData.push({ref:prefix+'-'+String(i).padStart(3,'0'),buy:commonBuy});
-    }
-  }
-  renderBatchPerEpiItems(prefix);
-  showModal('modal-batch-per-epi');
+function updateBatchLifespanHint(){
+  var type=document.getElementById('b-type').value;
+  var cfg=EPI_CONFIG[type];
+  var wrap=document.getElementById('batch-lifespan-hint-wrap');
+  if(cfg){document.getElementById('batch-lifespan-hint').textContent='Max: '+cfg.lifeMax+'a \u2014 Usage: '+cfg.lifeUse+'a \u2014 /'+cfg.ctrlMonths+' mois \u2014 '+cfg.norm; wrap.style.display='block';}
+  else wrap.style.display='none';
 }
-
-function renderBatchPerEpiItems(prefix){
-  var html='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;padding:8px 12px;background:var(--surface2);border-bottom:1px solid var(--border)">'
-    +'<div>#</div><div>Identifiant (ref)</div><div>Date mise en service</div></div>';
-  batchPerEpiData.forEach(function(item,idx){
-    html+='<div style="display:grid;grid-template-columns:32px 1fr 1fr;gap:8px;align-items:center;padding:7px 12px;border-bottom:1px solid var(--border);font-size:13px">'
-      +'<div style="color:var(--text2);font-weight:700">'+(idx+1)+'</div>'
-      +'<div><input type="text" value="'+item.ref+'" style="width:100%;padding:6px 8px;font-size:13px" onchange="batchPerEpiData['+idx+'].ref=this.value.trim().toUpperCase()" placeholder="Identifiant libre"></div>'
-      +'<div><input type="date" value="'+item.buy+'" style="width:100%;padding:6px 8px;font-size:13px" onchange="batchPerEpiData['+idx+'].buy=this.value"></div>'
-      +'</div>';
-  });
-  document.getElementById('bperepi-items').innerHTML=html;
-}
-
-function saveBatchPerEpi(){
-  // Validate: no duplicate refs
-  var seen={};var dups=[];
-  batchPerEpiData.forEach(function(item){
-    if(!item.ref){return;}
-    if(seen[item.ref])dups.push(item.ref);
-    seen[item.ref]=true;
-  });
-  if(dups.length){alert('Identifiants en double : '+dups.join(', '));return;}
-  closeModal();
-  // Update preview to show custom refs
-  var el=document.getElementById('batch-preview');
-  if(el) el.textContent=batchPerEpiData.slice(0,5).map(function(d){return d.ref;}).join(', ')+(batchPerEpiData.length>5?' ...':'');
-  showModal('modal-batch');
-  showToast(batchPerEpiData.length+' identifiants configurés');
-}
-
 function createBatch(){
   var name=document.getElementById('b-name').value.trim();
   var type=document.getElementById('b-type').value;
@@ -1714,43 +1594,32 @@ function createBatch(){
   var prefix=(document.getElementById('b-prefix').value||'').trim().toUpperCase();
   if(!name||!type||!qty||!prefix){alert('Nom, type, quantite et prefixe obligatoires');return;}
   var batchId='LOT-'+new Date().getFullYear()+'-'+String(nextBatchNum++).padStart(3,'0');
-  var commonBuy=document.getElementById('b-buy').value||todayStr;
+  var buy=document.getElementById('b-buy').value||todayStr;
   var fab=document.getElementById('b-fab').value||'';
   var brand=document.getElementById('b-brand').value;
   var model=document.getElementById('b-model').value;
   var norm=document.getElementById('b-norm').value;
   var lot=document.getElementById('b-lot').value;
-
-  // Build ref list — use per-EPI data if configured, otherwise auto-generate
-  var itemList=[];
-  if(batchPerEpiData.length===qty){
-    itemList=batchPerEpiData.map(function(d){return {ref:d.ref||prefix+'-?',buy:d.buy||commonBuy};});
-  } else {
-    for(var i=1;i<=qty;i++) itemList.push({ref:prefix+'-'+String(i).padStart(3,'0'),buy:commonBuy});
-  }
-
-  var conflicts=[];
-  itemList.forEach(function(d){if(epis.find(function(e){return e.ref===d.ref;}))conflicts.push(d.ref);});
+  var newRefs=[],conflicts=[];
+  for(var i=1;i<=qty;i++){var r=prefix+'-'+String(i).padStart(3,'0'); epis.find(function(e){return e.ref===r;})?conflicts.push(r):newRefs.push(r);}
   if(conflicts.length&&!confirm(conflicts.length+' references existent deja. Continuer?')) return;
-  var newItems=itemList.filter(function(d){return !epis.find(function(e){return e.ref===d.ref;});});
-
   showLoading('Creation du lot...');
   var photos=pendingBatchPhotos.slice();
   Promise.all(photos.map(function(p,i){return uploadPhotoToStorage(p,'batches/'+batchId+'/photo_'+i+'.jpg');}))
   .then(function(uploadedPhotos){
-    var batch={id:batchId,name:name,type:type,brand:brand,model:model,buy:commonBuy,fab:fab,norm:norm,lot:lot,created:todayStr,photos:uploadedPhotos};
-    batches.push(batch); pendingBatchPhotos=[]; batchPerEpiData=[];
+    var batch={id:batchId,name:name,type:type,brand:brand,model:model,buy:buy,fab:fab,norm:norm,lot:lot,created:todayStr,photos:uploadedPhotos};
+    batches.push(batch); pendingBatchPhotos=[];
     var promises=[fsSet('batches',batchId,batch)];
-    newItems.forEach(function(item){
-      var epi={ref:item.ref,type:type,brand:brand,model:model,buy:item.buy,fab:fab,norm:norm,lot:lot,status:'ok',lastCtrl:'',notes:'',photos:[],batchId:batchId};
-      epis.push(epi); promises.push(fsSet('epis',item.ref,epi));
+    newRefs.forEach(function(ref){
+      var epi={ref:ref,type:type,brand:brand,model:model,buy:buy,fab:fab,norm:norm,lot:lot,status:'ok',lastCtrl:'',notes:'',photos:[],batchId:batchId};
+      epis.push(epi); promises.push(fsSet('epis',ref,epi));
     });
     return Promise.all(promises);
   }).then(function(){
     hideLoading(); closeModal();
     showPage('batches',document.querySelector('[onclick*="batches"]'));
     renderBatches(); renderDashboard();
-    showToast('Lot cree — '+newItems.length+' EPI generes');
+    showToast('Lot cree \u2014 '+newRefs.length+' EPI generes');
     setTimeout(function(){toggleBatch(batchId);},200);
   }).catch(function(e){hideLoading();showToast('Erreur: '+e.message,'err');console.error(e);});
 }
@@ -1768,10 +1637,9 @@ function renderBatches(){
     var itemsHtml=bEpis.map(function(e){
       var s=getStatus(e),next=getNextCtrl(e),isRetired=e.status==='retired';
       var ctrlBtn=hasPerm('add_epi')&&!isRetired?'<button class="btn btn-sm btn-danger" onclick="detachFromBatch(\''+e.ref+'\')">&#8599; Sortir</button>':'';
-      var buyInfo=e.buy?' \u2014 Mis en service: '+e.buy:'';
-      return '<div class="batch-item-row" style="'+(isRetired?'opacity:0.5':'')+'"><div class="batch-item-ref" style="cursor:pointer" onclick="openEPIDetail(\''+e.ref+'\')" title="Voir fiche EPI">'+e.ref+'</div>'
-        +'<div class="batch-item-info">'+e.brand+' '+e.model+buyInfo+' \u2014 dernier: '+(e.lastCtrl||'jamais')+' \u2014 prochain: '+(next||'&mdash;')+'</div>'
-        +'<div class="batch-item-ctrl">'+badgeHtml(s)+'<button class="btn btn-sm" onclick="openEPIDetail(\''+e.ref+'\')">&#128203;</button>'+ctrlBtn+'</div></div>';
+      return '<div class="batch-item-row" style="'+(isRetired?'opacity:0.5':'')+'"><div class="batch-item-ref">'+e.ref+'</div>'
+        +'<div class="batch-item-info">'+e.brand+' '+e.model+' \u2014 dernier: '+(e.lastCtrl||'jamais')+' \u2014 prochain: '+(next||'&mdash;')+'</div>'
+        +'<div class="batch-item-ctrl">'+badgeHtml(s)+'<button class="btn btn-sm" onclick="openHistory(\'epi\',\''+e.ref+'\')">&#128203;</button>'+ctrlBtn+'</div></div>';
     }).join('')+(bEpis.length===0?'<div style="padding:16px 20px;font-size:13px;color:var(--text2)">Aucun EPI dans ce lot.</div>':'');
     return '<div class="batch-card" id="bcard-'+b.id+'">'
       +'<div class="batch-header" onclick="toggleBatch(\''+b.id+'\')"><div class="batch-chevron" id="bchev-'+b.id+'">&#9654;</div>'
@@ -1788,6 +1656,7 @@ function renderBatches(){
       +(hasPerm('add_controls')?'<button class="btn btn-sm btn-primary" onclick="openBatchControl(\''+b.id+'\')">&#10003; Controle du lot</button>':'')
       +'<button class="btn btn-sm" onclick="openHistory(\'batch\',\''+b.id+'\')">&#128203; Historique</button>'
       +'<span style="font-size:13px;color:var(--text2);margin-left:4px">'+active+' EPI actif'+(active>1?'s':'')+'</span>'
+      +(total===0&&hasPerm('add_epi')?'<button class="btn btn-sm btn-danger" style="margin-left:auto" onclick="deleteBatch(\''+b.id+'\')" title="Supprimer ce lot vide">&#128465; Supprimer le lot</button>':'')
       +'</div>'+photosHtml+itemsHtml+'</div></div>';
   }).join('');
   updateBatchBadge();
@@ -1795,6 +1664,16 @@ function renderBatches(){
 function toggleBatch(id){
   var b=document.getElementById('bbody-'+id); if(b) b.classList.toggle('open');
   var c=document.getElementById('bchev-'+id); if(c) c.classList.toggle('open');
+}
+function deleteBatch(batchId){
+  var batch=batches.find(function(b){return b.id===batchId;}); if(!batch) return;
+  var remaining=epis.filter(function(e){return e.batchId===batchId;});
+  if(remaining.length>0){alert('Ce lot contient encore '+remaining.length+' EPI(s). Sortez-les d\'abord avant de supprimer le lot.');return;}
+  if(!confirm('Supprimer définitivement le lot "'+batch.name+'" ('+batchId+') ?\n\nCette action est irréversible.')) return;
+  batches=batches.filter(function(b){return b.id!==batchId;});
+  fsDelete('batches',batchId).catch(function(){});
+  renderBatches(); renderDashboard();
+  showToast('Lot '+batchId+' supprimé');
 }
 function openBatchControl(batchId){
   var batch=batches.find(function(b){return b.id===batchId;});
@@ -1941,109 +1820,6 @@ function removePhoto(idx,target){
   else{pendingBatchPhotos.splice(idx,1);renderPhotoPreview('b-photos-preview',pendingBatchPhotos);}
 }
 
-// ==================== EPI DETAIL SHEET ====================
-function openEPIDetail(ref){
-  var epi=epis.find(function(e){return e.ref===ref;}); if(!epi) return;
-  var cfg=EPI_CONFIG[epi.type]||{};
-  var s=getStatus(epi);
-  var sColor={ok:'var(--accent)',warn:'var(--warn)',danger:'var(--danger)',retired:'var(--text2)',lost:'#5b21b6'};
-  var sText={ok:'Conforme',warn:'A controler',danger:'En alerte',retired:'Reforme',lost:'Introuvable'};
-  var lifeMax=(epi.customLifeMax!==undefined&&epi.customLifeMax!==null)?epi.customLifeMax:cfg.lifeMax;
-  var lifeUse=(epi.customLifeUse!==undefined&&epi.customLifeUse!==null)?epi.customLifeUse:cfg.lifeUse;
-  var ctrlMonths=(epi.customCtrlMonths!==undefined&&epi.customCtrlMonths!==null)?epi.customCtrlMonths:(cfg.ctrlMonths||12);
-  var fabDate=epi.fab||epi.buy;
-  var ageM=fabDate?Math.max(0,diffMonths(todayStr,fabDate)):0;
-  var lifeMaxStr=lifeMax===null?'Illimitee':lifeMax+'a';
-  var lifeUseStr=lifeUse===null?'Illimitee':(lifeUse||'?')+'a';
-  var epiCtrls=controls.filter(function(c){return c.ref===ref;}).slice().sort(function(a,b){return b.date.localeCompare(a.date);});
-  var photosHtml=epi.photos&&epi.photos.length?'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">'+epi.photos.map(function(p){return '<img src="'+p+'" style="width:90px;height:90px;border-radius:10px;object-fit:cover;border:1.5px solid var(--border2)">';}).join('')+'</div>':'';
-  var canEdit=hasPerm('add_epi');
-  var html='<div style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;margin-bottom:20px">'
-    +photosHtml
-    +'<div style="flex:1;min-width:220px">'
-    +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
-    +'<span class="badge '+(s==='ok'?'badge-ok':s==='warn'?'badge-warn':s==='danger'?'badge-danger':s==='retired'?'badge-retired':'badge-lost')+'">'+sText[s]+'</span>'
-    +(epi.batchId?'<span style="font-size:12px;color:var(--text2);background:var(--surface2);border:1px solid var(--border2);padding:2px 10px;border-radius:6px;cursor:pointer" onclick="closeModal();showBatch(\''+epi.batchId+'\')">Lot : '+epi.batchId+'</span>':'')
-    +'</div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;font-size:14px">'
-    +'<div><div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px">Type</div><div>'+epi.type+'</div></div>'
-    +'<div><div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px">Marque / Modele</div><div>'+epi.brand+' '+epi.model+'</div></div>'
-    +'<div><div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px">Mise en service</div><div>'+epi.buy+'</div></div>'
-    +'<div><div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px">Date fabrication</div><div>'+(epi.fab||'&mdash;')+'</div></div>'
-    +'<div><div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px">Norme</div><div>'+(epi.norm||'&mdash;')+'</div></div>'
-    +'<div><div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px">N° lot fournisseur</div><div>'+(epi.lot||'&mdash;')+'</div></div>'
-    +'<div><div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px">Age</div><div>'+Math.floor(ageM/12)+'a '+(ageM%12)+'m</div></div>'
-    +'<div><div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px">Dernier controle</div><div>'+(epi.lastCtrl||'&mdash;')+'</div></div>'
-    +'<div><div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px">Prochain controle</div><div>'+(getNextCtrl(epi)||'&mdash;')+'</div></div>'
-    +'</div>'
-    +(epi.notes?'<div style="margin-top:12px;font-size:13px;color:var(--text2);background:var(--surface2);border-radius:8px;padding:10px 12px;border-left:3px solid var(--border2)">'+epi.notes+'</div>':'')
-    +'</div></div>'
-    +'<div style="background:var(--surface2);border-radius:10px;border:1px solid var(--border);padding:14px 16px;margin-bottom:16px">'
-    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
-    +'<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text2)">Duree de vie</div>'
-    +(canEdit?'<button class="btn btn-sm" onclick="openEPILifespan(\''+ref+'\')">&#9998; Modifier</button>':'')
-    +'</div>'
-    +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:13px">'
-    +'<div style="text-align:center;background:var(--surface);border-radius:8px;padding:10px;border:1px solid var(--border)"><div style="font-size:20px;font-weight:700;color:var(--text)">'+lifeMaxStr+'</div><div style="font-size:11px;color:var(--text2);margin-top:3px">Duree max</div>'+(epi.customLifeMax!==undefined&&epi.customLifeMax!==null?'<div style="font-size:10px;color:var(--accent);margin-top:2px">&#9998; Personnalisee</div>':'<div style="font-size:10px;color:var(--text3);margin-top:2px">Par defaut</div>')+'</div>'
-    +'<div style="text-align:center;background:var(--surface);border-radius:8px;padding:10px;border:1px solid var(--border)"><div style="font-size:20px;font-weight:700;color:var(--text)">'+lifeUseStr+'</div><div style="font-size:11px;color:var(--text2);margin-top:3px">Usage recommande</div>'+(epi.customLifeUse!==undefined&&epi.customLifeUse!==null?'<div style="font-size:10px;color:var(--accent);margin-top:2px">&#9998; Personnalisee</div>':'<div style="font-size:10px;color:var(--text3);margin-top:2px">Par defaut</div>')+'</div>'
-    +'<div style="text-align:center;background:var(--surface);border-radius:8px;padding:10px;border:1px solid var(--border)"><div style="font-size:20px;font-weight:700;color:var(--text)">'+ctrlMonths+'m</div><div style="font-size:11px;color:var(--text2);margin-top:3px">Periodicite controle</div>'+(epi.customCtrlMonths!==undefined&&epi.customCtrlMonths!==null?'<div style="font-size:10px;color:var(--accent);margin-top:2px">&#9998; Personnalisee</div>':'<div style="font-size:10px;color:var(--text3);margin-top:2px">Par defaut</div>')+'</div>'
-    +'</div></div>'
-    +'<div style="margin-bottom:6px"><div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text2);margin-bottom:10px">Historique des controles</div>'
-    +(epiCtrls.length?'<div class="table-wrap" style="margin-bottom:0"><table><thead><tr><th>Date</th><th>Controleur</th><th>Resultat</th><th>Observations</th></tr></thead><tbody>'
-    +epiCtrls.map(function(c){var col=c.result==='danger'?'var(--danger)':c.result==='warn'?'var(--warn)':c.result==='retired'?'var(--text2)':'var(--accent)';var lbl={ok:'Conforme',warn:'Reserve',danger:'Non-conforme',retired:'Reforme',lost:'Introuvable'};return '<tr><td style="font-size:13px">'+c.date+'</td><td>'+c.who+'</td><td><span style="font-weight:600;color:'+col+'">'+(lbl[c.result]||c.result)+'</span></td><td class="muted" style="font-size:13px">'+(c.notes||'&mdash;')+'</td></tr>';}).join('')
-    +'</tbody></table></div>':'<div style="font-size:13px;color:var(--text2);padding:12px 0">Aucun controle enregistre</div>')
-    +'</div>';
-  var el=document.getElementById('modal-epi-detail');
-  el.querySelector('.modal-title').textContent='EPI — '+ref;
-  el.querySelector('#epi-detail-body').innerHTML=html;
-  var actionsEl=el.querySelector('#epi-detail-actions');
-  actionsEl.innerHTML='<button class="btn" onclick="closeModal()">Fermer</button>'
-    +(hasPerm('add_controls')?'<button class="btn btn-primary" onclick="closeModal();openModalControl(\''+ref+'\')">+ Enregistrer controle</button>':'')
-    +'<button class="btn" onclick="openCheckSheet(\''+epi.type+'\')">&#128203; Fiche controle</button>';
-  showModal('modal-epi-detail');
-}
-
-function openEPILifespan(ref){
-  var epi=epis.find(function(e){return e.ref===ref;}); if(!epi) return;
-  var cfg=EPI_CONFIG[epi.type]||{};
-  var el=document.getElementById('modal-epi-lifespan');
-  el.querySelector('.modal-title').textContent='Duree de vie — '+ref;
-  document.getElementById('els-ref').value=ref;
-  var defMax=cfg.lifeMax===null?'':cfg.lifeMax||'';
-  var defUse=cfg.lifeUse===null?'':cfg.lifeUse||'';
-  var defCtrl=cfg.ctrlMonths||12;
-  document.getElementById('els-lifemax').value=(epi.customLifeMax!==undefined&&epi.customLifeMax!==null)?epi.customLifeMax:'';
-  document.getElementById('els-lifemax').placeholder=defMax===''?'Illimitee (laisser vide)':'Par defaut: '+defMax;
-  document.getElementById('els-lifeuse').value=(epi.customLifeUse!==undefined&&epi.customLifeUse!==null)?epi.customLifeUse:'';
-  document.getElementById('els-lifeuse').placeholder=defUse===''?'Illimitee (laisser vide)':'Par defaut: '+defUse;
-  document.getElementById('els-ctrlmonths').value=(epi.customCtrlMonths!==undefined&&epi.customCtrlMonths!==null)?epi.customCtrlMonths:'';
-  document.getElementById('els-ctrlmonths').placeholder='Par defaut: '+defCtrl;
-  document.getElementById('els-buy').value=epi.buy||'';
-  document.getElementById('els-fab').value=epi.fab||'';
-  showModal('modal-epi-lifespan');
-}
-
-function saveEPILifespan(){
-  var ref=document.getElementById('els-ref').value;
-  var epi=epis.find(function(e){return e.ref===ref;}); if(!epi) return;
-  var maxVal=document.getElementById('els-lifemax').value.trim();
-  var useVal=document.getElementById('els-lifeuse').value.trim();
-  var ctrlVal=document.getElementById('els-ctrlmonths').value.trim();
-  var buyVal=document.getElementById('els-buy').value;
-  var fabVal=document.getElementById('els-fab').value;
-  // null = unlimited, undefined = use default
-  if(maxVal===''){delete epi.customLifeMax;}else{epi.customLifeMax=parseFloat(maxVal)||null;}
-  if(useVal===''){delete epi.customLifeUse;}else{epi.customLifeUse=parseFloat(useVal)||null;}
-  if(ctrlVal===''){delete epi.customCtrlMonths;}else{epi.customCtrlMonths=parseInt(ctrlVal)||null;}
-  if(buyVal) epi.buy=buyVal;
-  if(fabVal) epi.fab=fabVal;
-  fsSet('epis',ref,epi).catch(function(){});
-  closeModal();
-  openEPIDetail(ref);
-  renderInventory(); renderDashboard();
-  showToast('Duree de vie mise a jour');
-}
-
 // ==================== HISTORY ====================
 function openHistory(type,id){
   showModal('modal-history');
@@ -2129,10 +1905,10 @@ function openCheckSheet(type, catOverride){
   var chk=EPI_CHECKS[type]; var cfg=EPI_CONFIG[type];
   if(!chk){alert('Fiche non disponible pour ce type.');return;}
   document.getElementById('check-title').textContent=chk.icon+' Fiche de controle \u2014 '+type;
-  document.getElementById('check-subtitle').textContent='Norme '+(cfg?cfg.norm:'')+' \u2014 Controle tous les '+(cfg?cfg.ctrlMonths:12)+' mois \u2014 Duree vie max '+(cfg?(cfg.lifeMax===null?'Illimitee':cfg.lifeMax+' ans'):'?');
+  document.getElementById('check-subtitle').textContent='Norme '+(cfg?cfg.norm:'')+' \u2014 Controle tous les '+(cfg?cfg.ctrlMonths:12)+' mois \u2014 Duree vie max '+(cfg?cfg.lifeMax:'?')+' ans';
   document.getElementById('check-body').innerHTML=
     '<div class="check-resume">'+chk.resume+'</div>'
-    +'<div class="check-norm-badge">'+chk.icon+' Norme '+(cfg?cfg.norm:'&mdash;')+' &nbsp;&middot;&nbsp; /'+(cfg?cfg.ctrlMonths:12)+' mois &nbsp;&middot;&nbsp; Max '+(cfg?(cfg.lifeMax===null?'Illimitee':cfg.lifeMax+' ans'):'?')+'</div>'
+    +'<div class="check-norm-badge">'+chk.icon+' Norme '+(cfg?cfg.norm:'&mdash;')+' &nbsp;&middot;&nbsp; /'+(cfg?cfg.ctrlMonths:12)+' mois &nbsp;&middot;&nbsp; Max '+(cfg?cfg.lifeMax:'?')+' ans</div>'
     +'<div class="check-section"><div class="check-section-title ok-title">&#10003; Points de controle ('+chk.points.length+')</div>'
     +chk.points.map(function(p){return '<div class="check-item"><div class="check-bullet check-bullet-ok"></div><div>'+p+'</div></div>';}).join('')+'</div>'
     +'<div class="check-section"><div class="check-section-title danger-title">&#10007; Conditions de mise au rebut ('+chk.retirement.length+')</div>'
@@ -2252,9 +2028,7 @@ function exportPDF(type){
   if(type==='inventory'){
     html=header('Inventaire complet')+'<table style="'+TS+'"><thead><tr><th style="'+TH+'">Ref</th><th style="'+TH+'">Type</th><th style="'+TH+'">Modele</th><th style="'+TH+'">Mise en service</th><th style="'+TH+'">Age</th><th style="'+TH+'">Dernier ctrl</th><th style="'+TH+'">Prochain</th><th style="'+TH+'">Etat</th></tr></thead><tbody>'
       +epis.map(function(e,i){var s=getStatus(e),cfg=EPI_CONFIG[e.type],fab=e.fab||e.buy,ageM=fab?Math.max(0,diffMonths(todayStr,fab)):0,c=s==='danger'?'#dc2626':s==='warn'?'#b45309':s==='retired'?'#999':'#16a34a';
-        var lifeMax=(e.customLifeMax!==undefined&&e.customLifeMax!==null)?e.customLifeMax:(cfg?cfg.lifeMax:null);
-        var lifeStr=lifeMax===null?'illimitee':(lifeMax?lifeMax+'a max':'?');
-        return '<tr style="'+(i%2?AR:'')+'"><td style="'+TD+'">'+e.ref+'</td><td style="'+TD+'">'+e.type+'</td><td style="'+TD+'">'+e.brand+' '+e.model+'</td><td style="'+TD+'">'+e.buy+'</td><td style="'+TD+'">'+Math.floor(ageM/12)+'a '+(ageM%12)+'m / '+lifeStr+'</td><td style="'+TD+'">'+(e.lastCtrl||'&mdash;')+'</td><td style="'+TD+'">'+(getNextCtrl(e)||'&mdash;')+'</td><td style="'+TD+';color:'+c+';font-weight:600">'+(ST[s]||s)+'</td></tr>';}).join('')
+        return '<tr style="'+(i%2?AR:'')+'"><td style="'+TD+'">'+e.ref+'</td><td style="'+TD+'">'+e.type+'</td><td style="'+TD+'">'+e.brand+' '+e.model+'</td><td style="'+TD+'">'+e.buy+'</td><td style="'+TD+'">'+Math.floor(ageM/12)+'a '+(ageM%12)+'m'+(cfg?' / '+cfg.lifeMax+'a max':'')+'</td><td style="'+TD+'">'+(e.lastCtrl||'&mdash;')+'</td><td style="'+TD+'">'+(getNextCtrl(e)||'&mdash;')+'</td><td style="'+TD+';color:'+c+';font-weight:600">'+(ST[s]||s)+'</td></tr>';}).join('')
       +'</tbody></table>';
   } else if(type==='alerts'){
     var dan=epis.filter(function(e){return getStatus(e)==='danger';}),war=epis.filter(function(e){return getStatus(e)==='warn';}),lat=loans.filter(function(l){return l.status==='late';});
