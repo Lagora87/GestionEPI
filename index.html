@@ -545,7 +545,14 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
       <div class="form-group form-full" style="border-top:1px solid var(--border);padding-top:14px">
         <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text2)">Durée de vie personnalisée (optionnel)</label>
       </div>
-      <div class="form-group"><label>Durée de vie (années)</label><input type="number" id="f-lifeyears" min="1" max="50" step="1" placeholder="ex: 10" oninput="updateEndYearSuggest()"></div>
+      <div class="form-group"><label>Durée de vie (années)</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="number" id="f-lifeyears" min="1" max="50" step="1" placeholder="ex: 10" oninput="updateEndYearSuggest()" style="flex:1">
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:500;white-space:nowrap;cursor:pointer">
+            <input type="checkbox" id="f-unlimited" onchange="toggleUnlimited('f')"> Illimitée
+          </label>
+        </div>
+      </div>
       <div class="form-group"><label>Stockage / Remarque</label><input type="text" id="f-stocknote" placeholder="ex: stocké 2 ans av. mise en service"></div>
       <div class="form-group"><label>Année de fin de vie (→ 31/12/…)</label><input type="number" id="f-endyear" min="2020" max="2060" step="1" placeholder="ex: 2030" oninput="updateEndYearSuggest()"></div>
       <div id="f-endyear-info" style="display:none;grid-column:1/-1;font-size:12px;color:var(--text2);background:var(--surface2);padding:8px 12px;border-radius:8px;border:1px solid var(--border);margin-top:-8px"></div>
@@ -701,7 +708,14 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
       <div class="form-group form-full" style="border-top:1px solid var(--border);padding-top:14px">
         <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text2)">Durée de vie personnalisée (optionnel)</label>
       </div>
-      <div class="form-group"><label>Durée de vie (années)</label><input type="number" id="b-lifeyears" min="1" max="50" step="1" placeholder="ex: 10" oninput="updateBatchEndYearSuggest()"></div>
+      <div class="form-group"><label>Durée de vie (années)</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="number" id="b-lifeyears" min="1" max="50" step="1" placeholder="ex: 10" oninput="updateBatchEndYearSuggest()" style="flex:1">
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:500;white-space:nowrap;cursor:pointer">
+            <input type="checkbox" id="b-unlimited" onchange="toggleUnlimited('b')"> Illimitée
+          </label>
+        </div>
+      </div>
       <div class="form-group"><label>Stockage / Remarque</label><input type="text" id="b-stocknote" placeholder="ex: stocké 2 ans av. mise en service"></div>
       <div class="form-group"><label>Année de fin de vie (→ 31/12/…)</label><input type="number" id="b-endyear" min="2020" max="2060" step="1" placeholder="ex: 2030" oninput="updateBatchEndYearSuggest()"></div>
       <div id="b-endyear-info" style="display:none;grid-column:1/-1;font-size:12px;color:var(--text2);background:var(--surface2);padding:8px 12px;border-radius:8px;border:1px solid var(--border);margin-top:-8px"></div>
@@ -729,7 +743,28 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
         </div>
       </div>
     </div>
-    <div class="modal-actions"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="createBatch()">Créer le lot</button></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Annuler</button>
+      <button class="btn" onclick="createEmptyBatch()" title="Créer un lot sans EPI pour y assigner des EPI existants">📂 Créer lot vide</button>
+      <button class="btn btn-primary" onclick="createBatch()">Créer le lot</button>
+    </div>
+  </div>
+
+  <!-- REASSIGN EPI TO BATCH -->
+  <div class="modal hidden" id="modal-reassign" style="width:480px">
+    <div class="modal-header"><div class="modal-title" id="reassign-title">Réassigner l'EPI</div><button class="close-btn" onclick="closeModal()">×</button></div>
+    <input type="hidden" id="reassign-ref">
+    <div style="font-size:13px;color:var(--text2);margin-bottom:16px" id="reassign-desc"></div>
+    <div class="form-group">
+      <label>Assigner au lot</label>
+      <select id="reassign-batch" style="width:100%">
+        <option value="">— Aucun lot (EPI individuel) —</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveReassign()">Enregistrer</button>
+    </div>
   </div>
 
   <!-- BATCH BULK CONTROL -->
@@ -866,7 +901,14 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
       <div class="form-group form-full" style="border-top:1px solid var(--border);padding-top:14px">
         <label style="color:var(--text2)">Durée de vie personnalisée (optionnel — écrase les valeurs par défaut du type)</label>
       </div>
-      <div class="form-group"><label>Durée de vie (années)</label><input type="number" id="ee-lifeyears" min="1" max="50" placeholder="ex: 10" oninput="calcEndYear('ee')"></div>
+      <div class="form-group"><label>Durée de vie (années)</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="number" id="ee-lifeyears" min="1" max="50" placeholder="ex: 10" oninput="calcEndYear('ee')" style="flex:1">
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:500;white-space:nowrap;cursor:pointer">
+            <input type="checkbox" id="ee-unlimited" onchange="toggleUnlimited('ee')"> Illimitée
+          </label>
+        </div>
+      </div>
       <div class="form-group"><label>Année de fin de vie (→ 31/12/…)</label><input type="number" id="ee-endyear" min="2020" max="2060" placeholder="ex: 2030" oninput="calcEndYear('ee')"></div>
       <div class="form-group form-full"><label>Stockage / remarque durée vie</label><input type="text" id="ee-stocknote" placeholder="ex: stocké 2 ans avant mise en service"></div>
       <div class="form-group form-full" id="ee-endyear-info" style="display:none;margin-top:-8px">
@@ -894,7 +936,14 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
       <div class="form-group form-full" style="border-top:1px solid var(--border);padding-top:14px">
         <label style="color:var(--text2)">Durée de vie commune pour tous les EPI du lot</label>
       </div>
-      <div class="form-group"><label>Durée de vie (années)</label><input type="number" id="be-lifeyears" min="1" max="50" placeholder="ex: 10" oninput="calcEndYear('be')"></div>
+      <div class="form-group"><label>Durée de vie (années)</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="number" id="be-lifeyears" min="1" max="50" placeholder="ex: 10" oninput="calcEndYear('be')" style="flex:1">
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:500;white-space:nowrap;cursor:pointer">
+            <input type="checkbox" id="be-unlimited" onchange="toggleUnlimited('be')"> Illimitée
+          </label>
+        </div>
+      </div>
       <div class="form-group"><label>Année de fin de vie (→ 31/12/…)</label><input type="number" id="be-endyear" min="2020" max="2060" placeholder="ex: 2030" oninput="calcEndYear('be')"></div>
       <div class="form-group form-full"><label>Stockage / remarque durée vie</label><input type="text" id="be-stocknote" placeholder="ex: stocké 2 ans avant mise en service"></div>
       <div class="form-group form-full" id="be-endyear-info" style="display:none;margin-top:-8px">
@@ -1241,6 +1290,11 @@ function loadAllData(){
     loans=results[2].map(function(r){return Object.assign({},r.data,{id:r.loan_id});});
     batches=results[3].map(function(r){return Object.assign({},r.data,{id:r.batch_id});});
     members=results[4].map(function(r){var m=Object.assign({},r.data,{id:r.member_id});if(!m.perms||!Array.isArray(m.perms))m.perms=[];return m;});
+    // Fix nextBatchNum: derive from highest existing batch number to avoid ID collisions
+    batches.forEach(function(b){
+      var m=b.id&&b.id.match(/LOT-\d{4}-(\d+)/);
+      if(m){var n=parseInt(m[1]);if(n>=nextBatchNum)nextBatchNum=n+1;}
+    });
     hideLoading();
     if(members.length===0) return seedInitialAdmin();
   }).catch(function(e){
@@ -1319,6 +1373,7 @@ function showPage(id,el){
 function getNextCtrl(epi){if(epi.status==='stock')return null;if(!epi.lastCtrl)return null;var cfg=EPI_CONFIG[epi.type];var months=cfg?cfg.ctrlMonths:12;return fmt(addMonths(new Date(epi.lastCtrl),months));}
 function getLifeStatus(epi){
   if(epi.status==='retired'||epi.status==='lost'||epi.status==='stock')return null;
+  if(epi.unlimited)return null;
   if(epi.endYear){
     var dl=diffDays(epi.endYear+'-12-31',todayStr);
     if(dl<0)return 'danger'; if(dl<180)return 'warn'; return null;
@@ -1342,6 +1397,7 @@ function badgeHtml(s){
 }
 function lifespanBar(epi){
   if(epi.status==='stock') return '<span style="font-size:12px;color:#1d4ed8;font-weight:600">En stock</span>';
+  if(epi.unlimited) return '<span style="font-size:12px;color:#16a34a;font-weight:600">&#9854; Illimitée</span>';
   // If manual endYear is set, use it
   if(epi.endYear){
     var endDate=epi.endYear+'-12-31';
@@ -1575,6 +1631,7 @@ function openEPIDetail(ref){
   document.getElementById('epi-detail-body').innerHTML=photosHtml+'<div style="display:flex;align-items:center;gap:12px;margin-bottom:18px"><span class="badge '+(badgeCls[s]||'badge-ok')+'" style="font-size:13px;padding:5px 14px">'+(sLabel[s]||s)+'</span>'+(epi.batchId?'<span style="font-size:12px;color:var(--text2);background:var(--surface2);border:1px solid var(--border2);padding:3px 10px;border-radius:6px;cursor:pointer" onclick="closeModal();showBatch(\''+epi.batchId+'\')">Lot: '+epi.batchId+'</span>':'')+'</div><div style="display:grid;grid-template-columns:130px 1fr;gap:0;background:var(--surface2);border-radius:10px;border:1px solid var(--border);padding:4px 16px;margin-bottom:20px">'+grid+'</div><div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text2);margin-bottom:10px">Historique des contrôles</div>'+ctrlsHtml;
   var acts='<button class="btn" onclick="closeModal()">Fermer</button>';
   if(hasPerm('add_epi'))acts+='<button class="btn" onclick="openEPIEdit(\''+ref+'\')">&#9998; Modifier</button>';
+  if(hasPerm('add_epi'))acts+='<button class="btn" onclick="openReassign(\''+ref+'\')">&#8652; Réassigner</button>';
   if(hasPerm('add_controls'))acts+='<button class="btn btn-primary" onclick="closeModal();openModalControl(\''+ref+'\')">+ Controle</button>';
   document.getElementById('epi-detail-actions').innerHTML=acts;
   showModal('modal-epi-detail');
@@ -1593,6 +1650,8 @@ function openEPIEdit(ref){
   document.getElementById('ee-status').value=epi.status||'ok';
   document.getElementById('ee-lifeyears').value=epi.lifeYears||'';
   document.getElementById('ee-endyear').value=epi.endYear||'';
+  var eeUnlCb=document.getElementById('ee-unlimited');
+  if(eeUnlCb){eeUnlCb.checked=!!epi.unlimited;toggleUnlimited('ee');}
   document.getElementById('ee-stocknote').value=epi.stockNote||'';
   document.getElementById('ee-notes').value=epi.notes||'';
   document.getElementById('ee-endyear-info').style.display='none';
@@ -1613,8 +1672,9 @@ function saveEPIEdit(){
   epi.notes=document.getElementById('ee-notes').value||'';
   var ly=parseInt(document.getElementById('ee-lifeyears').value)||null;
   var ey=parseInt(document.getElementById('ee-endyear').value)||null;
-  if(ly)epi.lifeYears=ly;else delete epi.lifeYears;
-  if(ey)epi.endYear=ey;else delete epi.endYear;
+  var unl=(document.getElementById('ee-unlimited')||{}).checked||false;
+  if(unl){epi.unlimited=true;delete epi.lifeYears;delete epi.endYear;}
+  else{delete epi.unlimited;if(ly)epi.lifeYears=ly;else delete epi.lifeYears;if(ey)epi.endYear=ey;else delete epi.endYear;}
   epi.stockNote=document.getElementById('ee-stocknote').value||'';
   showLoading('Enregistrement...');
   fsSet('epis',ref,epi).then(function(){hideLoading();renderInventory();renderDashboard();updateAlertBadge();showToast('EPI mis a jour');closeModal();openEPIDetail(ref);}).catch(function(e){hideLoading();showToast('Erreur: '+e.message,'err');});
@@ -1672,6 +1732,76 @@ function saveBatchEdit(){
   Promise.all(promises).then(function(){hideLoading();closeModal();renderBatches();renderDashboard();showToast('Lot mis a jour');}).catch(function(e){hideLoading();showToast('Erreur: '+e.message,'err');});
 }
 
+function toggleUnlimited(prefix){
+  var cb=document.getElementById(prefix+'-unlimited');
+  var ly=document.getElementById(prefix+'-lifeyears');
+  var ey=document.getElementById(prefix+'-endyear');
+  var info=document.getElementById(prefix+'-endyear-info');
+  if(!cb||!ly)return;
+  if(cb.checked){
+    ly.value='';ly.disabled=true;ly.placeholder='Illimitée';
+    if(ey)ey.disabled=true;
+    if(info){info.style.display='block';info.textContent='→ Durée de vie illimitée (EPI métallique)';}
+  } else {
+    ly.disabled=false;ly.placeholder='ex: 10';
+    if(ey)ey.disabled=false;
+    if(info)info.style.display='none';
+  }
+}
+function createEmptyBatch(){
+  var name=document.getElementById('b-name').value.trim();
+  var type=document.getElementById('b-type').value;
+  if(!name||!type){alert('Nom et type obligatoires pour créer un lot vide');return;}
+  var batchId='LOT-'+new Date().getFullYear()+'-'+String(nextBatchNum++).padStart(3,'0');
+  var buy=document.getElementById('b-buy').value||todayStr;
+  var fab=document.getElementById('b-fab').value||'';
+  var brand=document.getElementById('b-brand').value||'';
+  var model=document.getElementById('b-model').value||'';
+  var norm=document.getElementById('b-norm').value||'';
+  var lot=document.getElementById('b-lot').value||'';
+  var lifeYears=parseInt(document.getElementById('b-lifeyears').value)||null;
+  var endYear=parseInt(document.getElementById('b-endyear').value)||null;
+  var stockNote=document.getElementById('b-stocknote').value||'';
+  if(lifeYears&&!endYear&&buy)endYear=parseInt(buy.split('-')[0])+lifeYears||null;
+  var batch={id:batchId,name:name,type:type,brand:brand,model:model,buy:buy,fab:fab,norm:norm,lot:lot,created:todayStr,photos:[]};
+  if(lifeYears)batch.lifeYears=lifeYears;if(endYear)batch.endYear=endYear;if(stockNote)batch.stockNote=stockNote;
+  batches.push(batch);
+  showLoading('Création du lot vide...');
+  fsSet('batches',batchId,batch).then(function(){
+    hideLoading();closeModal();
+    showPage('batches',document.querySelector('[onclick*="batches"]'));
+    renderBatches();renderDashboard();
+    showToast('Lot vide créé : '+batchId);
+    setTimeout(function(){toggleBatch(batchId);},200);
+  }).catch(function(e){hideLoading();showToast('Erreur: '+e.message,'err');});
+}
+
+function openReassign(ref){
+  var epi=epis.find(function(e){return e.ref===ref;});if(!epi)return;
+  document.getElementById('reassign-ref').value=ref;
+  document.getElementById('reassign-title').textContent='Réassigner — '+ref;
+  document.getElementById('reassign-desc').textContent='EPI actuel : '+epi.brand+' '+epi.model+(epi.batchId?' (lot: '+epi.batchId+')':' (sans lot)');
+  var sel=document.getElementById('reassign-batch');
+  sel.innerHTML='<option value="">— Aucun lot (EPI individuel) —</option>'
+    +batches.map(function(b){return '<option value="'+b.id+'"'+(epi.batchId===b.id?' selected':'')+'>'+b.id+' — '+b.name+' ('+b.type+')</option>';}).join('');
+  showModal('modal-reassign');
+}
+
+function saveReassign(){
+  var ref=document.getElementById('reassign-ref').value;
+  var newBatchId=document.getElementById('reassign-batch').value||null;
+  var epi=epis.find(function(e){return e.ref===ref;});if(!epi)return;
+  var oldBatchId=epi.batchId||null;
+  if(newBatchId)epi.batchId=newBatchId;else delete epi.batchId;
+  showLoading('Réassignation...');
+  fsSet('epis',ref,epi).then(function(){
+    hideLoading();closeModal();
+    renderInventory();renderBatches();renderDashboard();
+    var msg=newBatchId?ref+' assigné au lot '+newBatchId:ref+' retiré du lot '+(oldBatchId||'');
+    showToast(msg);
+  }).catch(function(e){hideLoading();showToast('Erreur: '+e.message,'err');});
+}
+
 function deleteBatch(batchId){
   var b=batches.find(function(x){return x.id===batchId;});if(!b)return;
   var remaining=epis.filter(function(e){return e.batchId===batchId;});
@@ -1694,7 +1824,7 @@ function updateBatchLifespanHint(){
 
 var ALL_MODALS=['modal-add','modal-qr','modal-control','modal-loan','modal-member','modal-pdf',
     'modal-batch','modal-batch-ctrl','modal-photo','modal-history','modal-check','modal-bulk-ctrl',
-    'modal-epi-detail','modal-epi-edit','modal-batch-edit'];
+    'modal-epi-detail','modal-epi-edit','modal-batch-edit','modal-reassign'];
 function showModal(id) {
   ALL_MODALS.forEach(function(x){var el=document.getElementById(x);if(el)el.classList.add('hidden');});
   document.getElementById('modal-overlay').classList.add('open');
@@ -1773,10 +1903,11 @@ function addEPI(prefill) {
   .then(function(uploadedPhotos){
     var buy=document.getElementById('f-buy').value||todayStr;
     var lifeYears=parseInt(document.getElementById('f-lifeyears').value)||null;
+    var unlimited=(document.getElementById('f-unlimited')||{}).checked||false;
     var endYear=parseInt(document.getElementById('f-endyear').value)||null;
     var stockNote=document.getElementById('f-stocknote').value||'';
     var fStatus=document.getElementById('f-status').value||'ok';
-    if(lifeYears&&!endYear&&buy){endYear=parseInt(buy.split('-')[0])+lifeYears||null;}
+    if(!unlimited&&lifeYears&&!endYear&&buy){endYear=parseInt(buy.split('-')[0])+lifeYears||null;}
     var epi={ref:ref,type:type,
       brand:data.brand||document.getElementById('f-brand').value,
       model:data.model||document.getElementById('f-model').value,
@@ -1788,8 +1919,9 @@ function addEPI(prefill) {
       notes:document.getElementById('f-notes').value,
       photos:uploadedPhotos
     };
-    if(lifeYears)epi.lifeYears=lifeYears;
-    if(endYear)epi.endYear=endYear;
+    if(unlimited)epi.unlimited=true;
+    if(lifeYears&&!unlimited)epi.lifeYears=lifeYears;
+    if(endYear&&!unlimited)epi.endYear=endYear;
     if(stockNote)epi.stockNote=stockNote;
     epis.push(epi); pendingEpiPhotos=[];
     return fsSet('epis',ref,epi);
@@ -1954,11 +2086,12 @@ function createBatch(){
   var norm=document.getElementById('b-norm').value;
   var lot=document.getElementById('b-lot').value;
   var lifeYears=parseInt(document.getElementById('b-lifeyears').value)||null;
+  var unlimited=(document.getElementById('b-unlimited')||{}).checked||false;
   var endYear=parseInt(document.getElementById('b-endyear').value)||null;
   var stockNote=document.getElementById('b-stocknote').value||'';
   var bStatus=document.getElementById('b-status').value||'ok';
-  // Auto-calc endYear from lifeYears + buy if not set
-  if(lifeYears&&!endYear&&buy){endYear=parseInt(buy.split('-')[0])+lifeYears||null;}
+  // Auto-calc endYear from lifeYears + buy if not set and not unlimited
+  if(!unlimited&&lifeYears&&!endYear&&buy){endYear=parseInt(buy.split('-')[0])+lifeYears||null;}
   var newRefs=[],conflicts=[];
   for(var i=1;i<=qty;i++){var r=prefix+'-'+String(i).padStart(3,'0'); epis.find(function(e){return e.ref===r;})?conflicts.push(r):newRefs.push(r);}
   if(conflicts.length&&!confirm(conflicts.length+' references existent deja. Continuer?')) return;
@@ -1967,15 +2100,17 @@ function createBatch(){
   Promise.all(photos.map(function(p,i){return uploadPhotoToStorage(p,'batches/'+batchId+'/photo_'+i+'.jpg');}))
   .then(function(uploadedPhotos){
     var batch={id:batchId,name:name,type:type,brand:brand,model:model,buy:buy,fab:fab,norm:norm,lot:lot,created:todayStr,photos:uploadedPhotos};
-    if(lifeYears)batch.lifeYears=lifeYears;
-    if(endYear)batch.endYear=endYear;
+    if(unlimited)batch.unlimited=true;
+    if(lifeYears&&!unlimited)batch.lifeYears=lifeYears;
+    if(endYear&&!unlimited)batch.endYear=endYear;
     if(stockNote)batch.stockNote=stockNote;
     batches.push(batch); pendingBatchPhotos=[];
     var promises=[fsSet('batches',batchId,batch)];
     newRefs.forEach(function(ref){
       var epi={ref:ref,type:type,brand:brand,model:model,buy:buy,fab:fab,norm:norm,lot:lot,status:bStatus,lastCtrl:'',notes:'',photos:[],batchId:batchId};
-      if(lifeYears)epi.lifeYears=lifeYears;
-      if(endYear)epi.endYear=endYear;
+      if(unlimited)epi.unlimited=true;
+      if(lifeYears&&!unlimited)epi.lifeYears=lifeYears;
+      if(endYear&&!unlimited)epi.endYear=endYear;
       if(stockNote)epi.stockNote=stockNote;
       epis.push(epi); promises.push(fsSet('epis',ref,epi));
     });
