@@ -1693,6 +1693,8 @@ function openBatchEdit(batchId){
   document.getElementById('be-lot').value=b.lot||'';
   document.getElementById('be-lifeyears').value=b.lifeYears||'';
   document.getElementById('be-endyear').value=b.endYear||'';
+  var beUnlCb=document.getElementById('be-unlimited');
+  if(beUnlCb){beUnlCb.checked=!!b.unlimited;toggleUnlimited('be');}
   document.getElementById('be-stocknote').value=b.stockNote||'';
   document.getElementById('be-endyear-info').style.display='none';
   if(b.endYear||b.lifeYears)calcEndYear('be');
@@ -1715,8 +1717,9 @@ function saveBatchEdit(){
   b.lot=document.getElementById('be-lot').value||'';
   var ly=parseInt(document.getElementById('be-lifeyears').value)||null;
   var ey=parseInt(document.getElementById('be-endyear').value)||null;
-  if(ly)b.lifeYears=ly;else delete b.lifeYears;
-  if(ey)b.endYear=ey;else delete b.endYear;
+  var unl=(document.getElementById('be-unlimited')||{}).checked||false;
+  if(unl){b.unlimited=true;delete b.lifeYears;delete b.endYear;}
+  else{delete b.unlimited;if(ly)b.lifeYears=ly;else delete b.lifeYears;if(ey)b.endYear=ey;else delete b.endYear;}
   b.stockNote=document.getElementById('be-stocknote').value||'';
   var bEpis=epis.filter(function(e){return e.batchId===batchId;});
   var promises=[fsSet('batches',batchId,b)];
@@ -1835,6 +1838,9 @@ function openModal(type) {
   else if(type==='add'){
     showModal('modal-add');
     ['f-ref','f-brand','f-model','f-norm','f-lot','f-notes','f-lifeyears','f-stocknote','f-endyear'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+    var fUnl=document.getElementById('f-unlimited');if(fUnl){fUnl.checked=false;toggleUnlimited('f');}
+    var fSt=document.getElementById('f-status');if(fSt)fSt.value='ok';
+    var fInfo=document.getElementById('f-endyear-info');if(fInfo)fInfo.style.display='none';
     var ft=document.getElementById('f-type'); if(ft) ft.value='';
     var fb=document.getElementById('f-buy'); if(fb) fb.value='';
     var ff=document.getElementById('f-fab'); if(ff) ff.value='';
@@ -1869,6 +1875,9 @@ function openModal(type) {
   else if(type==='batch'){
     showModal('modal-batch');
     ['b-name','b-brand','b-model','b-norm','b-lot','b-qty','b-prefix','b-lifeyears','b-stocknote','b-endyear'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+    var bUnl=document.getElementById('b-unlimited');if(bUnl){bUnl.checked=false;toggleUnlimited('b');}
+    var bSt=document.getElementById('b-status');if(bSt)bSt.value='ok';
+    var bInfo=document.getElementById('b-endyear-info');if(bInfo)bInfo.style.display='none';
     var bt=document.getElementById('b-type'); if(bt) bt.value='';
     var bb=document.getElementById('b-buy'); if(bb) bb.value=todayStr;
     var bfab=document.getElementById('b-fab'); if(bfab) bfab.value='';
