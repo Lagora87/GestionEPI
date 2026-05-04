@@ -119,12 +119,7 @@ tbody tr[onclick] { cursor: pointer; }
 tbody tr[onclick]:hover { background: #f0fdf4; }
 
 /* ── TABLES ── */
-.table-wrap { background: var(--surface); border-radius: var(--rad-lg); border: 1px solid var(--border); overflow: hidden; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 20px; box-shadow: var(--shadow); scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
-.table-wrap::-webkit-scrollbar { height: 6px; }
-.table-wrap::-webkit-scrollbar-track { background: transparent; }
-.table-wrap::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
-#inventory-table td, #inventory-table th, thead tr th { font-size: 12px; padding: 8px 10px; }
-#inventory-table td:nth-child(4) { max-width: 180px; }
+.table-wrap { background: var(--surface); border-radius: var(--rad-lg); border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; box-shadow: var(--shadow); }
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
 thead th { padding: 12px 16px; text-align: left; font-size: 11px; font-weight: 700; color: var(--text2); border-bottom: 1px solid var(--border); background: var(--surface2); text-transform: uppercase; letter-spacing: 0.05em; }
 tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
@@ -320,8 +315,7 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
         <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
       </div>
       <div id="login-error" class="login-error">Identifiant ou mot de passe incorrect.</div>
-      <div id="login-loading-msg" style="font-size:12px;color:var(--text2);text-align:center;display:none">⏳ Chargement des données…</div>
-      <button class="login-btn" id="login-submit-btn" onclick="doLogin()" disabled style="opacity:0.6">Chargement…</button>
+      <button class="login-btn" onclick="doLogin()">Se connecter</button>
     </div>
   </div>
 </div>
@@ -385,8 +379,6 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
           <button class="btn" onclick="openModal('batch')" id="btn-add-batch" data-perm="add_epi">+ Créer un lot</button>
           <button class="btn" onclick="openModal('add')" id="btn-add-epi">+ Ajouter EPI</button>
           <button class="btn btn-primary" onclick="openModal('control')" id="btn-add-ctrl">Enregistrer contrôle</button>
-          <button class="btn" onclick="exportBackupJSON()" title="Télécharger une sauvegarde complète de toutes vos données" data-perm="export_pdf">💾 Sauvegarder</button>
-          <label class="btn" style="cursor:pointer;margin:0" title="Restaurer depuis une sauvegarde JSON" data-perm="add_epi">📂 Restaurer <input type="file" accept=".json" style="display:none" onchange="importBackupJSON(this)"></label>
         </div>
       </div>
 
@@ -925,14 +917,6 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
         <div style="font-size:12px;color:var(--text2);background:var(--surface2);padding:8px 12px;border-radius:8px;border:1px solid var(--border)"></div>
       </div>
       <div class="form-group form-full"><label>Observations</label><textarea id="ee-notes" rows="2"></textarea></div>
-      <div class="form-group form-full" style="border-top:1px solid var(--border);padding-top:14px">
-        <label>Photos</label>
-        <div class="photo-grid" id="ee-photos-preview"></div>
-        <div style="display:flex;gap:8px;margin-top:8px">
-          <button type="button" class="btn btn-sm" onclick="openPhotoCapture('epi-edit')">📷 Prendre une photo</button>
-          <label class="btn btn-sm" style="cursor:pointer;margin:0">📁 Importer <input type="file" accept="image/*" multiple style="display:none" onchange="importPhotos(this,'epi-edit')"></label>
-        </div>
-      </div>
     </div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal()">Annuler</button>
@@ -1225,7 +1209,7 @@ var currentUser=null, editingMemberId=null;
 var qrStream=null, qrInterval=null, qrParsed=null;
 var nextBatchNum=2;
 var photoStream=null, photoTarget=null, photoCameraIndex=0, photoCameras=[];
-var pendingEpiPhotos=[], pendingBatchPhotos=[], pendingBatchEditPhotos=[], pendingEpiEditPhotos=[];
+var pendingEpiPhotos=[], pendingBatchPhotos=[], pendingBatchEditPhotos=[];
 var selectedRefs2=new Set();
 var batchCtrlTarget=null;
 
@@ -1321,17 +1305,7 @@ function loadAllData(){
       if(m){var n=parseInt(m[1]);if(n>=nextBatchNum)nextBatchNum=n+1;}
     });
     hideLoading();
-    if(members.length===0) return seedInitialAdmin().then(function(){
-      var b=document.getElementById('login-submit-btn');
-      if(b){b.textContent='Se connecter';b.disabled=false;b.style.opacity='1';}
-    });
-    // Signal login screen is ready
-    var errEl=document.getElementById('login-error');
-    if(errEl&&errEl.textContent==='Chargement en cours…') errEl.style.display='none';
-    var loginBtn=document.getElementById('login-submit-btn');
-    if(loginBtn){loginBtn.textContent='Se connecter';loginBtn.disabled=false;loginBtn.style.opacity='1';}
-    var loadMsg=document.getElementById('login-loading-msg');
-    if(loadMsg)loadMsg.style.display='none';
+    if(members.length===0) return seedInitialAdmin();
   }).catch(function(e){
     hideLoading();
     console.error('Supabase error:',e);
@@ -1340,8 +1314,6 @@ function loadAllData(){
     else if(msg.indexOf('Failed to fetch')!==-1) showToast('Impossible de joindre Supabase','err');
     else showToast('Erreur: '+msg,'err');
     loadDemoData();
-    var loginBtn=document.getElementById('login-submit-btn');
-    if(loginBtn){loginBtn.textContent='Se connecter';loginBtn.disabled=false;loginBtn.style.opacity='1';}
   });
 }
 function seedInitialAdmin(){
@@ -1355,24 +1327,10 @@ function doLogin(){
   var login=document.getElementById('login-user').value.trim();
   var pass=document.getElementById('login-pass').value;
   var errEl=document.getElementById('login-error');
-  var btn=document.getElementById('login-submit-btn');
   if(!login||!pass){errEl.style.display='block';errEl.textContent='Renseignez identifiant et mot de passe.';return;}
-  // If members not loaded yet, reload data first
-  if(members.length===0){
-    errEl.style.display='block';errEl.textContent='Chargement en cours…';
-    if(btn){btn.textContent='Connexion…';btn.disabled=true;}
-    loadAllData().then(function(){
-      if(btn){btn.textContent='Se connecter';btn.disabled=false;}
-      doLogin();
-    }).catch(function(){
-      if(btn){btn.textContent='Se connecter';btn.disabled=false;}
-      errEl.textContent='Impossible de joindre le serveur. Vérifiez votre connexion.';
-    });
-    return;
-  }
   var user=null;
   for(var i=0;i<members.length;i++){if(members[i].login===login&&members[i].pass===pass){user=members[i];break;}}
-  if(!user){errEl.style.display='block';errEl.textContent='Identifiant ou mot de passe incorrect.';return;}
+  if(!user){errEl.style.display='block';errEl.textContent=members.length===0?'Donnees pas encore chargees - attendez et reessayez.':'Identifiant ou mot de passe incorrect.';return;}
   errEl.style.display='none';loginSuccess(user);
 }
 function loginSuccess(user){
@@ -1557,21 +1515,7 @@ function editMember(id){
   ['view_epi','add_epi','view_controls','add_controls','view_loans','manage_loans','export_pdf','manage_members'].forEach(function(p){var el=document.getElementById('p-'+p);if(el)el.checked=m.perms&&m.perms.indexOf(p)!==-1;});
   openModal('member');
 }
-function deleteControl(ctrlId, ref){
-  if(!confirm('Supprimer ce contrôle ? Cette action est irréversible.')) return;
-  controls = controls.filter(function(c){ return c.id !== ctrlId; });
-  fsDelete('controls', ctrlId).catch(function(){});
-  // Recalculate lastCtrl for the EPI
-  var epi = epis.find(function(e){ return e.ref === ref; });
-  if(epi){
-    var remaining = controls.filter(function(c){ return c.ref === ref; }).sort(function(a,b){ return b.date.localeCompare(a.date); });
-    epi.lastCtrl = remaining.length ? remaining[0].date : '';
-    fsSet('epis', ref, epi).catch(function(){});
-  }
-  renderInventory(); renderDashboard(); updateAlertBadge();
-  showToast('Contrôle supprimé');
-  openEPIDetail(ref); // refresh the open detail sheet
-}if(!confirm('Supprimer ce membre ?'))return;members=members.filter(function(m){return String(m.id)!==String(id);});fsDelete('members',id).catch(function(){});renderMembers();showToast('Membre supprime');}
+function deleteMember(id){if(!confirm('Supprimer ce membre ?'))return;members=members.filter(function(m){return String(m.id)!==String(id);});fsDelete('members',id).catch(function(){});renderMembers();showToast('Membre supprime');}
 function saveMember(){
   var name=document.getElementById('m-name').value.trim();var login=document.getElementById('m-login').value.trim();var pass=document.getElementById('m-pass').value;var email=document.getElementById('m-email').value.trim();var role=document.getElementById('m-role').value;
   if(!name||!login){alert('Nom et identifiant obligatoires');return;}if(!editingMemberId&&!pass){alert('Mot de passe obligatoire');return;}
@@ -1690,7 +1634,7 @@ function openEPIDetail(ref){
   if(epi.notes)rows.push(['Observations',epi.notes]);
   var grid=rows.map(function(r){return '<div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;padding:7px 0 2px;border-top:1px solid var(--border)">'+r[0]+'</div><div style="font-size:14px;padding:2px 0 7px;border-top:1px solid var(--border)">'+r[1]+'</div>';}).join('');
   var ctrlsHtml=epiCtrls.length
-    ?'<div class="table-wrap" style="margin:0"><table><thead><tr><th>Date</th><th>Controleur</th><th>Resultat</th><th>Observations</th>'+(hasPerm('add_controls')?'<th></th>':'')+'</tr></thead><tbody>'+epiCtrls.map(function(c){var cc={ok:'var(--accent)',warn:'var(--warn)',danger:'var(--danger)',retired:'var(--text2)',lost:'#5b21b6'};var cl={ok:'Conforme',warn:'Reserve',danger:'Non-conf.',retired:'Reforme',lost:'Introuvable'};return '<tr><td style="font-size:13px">'+c.date+'</td><td>'+c.who+'</td><td style="color:'+(cc[c.result]||'var(--text2)')+';font-weight:600">'+(cl[c.result]||c.result)+'</td><td class="muted" style="font-size:13px">'+(c.notes||'—')+'</td>'+(hasPerm('add_controls')?'<td><button class="btn btn-sm btn-danger" onclick="deleteControl(\''+c.id+'\',\''+ref+'\')" title="Supprimer ce contrôle">&#128465;</button></td>':'')+'</tr>';}).join('')+'</tbody></table></div>'
+    ?'<div class="table-wrap" style="margin:0"><table><thead><tr><th>Date</th><th>Controleur</th><th>Resultat</th><th>Observations</th></tr></thead><tbody>'+epiCtrls.map(function(c){var cc={ok:'var(--accent)',warn:'var(--warn)',danger:'var(--danger)',retired:'var(--text2)',lost:'#5b21b6'};var cl={ok:'Conforme',warn:'Reserve',danger:'Non-conf.',retired:'Reforme',lost:'Introuvable'};return '<tr><td style="font-size:13px">'+c.date+'</td><td>'+c.who+'</td><td style="color:'+(cc[c.result]||'var(--text2)')+';font-weight:600">'+(cl[c.result]||c.result)+'</td><td class="muted" style="font-size:13px">'+(c.notes||'—')+'</td></tr>';}).join('')+'</tbody></table></div>'
     :'<div style="padding:16px 0;font-size:13px;color:var(--text2)">Aucun contrôle enregistré</div>';
   document.getElementById('epi-detail-title').textContent='Fiche EPI — '+ref;
   document.getElementById('epi-detail-body').innerHTML=photosHtml+'<div style="display:flex;align-items:center;gap:12px;margin-bottom:18px"><span class="badge '+(badgeCls[s]||'badge-ok')+'" style="font-size:13px;padding:5px 14px">'+(sLabel[s]||s)+'</span>'+(epi.batchId?'<span style="font-size:12px;color:var(--text2);background:var(--surface2);border:1px solid var(--border2);padding:3px 10px;border-radius:6px;cursor:pointer" onclick="closeModal();showBatch(\''+epi.batchId+'\')">Lot: '+epi.batchId+'</span>':'')+'</div><div style="display:grid;grid-template-columns:130px 1fr;gap:0;background:var(--surface2);border-radius:10px;border:1px solid var(--border);padding:4px 16px;margin-bottom:20px">'+grid+'</div><div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text2);margin-bottom:10px">Historique des contrôles</div>'+ctrlsHtml;
@@ -1721,9 +1665,6 @@ function openEPIEdit(ref){
   document.getElementById('ee-notes').value=epi.notes||'';
   document.getElementById('ee-endyear-info').style.display='none';
   if(epi.endYear||epi.lifeYears)calcEndYear('ee');
-  // Load existing photos
-  pendingEpiEditPhotos=(epi.photos||[]).slice();
-  renderPhotoPreview('ee-photos-preview', pendingEpiEditPhotos);
   showModal('modal-epi-edit');
 }
 
@@ -1744,15 +1685,8 @@ function saveEPIEdit(){
   if(unl){epi.unlimited=true;delete epi.lifeYears;delete epi.endYear;}
   else{delete epi.unlimited;if(ly)epi.lifeYears=ly;else delete epi.lifeYears;if(ey)epi.endYear=ey;else delete epi.endYear;}
   epi.stockNote=document.getElementById('ee-stocknote').value||'';
-  // Handle photos
-  var newEpiPhotos=(pendingEpiEditPhotos||[]).filter(function(p){return !p.startsWith('http');});
-  var existingEpiPhotos=(pendingEpiEditPhotos||[]).filter(function(p){return p.startsWith('http');});
   showLoading('Enregistrement...');
-  Promise.all(newEpiPhotos.map(function(p,i){return uploadPhotoToStorage(p,'epis/'+ref+'/edit_'+Date.now()+'_'+i+'.jpg');}))
-  .then(function(uploaded){
-    epi.photos=existingEpiPhotos.concat(uploaded);
-    return fsSet('epis',ref,epi);
-  }).then(function(){hideLoading();pendingEpiEditPhotos=[];renderInventory();renderDashboard();updateAlertBadge();showToast('EPI mis a jour');closeModal();openEPIDetail(ref);}).catch(function(e){hideLoading();showToast('Erreur: '+e.message,'err');});
+  fsSet('epis',ref,epi).then(function(){hideLoading();renderInventory();renderDashboard();updateAlertBadge();showToast('EPI mis a jour');closeModal();openEPIDetail(ref);}).catch(function(e){hideLoading();showToast('Erreur: '+e.message,'err');});
 }
 
 // ==================== BATCH EDIT + DELETE ====================
@@ -2379,7 +2313,7 @@ function retakePhoto(){document.getElementById('photo-preview-snap').style.displ
 function confirmPhoto(){
   addPhotoToTarget(document.getElementById('photo-snap-img').src);
   closePhotoCapture();
-  var modal=photoTarget==='epi'?'modal-add':photoTarget==='epi-edit'?'modal-epi-edit':photoTarget==='batch-edit'?'modal-batch-edit':'modal-batch';
+  var modal=photoTarget==='epi'?'modal-add':photoTarget==='batch-edit'?'modal-batch-edit':'modal-batch';
   showModal(modal);
 }
 function closePhotoCapture(){
@@ -2389,7 +2323,6 @@ function closePhotoCapture(){
 }
 function addPhotoToTarget(dataUrl){
   if(photoTarget==='epi'){pendingEpiPhotos.push(dataUrl);renderPhotoPreview('f-photos-preview',pendingEpiPhotos,'epi');}
-  else if(photoTarget==='epi-edit'){pendingEpiEditPhotos.push(dataUrl);renderPhotoPreview('ee-photos-preview',pendingEpiEditPhotos,'epi-edit');}
   else if(photoTarget==='batch-edit'){pendingBatchEditPhotos.push(dataUrl);renderPhotoPreview('be-photos-preview',pendingBatchEditPhotos,'batch-edit');}
   else{pendingBatchPhotos.push(dataUrl);renderPhotoPreview('b-photos-preview',pendingBatchPhotos,'batch');}
 }
@@ -2398,7 +2331,6 @@ function importPhotos(input,target){
     var reader=new FileReader();
     reader.onload=function(ev){
       if(target==='epi'){pendingEpiPhotos.push(ev.target.result);renderPhotoPreview('f-photos-preview',pendingEpiPhotos,'epi');}
-      else if(target==='epi-edit'){pendingEpiEditPhotos.push(ev.target.result);renderPhotoPreview('ee-photos-preview',pendingEpiEditPhotos,'epi-edit');}
       else if(target==='batch-edit'){pendingBatchEditPhotos.push(ev.target.result);renderPhotoPreview('be-photos-preview',pendingBatchEditPhotos,'batch-edit');}
       else{pendingBatchPhotos.push(ev.target.result);renderPhotoPreview('b-photos-preview',pendingBatchPhotos,'batch');}
     };
@@ -2682,61 +2614,6 @@ function exportPDF(type){
   w.document.close();
 }
 
-
-// ==================== SAUVEGARDE JSON ====================
-function exportBackupJSON(){
-  var backup = {
-    version: 1,
-    exported: new Date().toISOString(),
-    club: 'AGORA',
-    epis: epis,
-    controls: controls,
-    batches: batches,
-    loans: loans,
-    members: members
-  };
-  var blob = new Blob([JSON.stringify(backup, null, 2)], {type: 'application/json'});
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  var date = new Date().toISOString().slice(0,10);
-  a.href = url; a.download = 'EPI_AGORA_sauvegarde_'+date+'.json';
-  document.body.appendChild(a); a.click();
-  document.body.removeChild(a); URL.revokeObjectURL(url);
-  showToast('Sauvegarde téléchargée ('+epis.length+' EPI, '+controls.length+' contrôles)');
-}
-
-function importBackupJSON(input){
-  var file = input.files[0]; if(!file) return;
-  if(!confirm('ATTENTION : Cette restauration va écraser toutes vos données actuelles avec celles du fichier de sauvegarde.\n\nContinuer ?')) { input.value=''; return; }
-  var reader = new FileReader();
-  reader.onload = function(e){
-    var data;
-    try { data = JSON.parse(e.target.result); }
-    catch(err){ showToast('Fichier invalide — ce n\'est pas une sauvegarde AGORA','err'); return; }
-    if(!data.epis || !data.controls){ showToast('Fichier de sauvegarde invalide','err'); return; }
-    showLoading('Restauration en cours...');
-    // Write all data back to Supabase
-    var promises = [];
-    (data.epis||[]).forEach(function(e){ promises.push(fsSet('epis',e.ref,e)); });
-    (data.controls||[]).forEach(function(c){ promises.push(fsSet('controls',c.id,c)); });
-    (data.batches||[]).forEach(function(b){ promises.push(fsSet('batches',b.id,b)); });
-    (data.loans||[]).forEach(function(l){ promises.push(fsSet('loans',l.id,l)); });
-    (data.members||[]).forEach(function(m){ promises.push(fsSet('members',String(m.id),m)); });
-    Promise.all(promises).then(function(){
-      // Reload local state
-      epis = data.epis||[];
-      controls = data.controls||[];
-      batches = data.batches||[];
-      loans = data.loans||[];
-      members = data.members||[];
-      hideLoading();
-      renderInventory(); renderDashboard(); renderBatches(); renderControls(); updateAlertBadge();
-      showToast('Restauration réussie — '+epis.length+' EPI, '+controls.length+' contrôles');
-    }).catch(function(err){ hideLoading(); showToast('Erreur lors de la restauration: '+err.message,'err'); });
-  };
-  reader.readAsText(file);
-  input.value='';
-}
 
 // ==================== MOBILE SIDEBAR ====================
 function toggleSidebar() {
