@@ -119,7 +119,12 @@ tbody tr[onclick] { cursor: pointer; }
 tbody tr[onclick]:hover { background: #f0fdf4; }
 
 /* ── TABLES ── */
-.table-wrap { background: var(--surface); border-radius: var(--rad-lg); border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; box-shadow: var(--shadow); }
+.table-wrap { background: var(--surface); border-radius: var(--rad-lg); border: 1px solid var(--border); overflow: hidden; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 20px; box-shadow: var(--shadow); scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
+.table-wrap::-webkit-scrollbar { height: 6px; }
+.table-wrap::-webkit-scrollbar-track { background: transparent; }
+.table-wrap::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+#inventory-table td, #inventory-table th, thead tr th { font-size: 12px; padding: 8px 10px; }
+#inventory-table td:nth-child(4) { max-width: 180px; }
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
 thead th { padding: 12px 16px; text-align: left; font-size: 11px; font-weight: 700; color: var(--text2); border-bottom: 1px solid var(--border); background: var(--surface2); text-transform: uppercase; letter-spacing: 0.05em; }
 tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
@@ -315,7 +320,8 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
         <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
       </div>
       <div id="login-error" class="login-error">Identifiant ou mot de passe incorrect.</div>
-      <button class="login-btn" onclick="doLogin()">Se connecter</button>
+      <div id="login-loading-msg" style="font-size:12px;color:var(--text2);text-align:center;display:none">⏳ Chargement des données…</div>
+      <button class="login-btn" id="login-submit-btn" onclick="doLogin()" disabled style="opacity:0.6">Chargement…</button>
     </div>
   </div>
 </div>
@@ -919,6 +925,14 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
         <div style="font-size:12px;color:var(--text2);background:var(--surface2);padding:8px 12px;border-radius:8px;border:1px solid var(--border)"></div>
       </div>
       <div class="form-group form-full"><label>Observations</label><textarea id="ee-notes" rows="2"></textarea></div>
+      <div class="form-group form-full" style="border-top:1px solid var(--border);padding-top:14px">
+        <label>Photos</label>
+        <div class="photo-grid" id="ee-photos-preview"></div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button type="button" class="btn btn-sm" onclick="openPhotoCapture('epi-edit')">📷 Prendre une photo</button>
+          <label class="btn btn-sm" style="cursor:pointer;margin:0">📁 Importer <input type="file" accept="image/*" multiple style="display:none" onchange="importPhotos(this,'epi-edit')"></label>
+        </div>
+      </div>
     </div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal()">Annuler</button>
@@ -1211,7 +1225,7 @@ var currentUser=null, editingMemberId=null;
 var qrStream=null, qrInterval=null, qrParsed=null;
 var nextBatchNum=2;
 var photoStream=null, photoTarget=null, photoCameraIndex=0, photoCameras=[];
-var pendingEpiPhotos=[], pendingBatchPhotos=[], pendingBatchEditPhotos=[];
+var pendingEpiPhotos=[], pendingBatchPhotos=[], pendingBatchEditPhotos=[], pendingEpiEditPhotos=[];
 var selectedRefs2=new Set();
 var batchCtrlTarget=null;
 
@@ -1307,7 +1321,17 @@ function loadAllData(){
       if(m){var n=parseInt(m[1]);if(n>=nextBatchNum)nextBatchNum=n+1;}
     });
     hideLoading();
-    if(members.length===0) return seedInitialAdmin();
+    if(members.length===0) return seedInitialAdmin().then(function(){
+      var b=document.getElementById('login-submit-btn');
+      if(b){b.textContent='Se connecter';b.disabled=false;b.style.opacity='1';}
+    });
+    // Signal login screen is ready
+    var errEl=document.getElementById('login-error');
+    if(errEl&&errEl.textContent==='Chargement en cours…') errEl.style.display='none';
+    var loginBtn=document.getElementById('login-submit-btn');
+    if(loginBtn){loginBtn.textContent='Se connecter';loginBtn.disabled=false;loginBtn.style.opacity='1';}
+    var loadMsg=document.getElementById('login-loading-msg');
+    if(loadMsg)loadMsg.style.display='none';
   }).catch(function(e){
     hideLoading();
     console.error('Supabase error:',e);
@@ -1316,6 +1340,8 @@ function loadAllData(){
     else if(msg.indexOf('Failed to fetch')!==-1) showToast('Impossible de joindre Supabase','err');
     else showToast('Erreur: '+msg,'err');
     loadDemoData();
+    var loginBtn=document.getElementById('login-submit-btn');
+    if(loginBtn){loginBtn.textContent='Se connecter';loginBtn.disabled=false;loginBtn.style.opacity='1';}
   });
 }
 function seedInitialAdmin(){
@@ -1329,10 +1355,24 @@ function doLogin(){
   var login=document.getElementById('login-user').value.trim();
   var pass=document.getElementById('login-pass').value;
   var errEl=document.getElementById('login-error');
+  var btn=document.getElementById('login-submit-btn');
   if(!login||!pass){errEl.style.display='block';errEl.textContent='Renseignez identifiant et mot de passe.';return;}
+  // If members not loaded yet, reload data first
+  if(members.length===0){
+    errEl.style.display='block';errEl.textContent='Chargement en cours…';
+    if(btn){btn.textContent='Connexion…';btn.disabled=true;}
+    loadAllData().then(function(){
+      if(btn){btn.textContent='Se connecter';btn.disabled=false;}
+      doLogin();
+    }).catch(function(){
+      if(btn){btn.textContent='Se connecter';btn.disabled=false;}
+      errEl.textContent='Impossible de joindre le serveur. Vérifiez votre connexion.';
+    });
+    return;
+  }
   var user=null;
   for(var i=0;i<members.length;i++){if(members[i].login===login&&members[i].pass===pass){user=members[i];break;}}
-  if(!user){errEl.style.display='block';errEl.textContent=members.length===0?'Donnees pas encore chargees - attendez et reessayez.':'Identifiant ou mot de passe incorrect.';return;}
+  if(!user){errEl.style.display='block';errEl.textContent='Identifiant ou mot de passe incorrect.';return;}
   errEl.style.display='none';loginSuccess(user);
 }
 function loginSuccess(user){
@@ -1681,6 +1721,9 @@ function openEPIEdit(ref){
   document.getElementById('ee-notes').value=epi.notes||'';
   document.getElementById('ee-endyear-info').style.display='none';
   if(epi.endYear||epi.lifeYears)calcEndYear('ee');
+  // Load existing photos
+  pendingEpiEditPhotos=(epi.photos||[]).slice();
+  renderPhotoPreview('ee-photos-preview', pendingEpiEditPhotos);
   showModal('modal-epi-edit');
 }
 
@@ -1701,8 +1744,15 @@ function saveEPIEdit(){
   if(unl){epi.unlimited=true;delete epi.lifeYears;delete epi.endYear;}
   else{delete epi.unlimited;if(ly)epi.lifeYears=ly;else delete epi.lifeYears;if(ey)epi.endYear=ey;else delete epi.endYear;}
   epi.stockNote=document.getElementById('ee-stocknote').value||'';
+  // Handle photos
+  var newEpiPhotos=(pendingEpiEditPhotos||[]).filter(function(p){return !p.startsWith('http');});
+  var existingEpiPhotos=(pendingEpiEditPhotos||[]).filter(function(p){return p.startsWith('http');});
   showLoading('Enregistrement...');
-  fsSet('epis',ref,epi).then(function(){hideLoading();renderInventory();renderDashboard();updateAlertBadge();showToast('EPI mis a jour');closeModal();openEPIDetail(ref);}).catch(function(e){hideLoading();showToast('Erreur: '+e.message,'err');});
+  Promise.all(newEpiPhotos.map(function(p,i){return uploadPhotoToStorage(p,'epis/'+ref+'/edit_'+Date.now()+'_'+i+'.jpg');}))
+  .then(function(uploaded){
+    epi.photos=existingEpiPhotos.concat(uploaded);
+    return fsSet('epis',ref,epi);
+  }).then(function(){hideLoading();pendingEpiEditPhotos=[];renderInventory();renderDashboard();updateAlertBadge();showToast('EPI mis a jour');closeModal();openEPIDetail(ref);}).catch(function(e){hideLoading();showToast('Erreur: '+e.message,'err');});
 }
 
 // ==================== BATCH EDIT + DELETE ====================
@@ -2329,7 +2379,7 @@ function retakePhoto(){document.getElementById('photo-preview-snap').style.displ
 function confirmPhoto(){
   addPhotoToTarget(document.getElementById('photo-snap-img').src);
   closePhotoCapture();
-  var modal=photoTarget==='epi'?'modal-add':photoTarget==='batch-edit'?'modal-batch-edit':'modal-batch';
+  var modal=photoTarget==='epi'?'modal-add':photoTarget==='epi-edit'?'modal-epi-edit':photoTarget==='batch-edit'?'modal-batch-edit':'modal-batch';
   showModal(modal);
 }
 function closePhotoCapture(){
@@ -2339,6 +2389,7 @@ function closePhotoCapture(){
 }
 function addPhotoToTarget(dataUrl){
   if(photoTarget==='epi'){pendingEpiPhotos.push(dataUrl);renderPhotoPreview('f-photos-preview',pendingEpiPhotos,'epi');}
+  else if(photoTarget==='epi-edit'){pendingEpiEditPhotos.push(dataUrl);renderPhotoPreview('ee-photos-preview',pendingEpiEditPhotos,'epi-edit');}
   else if(photoTarget==='batch-edit'){pendingBatchEditPhotos.push(dataUrl);renderPhotoPreview('be-photos-preview',pendingBatchEditPhotos,'batch-edit');}
   else{pendingBatchPhotos.push(dataUrl);renderPhotoPreview('b-photos-preview',pendingBatchPhotos,'batch');}
 }
@@ -2347,6 +2398,7 @@ function importPhotos(input,target){
     var reader=new FileReader();
     reader.onload=function(ev){
       if(target==='epi'){pendingEpiPhotos.push(ev.target.result);renderPhotoPreview('f-photos-preview',pendingEpiPhotos,'epi');}
+      else if(target==='epi-edit'){pendingEpiEditPhotos.push(ev.target.result);renderPhotoPreview('ee-photos-preview',pendingEpiEditPhotos,'epi-edit');}
       else if(target==='batch-edit'){pendingBatchEditPhotos.push(ev.target.result);renderPhotoPreview('be-photos-preview',pendingBatchEditPhotos,'batch-edit');}
       else{pendingBatchPhotos.push(ev.target.result);renderPhotoPreview('b-photos-preview',pendingBatchPhotos,'batch');}
     };
