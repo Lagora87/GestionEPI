@@ -255,6 +255,9 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
 /* ── PHOTO ── */
 .photo-thumb { width: 68px; height: 68px; border-radius: var(--rad); object-fit: cover; border: 1.5px solid var(--border2); cursor: pointer; transition: opacity 0.12s; }
 .photo-thumb:hover { opacity: 0.85; }
+#lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:9999; align-items:center; justify-content:center; cursor:pointer; }
+#lightbox.open { display:flex; }
+#lightbox img { max-width:92vw; max-height:92vh; border-radius:12px; box-shadow:0 8px 40px rgba(0,0,0,0.5); }
 .photo-placeholder { width: 68px; height: 68px; border-radius: var(--rad); border: 1.5px dashed var(--border2); display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; background: var(--surface2); transition: background 0.12s; }
 .photo-placeholder:hover { background: var(--surface3); }
 #photo-video { width: 100%; border-radius: var(--rad); display: block; }
@@ -1661,7 +1664,7 @@ function openEPIDetail(ref){
   var sLabel={ok:'Conforme',warn:'A controler',danger:'En alerte',retired:'Reforme',lost:'Introuvable'};
   var badgeCls={ok:'badge-ok',warn:'badge-warn',danger:'badge-danger',retired:'badge-retired',lost:'badge-lost'};
   var epiCtrls=controls.filter(function(c){return c.ref===ref;}).slice().sort(function(a,b){return b.date.localeCompare(a.date);});
-  var photosHtml=(epi.photos&&epi.photos.length)?'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">'+epi.photos.map(function(p){return '<img src="'+p+'" style="width:90px;height:90px;border-radius:10px;object-fit:cover;border:1.5px solid var(--border2)">';}).join('')+'</div>':'';
+  var photosHtml=(epi.photos&&epi.photos.length)?'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">'+epi.photos.map(function(p){return '<img src="'+p+'" onclick="openLightbox(\''+p+'\')" style="width:90px;height:90px;border-radius:10px;object-fit:cover;border:1.5px solid var(--border2);cursor:zoom-in">';}).join('')+'</div>':'';
   var lifeStr='—';
   if(epi.endYear){var dl=diffDays(epi.endYear+'-12-31',todayStr);lifeStr='31/12/'+epi.endYear+(dl>0?' ('+Math.floor(dl/365)+'a '+Math.floor((dl%365)/30)+'m)':' <span style="color:var(--danger);font-weight:700">EXPIRÉ</span>')+(epi.stockNote?' — '+epi.stockNote:'');}
   else if(epi.lifeYears&&epi.buy){var endYr=parseInt(epi.buy.split('-')[0])+epi.lifeYears;var dl2=diffDays(endYr+'-12-31',todayStr);lifeStr=epi.lifeYears+'a — Fin: 31/12/'+endYr+(dl2>0?' ('+Math.floor(dl2/365)+'a restants)':' EXPIRÉ')+(epi.stockNote?' — '+epi.stockNote:'');}
@@ -2777,6 +2780,11 @@ window.addEventListener('load', function() {
 });
 </script>
 
+<div id="lightbox" onclick="closeLightbox()"><img id="lightbox-img" src=""></div>
+<script>
+function openLightbox(src){document.getElementById('lightbox-img').src=src;document.getElementById('lightbox').classList.add('open');}
+function closeLightbox(){document.getElementById('lightbox').classList.remove('open');document.getElementById('lightbox-img').src='';}
+</script>
 
 </body>
 </html>
