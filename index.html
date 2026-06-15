@@ -122,32 +122,7 @@ tbody tr[onclick]:hover { background: #f0fdf4; }
 .table-wrap { background: var(--surface); border-radius: var(--rad-lg); border: 1px solid var(--border); overflow: hidden; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 20px; box-shadow: var(--shadow); scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
 .table-wrap::-webkit-scrollbar { height: 6px; }
 .table-wrap::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
-/* Compact inventory table so it fits without scrolling on PC */
-#inventory-table tr td, #inventory-table tr th,
-table thead th { font-size: 11px; padding: 7px 8px; }
-#inventory-table tr td { font-size: 11px; }
-#inventory-table tr td.muted { font-size: 11px; }
-/* Sticky horizontal scrollbar at bottom of viewport */
-.table-wrap-scroll {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  position: relative;
-}
-.table-wrap-scroll::-webkit-scrollbar { height: 7px; }
-.table-wrap-scroll::-webkit-scrollbar-track { background: var(--surface2); border-radius: 4px; }
-.table-wrap-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
-/* Make the inventory wrapper sticky-scroll */
-#inventory-scroll-wrap {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border2) var(--surface2);
-  /* Show scrollbar always so user knows it's there */
-  overflow-x: scroll;
-}
-#inventory-scroll-wrap::-webkit-scrollbar { height: 8px; }
-#inventory-scroll-wrap::-webkit-scrollbar-track { background: var(--surface2); border-radius: 4px; margin: 0 4px; }
-#inventory-scroll-wrap::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; opacity: 0.6; }
+#inventory-table tr td, #inventory-table tr th { font-size: 12px; padding: 8px 10px; }
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
 thead th { padding: 12px 16px; text-align: left; font-size: 11px; font-weight: 700; color: var(--text2); border-bottom: 1px solid var(--border); background: var(--surface2); text-transform: uppercase; letter-spacing: 0.05em; }
 tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
@@ -255,9 +230,6 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
 /* ── PHOTO ── */
 .photo-thumb { width: 68px; height: 68px; border-radius: var(--rad); object-fit: cover; border: 1.5px solid var(--border2); cursor: pointer; transition: opacity 0.12s; }
 .photo-thumb:hover { opacity: 0.85; }
-#lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:9999; align-items:center; justify-content:center; cursor:pointer; }
-#lightbox.open { display:flex; }
-#lightbox img { max-width:92vw; max-height:92vh; border-radius:12px; box-shadow:0 8px 40px rgba(0,0,0,0.5); }
 .photo-placeholder { width: 68px; height: 68px; border-radius: var(--rad); border: 1.5px dashed var(--border2); display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; background: var(--surface2); transition: background 0.12s; }
 .photo-placeholder:hover { background: var(--surface3); }
 #photo-video { width: 100%; border-radius: var(--rad); display: block; }
@@ -467,11 +439,11 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
             <button class="btn btn-sm" onclick="openBulkControlCustom()">⚙ Contrôle groupé personnalisé</button>
             <button class="btn btn-sm" onclick="clearSelection()">✕ Désélectionner tout</button>
           </div>
-          <div class="table-wrap" id="inventory-scroll-wrap" style="position:sticky;bottom:0;max-height:calc(100vh - 220px);overflow-y:auto;border-radius:var(--rad-lg);border:1px solid var(--border);background:var(--surface);box-shadow:var(--shadow);margin-bottom:20px">
-            <table style="min-width:700px">
+          <div class="table-wrap">
+            <table>
               <thead><tr>
-                <th style="width:34px"><input type="checkbox" id="select-all-chk" onchange="toggleSelectAll(this)" title="Tout sélectionner"></th>
-                <th>Référence</th><th>Marque / Modèle</th><th>Mise en service</th><th>Durée vie</th><th>Dernier ctrl</th><th>Prochain</th><th>État</th><th></th>
+                <th style="width:40px"><input type="checkbox" id="select-all-chk" onchange="toggleSelectAll(this)" title="Tout sélectionner"></th>
+                <th>Référence</th><th>Type</th><th>Marque / Modèle</th><th>Mise en service</th><th>Âge / Durée vie</th><th>Dernier contrôle</th><th>Prochain</th><th>État</th><th></th>
               </tr></thead>
               <tbody id="inventory-table"></tbody>
             </table>
@@ -1331,16 +1303,25 @@ function uploadPhotoToStorage(dataUrl,path){
 }
 
 // ==================== LOAD DATA ====================
+function stripPhotos(obj){
+  // Remove base64 photos from data at load time — loaded on demand when opening a sheet
+  var clean=Object.assign({},obj);
+  if(clean.photos&&Array.isArray(clean.photos)){
+    // Keep only http URLs (already in Storage), strip base64 inline ones
+    clean.photos=clean.photos.filter(function(p){return typeof p==='string'&&p.indexOf('http')===0;});
+  }
+  return clean;
+}
 function loadAllData(){
   showLoading('Connexion a Supabase...');
   return Promise.all([dbSelect('epis'),dbSelect('controls','order=created_at.desc'),dbSelect('loans'),dbSelect('batches'),dbSelect('members')])
   .then(function(results){
-    epis=results[0].map(function(r){return Object.assign({},r.data,{ref:r.ref});});
+    epis=results[0].map(function(r){return Object.assign({},stripPhotos(r.data),{ref:r.ref});});
     controls=results[1].map(function(r){return Object.assign({},r.data,{id:r.ctrl_id});});
     loans=results[2].map(function(r){return Object.assign({},r.data,{id:r.loan_id});});
-    batches=results[3].map(function(r){return Object.assign({},r.data,{id:r.batch_id});});
+    batches=results[3].map(function(r){return Object.assign({},stripPhotos(r.data),{id:r.batch_id});});
     members=results[4].map(function(r){var m=Object.assign({},r.data,{id:r.member_id});if(!m.perms||!Array.isArray(m.perms))m.perms=[];return m;});
-    // Fix nextBatchNum: derive from highest existing batch number to avoid ID collisions
+    // Fix nextBatchNum
     batches.forEach(function(b){
       var m=b.id&&b.id.match(/LOT-\d{4}-(\d+)/);
       if(m){var n=parseInt(m[1]);if(n>=nextBatchNum)nextBatchNum=n+1;}
@@ -1500,16 +1481,16 @@ function renderInventory(){
     var isActive=e.status!=='retired'&&e.status!=='lost';
     var photo=e.photos&&e.photos.length?'<img src="'+e.photos[0]+'" class="photo-thumb" onclick="event.stopPropagation();openEPIDetail(\''+e.ref+'\')" style="cursor:pointer">':'<div class="photo-placeholder" onclick="event.stopPropagation();openEPIDetail(\''+e.ref+'\')" style="cursor:pointer" title="Fiche EPI">&#128203;</div>';
     return '<tr style="cursor:pointer" onclick="openEPIDetail(\''+e.ref+'\')" title="Voir la fiche EPI">'
-      +'<td style="width:34px" onclick="event.stopPropagation()"><input type="checkbox" class="epi-chk" data-ref="'+e.ref+'" onchange="onEpiCheckChange()"'+(isActive?'':' disabled style="opacity:0.3"')+'></td>'
-      +'<td><strong style="font-size:11px">'+e.ref+'</strong>'+bTag+'</td>'
-      +'<td><div style="display:flex;align-items:center;gap:6px">'+photo+'<span style="font-size:11px">'+e.brand+' '+e.model+'<br><small style="color:var(--text2)">'+e.type+'</small></span></div></td>'
-      +'<td class="muted">'+e.buy+'</td><td style="min-width:110px">'+lifespanBar(e)+'</td>'
+      +'<td style="width:40px" onclick="event.stopPropagation()"><input type="checkbox" class="epi-chk" data-ref="'+e.ref+'" onchange="onEpiCheckChange()"'+(isActive?'':' disabled style="opacity:0.3"')+'></td>'
+      +'<td><strong>'+e.ref+'</strong>'+bTag+'</td><td>'+getCat(e.type)+'</td>'
+      +'<td><div style="display:flex;align-items:center;gap:8px">'+photo+'<span>'+e.brand+' '+e.model+'<br><small style="color:var(--text2)">'+e.type+'</small></span></div></td>'
+      +'<td class="muted">'+e.buy+'</td><td style="min-width:120px">'+lifespanBar(e)+'</td>'
       +'<td class="muted">'+(e.lastCtrl||'&mdash;')+'</td><td class="muted">'+(getNextCtrl(e)||'&mdash;')+'</td>'
       +'<td>'+badgeHtml(getStatus(e))+'</td>'
       +'<td style="white-space:nowrap" onclick="event.stopPropagation()">'
-      +'<button class="btn btn-sm" onclick="openEPIDetail(\''+e.ref+'\')" title="Fiche">&#128203;</button>'
-      +(canCtrl?'<button class="btn btn-sm" style="margin-left:3px" onclick="openModalControl(\''+e.ref+'\')" title="Contrôler">✓</button>':'')
-      +(hasPerm('add_epi')?'<button class="btn btn-sm btn-danger" style="margin-left:3px" onclick="deleteEPI(\''+e.ref+'\')" title="Supprimer">&#128465;</button>':'')
+      +'<button class="btn btn-sm" onclick="openEPIDetail(\''+e.ref+'\')">&#128203; Fiche</button>'
+      +(canCtrl?'<button class="btn btn-sm" style="margin-left:4px" onclick="openModalControl(\''+e.ref+'\')">Controler</button>':'')
+      +(hasPerm('add_epi')?'<button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="deleteEPI(\''+e.ref+'\')" title="Supprimer definitivement">&#128465;</button>':'')
       +'</td></tr>';
   }).join('');
 }
@@ -1660,11 +1641,19 @@ function calcEndYear(prefix){
 function openEPIDetail(ref){
   var epi=epis.find(function(e){return e.ref===ref;});
   if(!epi){showToast('EPI introuvable','err');return;}
+  // Load full data (with photos) on demand
+  dbSelect('epis','ref=eq.'+encodeURIComponent(ref)).then(function(rows){
+    if(rows&&rows.length){var full=Object.assign({},rows[0].data,{ref:rows[0].ref});epi.photos=full.photos||[];_renderEPIDetail(epi);}
+    else _renderEPIDetail(epi);
+  }).catch(function(){_renderEPIDetail(epi);});
+}
+function _renderEPIDetail(epi){
+  var ref=epi.ref;
   var s=getStatus(epi);
   var sLabel={ok:'Conforme',warn:'A controler',danger:'En alerte',retired:'Reforme',lost:'Introuvable'};
   var badgeCls={ok:'badge-ok',warn:'badge-warn',danger:'badge-danger',retired:'badge-retired',lost:'badge-lost'};
   var epiCtrls=controls.filter(function(c){return c.ref===ref;}).slice().sort(function(a,b){return b.date.localeCompare(a.date);});
-  var photosHtml=(epi.photos&&epi.photos.length)?'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">'+epi.photos.map(function(p){return '<img src="'+p+'" onclick="openLightbox(\''+p+'\')" style="width:90px;height:90px;border-radius:10px;object-fit:cover;border:1.5px solid var(--border2);cursor:zoom-in">';}).join('')+'</div>':'';
+  var photosHtml=(epi.photos&&epi.photos.length)?'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">'+epi.photos.map(function(p){return '<img src="'+p+'" style="width:90px;height:90px;border-radius:10px;object-fit:cover;border:1.5px solid var(--border2)">';}).join('')+'</div>':'';
   var lifeStr='—';
   if(epi.endYear){var dl=diffDays(epi.endYear+'-12-31',todayStr);lifeStr='31/12/'+epi.endYear+(dl>0?' ('+Math.floor(dl/365)+'a '+Math.floor((dl%365)/30)+'m)':' <span style="color:var(--danger);font-weight:700">EXPIRÉ</span>')+(epi.stockNote?' — '+epi.stockNote:'');}
   else if(epi.lifeYears&&epi.buy){var endYr=parseInt(epi.buy.split('-')[0])+epi.lifeYears;var dl2=diffDays(endYr+'-12-31',todayStr);lifeStr=epi.lifeYears+'a — Fin: 31/12/'+endYr+(dl2>0?' ('+Math.floor(dl2/365)+'a restants)':' EXPIRÉ')+(epi.stockNote?' — '+epi.stockNote:'');}
@@ -1685,7 +1674,7 @@ function openEPIDetail(ref){
   if(hasPerm('add_controls'))acts+='<button class="btn btn-primary" onclick="closeModal();openModalControl(\''+ref+'\')">+ Controle</button>';
   document.getElementById('epi-detail-actions').innerHTML=acts;
   showModal('modal-epi-detail');
-}
+}  // end _renderEPIDetail
 
 function deleteControl(ctrlId,ref){
   if(!confirm('Supprimer ce contrôle ? Action irréversible.'))return;
@@ -2267,6 +2256,15 @@ function renderBatches(){
 function toggleBatch(id){
   var b=document.getElementById('bbody-'+id); if(b) b.classList.toggle('open');
   var c=document.getElementById('bchev-'+id); if(c) c.classList.toggle('open');
+  // Load photos on first open
+  if(b&&b.classList.contains('open')){
+    var batch=batches.find(function(x){return x.id===id;});
+    if(batch&&(!batch.photos||batch.photos.length===0)){
+      dbSelect('batches','batch_id=eq.'+encodeURIComponent(id)).then(function(rows){
+        if(rows&&rows.length&&rows[0].data.photos){batch.photos=rows[0].data.photos;renderBatches();}
+      }).catch(function(){});
+    }
+  }
 }
 function openBatchControl(batchId){
   var batch=batches.find(function(b){return b.id===batchId;});
@@ -2780,11 +2778,6 @@ window.addEventListener('load', function() {
 });
 </script>
 
-<div id="lightbox" onclick="closeLightbox()"><img id="lightbox-img" src=""></div>
-<script>
-function openLightbox(src){document.getElementById('lightbox-img').src=src;document.getElementById('lightbox').classList.add('open');}
-function closeLightbox(){document.getElementById('lightbox').classList.remove('open');document.getElementById('lightbox-img').src='';}
-</script>
 
 </body>
 </html>
