@@ -1090,19 +1090,20 @@ function getCat(type) {
 function getCatStyle(type){
   var cat=getCat(type);
   var map={
-    'Corde':             {cls:'cat-corde',    icon:'🪢', border:'#93c5fd'},
-    'Baudriers':         {cls:'cat-baudriers',icon:'🧗', border:'#c4b5fd'},
-    'Casques':           {cls:'cat-casques',  icon:'⛑️', border:'#6ee7b7'},
-    'Degaines':          {cls:'cat-degaines', icon:'🔗', border:'#fcd34d'},
-    'Systemes assurage': {cls:'cat-assurage', icon:'🎯', border:'#fdba74'},
-    'Longes':            {cls:'cat-longes',   icon:'🔁', border:'#f9a8d4'},
-    'Sangles':           {cls:'cat-sangles',  icon:'🟣', border:'#e879f9'},
-    'Bloqueurs':         {cls:'cat-bloqueurs',icon:'⚙️', border:'#86efac'},
-    'Canyoning':         {cls:'cat-canyoning',icon:'💧', border:'#67e8f9'},
-    'Via Ferrata':       {cls:'cat-ferrata',  icon:'⛰️', border:'#fca5a5'},
-    'Dry Tooling':       {cls:'cat-tooling',  icon:'🪓', border:'#cbd5e1'}
+    'Corde':             {cls:'cat-corde',    icon:'🪢', border:'#3b82f6', lightBg:'#dbeafe', darkBg:'#bfdbfe'},
+    'Baudriers':         {cls:'cat-baudriers',icon:'🧗', border:'#7c3aed', lightBg:'#ede9fe', darkBg:'#c4b5fd'},
+    'Casques':           {cls:'cat-casques',  icon:'⛑️', border:'#059669', lightBg:'#d1fae5', darkBg:'#6ee7b7'},
+    'Degaines':          {cls:'cat-degaines', icon:'🔗', border:'#d97706', lightBg:'#fef3c7', darkBg:'#fcd34d'},
+    'Systemes assurage': {cls:'cat-assurage', icon:'🎯', border:'#ea580c', lightBg:'#ffedd5', darkBg:'#fdba74'},
+    'Longes':            {cls:'cat-longes',   icon:'🔁', border:'#db2777', lightBg:'#fce7f3', darkBg:'#f9a8d4'},
+    'Sangles':           {cls:'cat-sangles',  icon:'🟣', border:'#9333ea', lightBg:'#fdf4ff', darkBg:'#e879f9'},
+    'Bloqueurs':         {cls:'cat-bloqueurs',icon:'⚙️', border:'#16a34a', lightBg:'#dcfce7', darkBg:'#86efac'},
+    'Canyoning':         {cls:'cat-canyoning',icon:'💧', border:'#0891b2', lightBg:'#cffafe', darkBg:'#67e8f9'},
+    'Via Ferrata':       {cls:'cat-ferrata',  icon:'⛰️', border:'#dc2626', lightBg:'#fee2e2', darkBg:'#fca5a5'},
+    'Dry Tooling':       {cls:'cat-tooling',  icon:'🪓', border:'#475569', lightBg:'#f1f5f9', darkBg:'#cbd5e1'},
+    'Crash-Pad':         {cls:'cat-default',  icon:'🛡️', border:'#78716c', lightBg:'#fafaf9', darkBg:'#d6d3d1'}
   };
-  return map[cat]||{cls:'cat-default',icon:'📦',border:'#e2e8f0'};
+  return map[cat]||{cls:'cat-default',icon:'📦',border:'#94a3b8',lightBg:'#f8fafc',darkBg:'#e2e8f0'};
 }
 
 var ROLE_PERMS = {
@@ -1330,9 +1331,12 @@ function uploadPhotoToStorage(dataUrl,path){
     var parts=dataUrl.split(','),mime=parts[0].match(/:(.*?);/)[1],bin=atob(parts[1]),u8=new Uint8Array(bin.length);
     for(var i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
     return fetch(SUPABASE_URL+'/storage/v1/object/epi-photos/'+path,{method:'POST',headers:{'apikey':SUPABASE_ANON,'Authorization':'Bearer '+SUPABASE_ANON,'Content-Type':mime,'x-upsert':'true'},body:new Blob([u8],{type:mime})})
-    .then(function(res){if(!res.ok){console.warn('Storage upload failed ('+res.status+') - storing inline');return dataUrl;}return SUPABASE_URL+'/storage/v1/object/public/epi-photos/'+path;})
-    .catch(function(e){console.warn('Photo upload error:',e.message);return dataUrl;});
-  }catch(e){return Promise.resolve(dataUrl);}
+    .then(function(res){
+      if(!res.ok){throw new Error('Storage upload failed ('+res.status+'). Vérifiez que le bucket "epi-photos" existe dans Supabase Storage.');}
+      return SUPABASE_URL+'/storage/v1/object/public/epi-photos/'+path;
+    });
+    // Note: we never fall back to base64 — that would saturate the database
+  }catch(e){return Promise.reject(e);}
 }
 
 // ==================== LOAD DATA ====================
@@ -1509,7 +1513,12 @@ function renderInventory(){
     return true;
   });
   var canCtrl=hasPerm('add_controls');
-  // Group by batchId then solo, to insert spacers between groups
+  // Sort: lots first (grouped), then solo EPI
+  filtered.sort(function(a,b){
+    var ak=a.batchId?'0_'+a.batchId:'1_'+a.ref;
+    var bk=b.batchId?'0_'+b.batchId:'1_'+b.ref;
+    if(ak<bk)return -1; if(ak>bk)return 1; return 0;
+  });
   var rows=[];
   var seen={};
   filtered.forEach(function(e){
@@ -1528,7 +1537,7 @@ function renderInventory(){
     if(row.type==='spacer') return '<tr class="inv-spacer"><td colspan="9"></td></tr>';
     if(row.type==='lot-header'){
       var b=row.batch; var st=getCatStyle(row.epi.type);
-      return '<tr class="lot-header-row"><td colspan="9" style="background:'+st.border+'22;border-left:3px solid '+st.border+';color:#111">'
+      return '<tr class="lot-header-row"><td colspan="9" style="background:'+st.darkBg+';border-left:4px solid '+st.border+';color:#111;font-size:12px">'
         +st.icon+' &nbsp;<strong>'+row.batchId+'</strong>'+(b.name?' — '+b.name:'')+(b.brand?' · '+b.brand+' '+b.model:'')
         +'</td></tr>';
     }
@@ -1538,18 +1547,18 @@ function renderInventory(){
     var isActive=e.status!=='retired'&&e.status!=='lost';
     var photoEl=e.photos&&e.photos.length
       ?'<img src="'+e.photos[0]+'" style="width:28px;height:28px;border-radius:4px;object-fit:cover;border:1px solid rgba(0,0,0,0.15);flex-shrink:0" onclick="event.stopPropagation();openEPIDetail(\''+e.ref+'\')">'
-      :'<div style="width:28px;height:28px;border-radius:4px;background:rgba(0,0,0,0.06);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">'+st.icon+'</div>';
-    var leftBorder=e.batchId?'border-left:3px solid '+st.border+';':'border-left:3px solid transparent;';
-    return '<tr class="'+st.cls+'" style="'+leftBorder+'cursor:pointer" onclick="openEPIDetail(\''+e.ref+'\')" title="Voir la fiche EPI">'
-      +'<td style="width:34px" onclick="event.stopPropagation()"><input type="checkbox" class="epi-chk" data-ref="'+e.ref+'" onchange="onEpiCheckChange()"'+(isActive?'':' disabled style="opacity:0.3"')+'></td>'
-      +'<td style="color:#111;white-space:nowrap"><strong>'+e.ref+'</strong>'+bTag+'</td>'
-      +'<td style="color:#111"><div style="display:flex;align-items:center;gap:7px">'+photoEl+'<span style="white-space:nowrap;color:#111">'+e.brand+' '+e.model+' <small style="color:#555;font-size:10px">'+e.type+'</small></span></div></td>'
-      +'<td style="color:#111;white-space:nowrap">'+e.buy+'</td>'
-      +'<td style="min-width:110px">'+lifespanBar(e)+'</td>'
-      +'<td style="color:#111;white-space:nowrap">'+(e.lastCtrl||'&mdash;')+'</td>'
-      +'<td style="color:#111;white-space:nowrap">'+(getNextCtrl(e)||'&mdash;')+'</td>'
-      +'<td>'+badgeHtml(getStatus(e))+'</td>'
-      +'<td style="white-space:nowrap" onclick="event.stopPropagation()">'
+      :'<div style="width:28px;height:28px;border-radius:4px;background:'+st.lightBg+';display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">'+st.icon+'</div>';
+    var leftBorder=e.batchId?'border-left:4px solid '+st.border+';':'border-left:4px solid transparent;';
+    return '<tr style="'+leftBorder+'cursor:pointer;background:#fff" onclick="openEPIDetail(\''+e.ref+'\')" title="Voir la fiche EPI">'
+      +'<td style="width:34px;background:#fff" onclick="event.stopPropagation()"><input type="checkbox" class="epi-chk" data-ref="'+e.ref+'" onchange="onEpiCheckChange()"'+(isActive?'':' disabled style="opacity:0.3"')+'></td>'
+      +'<td style="background:'+st.lightBg+';white-space:nowrap"><strong style="color:#111">'+e.ref+'</strong>'+bTag+'</td>'
+      +'<td style="color:#111;background:#fff"><div style="display:flex;align-items:center;gap:7px">'+photoEl+'<span style="white-space:nowrap">'+e.brand+' '+e.model+' <small style="color:#555;font-size:10px">'+e.type+'</small></span></div></td>'
+      +'<td style="color:#111;background:#fff;white-space:nowrap">'+e.buy+'</td>'
+      +'<td style="background:#fff;min-width:110px">'+lifespanBar(e)+'</td>'
+      +'<td style="color:#111;background:#fff;white-space:nowrap">'+(e.lastCtrl||'&mdash;')+'</td>'
+      +'<td style="color:#111;background:#fff;white-space:nowrap">'+(getNextCtrl(e)||'&mdash;')+'</td>'
+      +'<td style="background:#fff">'+badgeHtml(getStatus(e))+'</td>'
+      +'<td style="background:#fff;white-space:nowrap" onclick="event.stopPropagation()">'
       +'<button class="btn btn-sm" onclick="openEPIDetail(\''+e.ref+'\')" title="Fiche">&#128203;</button>'
       +(canCtrl?'<button class="btn btn-sm" style="margin-left:3px" onclick="openModalControl(\''+e.ref+'\')" title="Contrôler">✓</button>':'')
       +(hasPerm('add_epi')?'<button class="btn btn-sm btn-danger" style="margin-left:3px" onclick="deleteEPI(\''+e.ref+'\')" title="Supprimer">&#128465;</button>':'')
