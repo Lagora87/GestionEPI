@@ -116,7 +116,23 @@ body { font-family: var(--font); font-size: 14px; background: var(--bg); color: 
 .badge-role-referent { background: var(--accent-light); color: var(--accent-text); }
 .badge-role-member { background: var(--surface2); color: var(--text2); }
 tbody tr[onclick] { cursor: pointer; }
-tbody tr[onclick]:hover { background: #f0fdf4; }
+tbody tr[onclick]:hover { filter: brightness(0.96); }
+/* Couleurs par catégorie */
+.cat-corde      { background: #dbeafe; }
+.cat-baudriers  { background: #ede9fe; }
+.cat-casques    { background: #d1fae5; }
+.cat-degaines   { background: #fef3c7; }
+.cat-assurage   { background: #ffedd5; }
+.cat-longes     { background: #fce7f3; }
+.cat-sangles    { background: #fdf4ff; }
+.cat-bloqueurs  { background: #f0fdf4; }
+.cat-canyoning  { background: #cffafe; }
+.cat-ferrata    { background: #fee2e2; }
+.cat-tooling    { background: #f1f5f9; }
+.cat-default    { background: #f8fafc; }
+/* Spacer between groups */
+.inv-spacer td  { height: 6px; background: #f1f5f9; border: none; padding: 0; }
+.lot-header-row td { padding: 3px 10px; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; }
 
 /* ── TABLES ── */
 .table-wrap { background: var(--surface); border-radius: var(--rad-lg); border: 1px solid var(--border); overflow: hidden; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 20px; box-shadow: var(--shadow); scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
@@ -442,8 +458,8 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
           <div class="table-wrap">
             <table>
               <thead><tr>
-                <th style="width:40px"><input type="checkbox" id="select-all-chk" onchange="toggleSelectAll(this)" title="Tout sélectionner"></th>
-                <th>Référence</th><th>Type</th><th>Marque / Modèle</th><th>Mise en service</th><th>Âge / Durée vie</th><th>Dernier contrôle</th><th>Prochain</th><th>État</th><th></th>
+                <th style="width:34px"><input type="checkbox" id="select-all-chk" onchange="toggleSelectAll(this)" title="Tout sélectionner"></th>
+                <th>Référence</th><th>Marque / Modèle</th><th>Mise en service</th><th>Durée vie</th><th>Dernier ctrl</th><th>Prochain</th><th>État</th><th></th>
               </tr></thead>
               <tbody id="inventory-table"></tbody>
             </table>
@@ -1071,6 +1087,23 @@ function getCat(type) {
   var cfg = EPI_CONFIG[type];
   return cfg ? cfg.cat : type;
 }
+function getCatStyle(type){
+  var cat=getCat(type);
+  var map={
+    'Corde':             {cls:'cat-corde',    icon:'🪢', border:'#93c5fd'},
+    'Baudriers':         {cls:'cat-baudriers',icon:'🧗', border:'#c4b5fd'},
+    'Casques':           {cls:'cat-casques',  icon:'⛑️', border:'#6ee7b7'},
+    'Degaines':          {cls:'cat-degaines', icon:'🔗', border:'#fcd34d'},
+    'Systemes assurage': {cls:'cat-assurage', icon:'🎯', border:'#fdba74'},
+    'Longes':            {cls:'cat-longes',   icon:'🔁', border:'#f9a8d4'},
+    'Sangles':           {cls:'cat-sangles',  icon:'🟣', border:'#e879f9'},
+    'Bloqueurs':         {cls:'cat-bloqueurs',icon:'⚙️', border:'#86efac'},
+    'Canyoning':         {cls:'cat-canyoning',icon:'💧', border:'#67e8f9'},
+    'Via Ferrata':       {cls:'cat-ferrata',  icon:'⛰️', border:'#fca5a5'},
+    'Dry Tooling':       {cls:'cat-tooling',  icon:'🪓', border:'#cbd5e1'}
+  };
+  return map[cat]||{cls:'cat-default',icon:'📦',border:'#e2e8f0'};
+}
 
 var ROLE_PERMS = {
   admin:   ['view_epi','add_epi','view_controls','add_controls','view_loans','manage_loans','export_pdf','manage_members'],
@@ -1476,21 +1509,50 @@ function renderInventory(){
     return true;
   });
   var canCtrl=hasPerm('add_controls');
-  document.getElementById('inventory-table').innerHTML=filtered.map(function(e){
-    var bTag=e.batchId?'<span style="font-size:11px;font-weight:700;background:var(--surface2);border:1px solid var(--border2);color:var(--text2);padding:2px 8px;border-radius:6px;cursor:pointer;margin-left:6px" onclick="event.stopPropagation();showBatch(\''+e.batchId+'\')" title="Voir le lot">'+e.batchId+'</span>':'';
+  // Group by batchId then solo, to insert spacers between groups
+  var rows=[];
+  var seen={};
+  filtered.forEach(function(e){
+    var groupKey=e.batchId||('__solo__'+e.ref);
+    if(!seen[groupKey]){
+      seen[groupKey]=true;
+      rows.push({type:'spacer'});
+      if(e.batchId){
+        var bInfo=batches.find(function(b){return b.id===e.batchId;})||{};
+        rows.push({type:'lot-header',batch:bInfo,batchId:e.batchId,epi:e});
+      }
+    }
+    rows.push({type:'epi',epi:e});
+  });
+  document.getElementById('inventory-table').innerHTML=rows.map(function(row){
+    if(row.type==='spacer') return '<tr class="inv-spacer"><td colspan="9"></td></tr>';
+    if(row.type==='lot-header'){
+      var b=row.batch; var st=getCatStyle(row.epi.type);
+      return '<tr class="lot-header-row"><td colspan="9" style="background:'+st.border+'22;border-left:3px solid '+st.border+';color:#111">'
+        +st.icon+' &nbsp;<strong>'+row.batchId+'</strong>'+(b.name?' — '+b.name:'')+(b.brand?' · '+b.brand+' '+b.model:'')
+        +'</td></tr>';
+    }
+    var e=row.epi;
+    var st=getCatStyle(e.type);
+    var bTag=e.batchId?'<span style="font-size:10px;background:rgba(0,0,0,0.08);border-radius:4px;padding:1px 5px;color:#333;margin-left:5px">'+e.batchId+'</span>':'';
     var isActive=e.status!=='retired'&&e.status!=='lost';
-    var photo=e.photos&&e.photos.length?'<img src="'+e.photos[0]+'" class="photo-thumb" onclick="event.stopPropagation();openEPIDetail(\''+e.ref+'\')" style="cursor:pointer">':'<div class="photo-placeholder" onclick="event.stopPropagation();openEPIDetail(\''+e.ref+'\')" style="cursor:pointer" title="Fiche EPI">&#128203;</div>';
-    return '<tr style="cursor:pointer" onclick="openEPIDetail(\''+e.ref+'\')" title="Voir la fiche EPI">'
-      +'<td style="width:40px" onclick="event.stopPropagation()"><input type="checkbox" class="epi-chk" data-ref="'+e.ref+'" onchange="onEpiCheckChange()"'+(isActive?'':' disabled style="opacity:0.3"')+'></td>'
-      +'<td><strong>'+e.ref+'</strong>'+bTag+'</td><td>'+getCat(e.type)+'</td>'
-      +'<td><div style="display:flex;align-items:center;gap:8px">'+photo+'<span>'+e.brand+' '+e.model+'<br><small style="color:var(--text2)">'+e.type+'</small></span></div></td>'
-      +'<td class="muted">'+e.buy+'</td><td style="min-width:120px">'+lifespanBar(e)+'</td>'
-      +'<td class="muted">'+(e.lastCtrl||'&mdash;')+'</td><td class="muted">'+(getNextCtrl(e)||'&mdash;')+'</td>'
+    var photoEl=e.photos&&e.photos.length
+      ?'<img src="'+e.photos[0]+'" style="width:28px;height:28px;border-radius:4px;object-fit:cover;border:1px solid rgba(0,0,0,0.15);flex-shrink:0" onclick="event.stopPropagation();openEPIDetail(\''+e.ref+'\')">'
+      :'<div style="width:28px;height:28px;border-radius:4px;background:rgba(0,0,0,0.06);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">'+st.icon+'</div>';
+    var leftBorder=e.batchId?'border-left:3px solid '+st.border+';':'border-left:3px solid transparent;';
+    return '<tr class="'+st.cls+'" style="'+leftBorder+'cursor:pointer" onclick="openEPIDetail(\''+e.ref+'\')" title="Voir la fiche EPI">'
+      +'<td style="width:34px" onclick="event.stopPropagation()"><input type="checkbox" class="epi-chk" data-ref="'+e.ref+'" onchange="onEpiCheckChange()"'+(isActive?'':' disabled style="opacity:0.3"')+'></td>'
+      +'<td style="color:#111;white-space:nowrap"><strong>'+e.ref+'</strong>'+bTag+'</td>'
+      +'<td style="color:#111"><div style="display:flex;align-items:center;gap:7px">'+photoEl+'<span style="white-space:nowrap;color:#111">'+e.brand+' '+e.model+' <small style="color:#555;font-size:10px">'+e.type+'</small></span></div></td>'
+      +'<td style="color:#111;white-space:nowrap">'+e.buy+'</td>'
+      +'<td style="min-width:110px">'+lifespanBar(e)+'</td>'
+      +'<td style="color:#111;white-space:nowrap">'+(e.lastCtrl||'&mdash;')+'</td>'
+      +'<td style="color:#111;white-space:nowrap">'+(getNextCtrl(e)||'&mdash;')+'</td>'
       +'<td>'+badgeHtml(getStatus(e))+'</td>'
       +'<td style="white-space:nowrap" onclick="event.stopPropagation()">'
-      +'<button class="btn btn-sm" onclick="openEPIDetail(\''+e.ref+'\')">&#128203; Fiche</button>'
-      +(canCtrl?'<button class="btn btn-sm" style="margin-left:4px" onclick="openModalControl(\''+e.ref+'\')">Controler</button>':'')
-      +(hasPerm('add_epi')?'<button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="deleteEPI(\''+e.ref+'\')" title="Supprimer definitivement">&#128465;</button>':'')
+      +'<button class="btn btn-sm" onclick="openEPIDetail(\''+e.ref+'\')" title="Fiche">&#128203;</button>'
+      +(canCtrl?'<button class="btn btn-sm" style="margin-left:3px" onclick="openModalControl(\''+e.ref+'\')" title="Contrôler">✓</button>':'')
+      +(hasPerm('add_epi')?'<button class="btn btn-sm btn-danger" style="margin-left:3px" onclick="deleteEPI(\''+e.ref+'\')" title="Supprimer">&#128465;</button>':'')
       +'</td></tr>';
   }).join('');
 }
@@ -2256,12 +2318,19 @@ function renderBatches(){
 function toggleBatch(id){
   var b=document.getElementById('bbody-'+id); if(b) b.classList.toggle('open');
   var c=document.getElementById('bchev-'+id); if(c) c.classList.toggle('open');
-  // Load photos on first open
+  // Load photos on first open — update only the photo grid, not the whole list
   if(b&&b.classList.contains('open')){
     var batch=batches.find(function(x){return x.id===id;});
     if(batch&&(!batch.photos||batch.photos.length===0)){
       dbSelect('batches','batch_id=eq.'+encodeURIComponent(id)).then(function(rows){
-        if(rows&&rows.length&&rows[0].data.photos){batch.photos=rows[0].data.photos;renderBatches();}
+        if(rows&&rows.length&&rows[0].data.photos&&rows[0].data.photos.length){
+          batch.photos=rows[0].data.photos;
+          // Update photo grid in place without re-rendering the whole list
+          var grid=b.querySelector('.batch-photo-grid');
+          if(grid){
+            grid.innerHTML=batch.photos.map(function(p){return '<img src="'+p+'" class="photo-thumb" onclick="openLightbox(\''+p+'\')">';}).join('');
+          }
+        }
       }).catch(function(){});
     }
   }
