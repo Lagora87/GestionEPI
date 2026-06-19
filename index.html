@@ -1513,11 +1513,13 @@ function renderInventory(){
     return true;
   });
   var canCtrl=hasPerm('add_controls');
-  // Sort: lots first (grouped), then solo EPI
+  // Sort: lots first (grouped), then solo EPI; within a lot, sort by ref
   filtered.sort(function(a,b){
     var ak=a.batchId?'0_'+a.batchId:'1_'+a.ref;
     var bk=b.batchId?'0_'+b.batchId:'1_'+b.ref;
-    if(ak<bk)return -1; if(ak>bk)return 1; return 0;
+    if(ak<bk)return -1; if(ak>bk)return 1;
+    // Same group: sort by ref (natural order, e.g. K15-001 before K15-002)
+    return a.ref.localeCompare(b.ref,undefined,{numeric:true});
   });
   var rows=[];
   var seen={};
@@ -1537,8 +1539,12 @@ function renderInventory(){
     if(row.type==='spacer') return '<tr class="inv-spacer"><td colspan="9"></td></tr>';
     if(row.type==='lot-header'){
       var b=row.batch; var st=getCatStyle(row.epi.type);
+      var photoSrc=(row.epi.photos&&row.epi.photos.length)?row.epi.photos[0]:((b.photos&&b.photos.length)?b.photos[0]:null);
+      var lotPhoto=photoSrc
+        ?'<img src="'+photoSrc+'" style="width:26px;height:26px;border-radius:5px;object-fit:cover;border:1.5px solid rgba(0,0,0,0.2);vertical-align:middle;margin-right:8px">'
+        :'';
       return '<tr class="lot-header-row"><td colspan="9" style="background:'+st.darkBg+';border-left:4px solid '+st.border+';color:#111;font-size:12px">'
-        +st.icon+' &nbsp;<strong>'+row.batchId+'</strong>'+(b.name?' — '+b.name:'')+(b.brand?' · '+b.brand+' '+b.model:'')
+        +'<span style="display:inline-flex;align-items:center">'+lotPhoto+st.icon+' &nbsp;<strong>'+row.batchId+'</strong>'+(b.name?' — '+b.name:'')+(b.brand?' · '+b.brand+' '+b.model:'')+'</span>'
         +'</td></tr>';
     }
     var e=row.epi;
