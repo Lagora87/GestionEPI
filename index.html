@@ -122,6 +122,7 @@ tbody tr[onclick]:hover { filter: brightness(0.96); }
 .cat-baudriers  { background: #ede9fe; }
 .cat-casques    { background: #d1fae5; }
 .cat-degaines   { background: #fef3c7; }
+.cat-mousquetons { background: #ccfbf1; }
 .cat-assurage   { background: #ffedd5; }
 .cat-longes     { background: #fce7f3; }
 .cat-sangles    { background: #fdf4ff; }
@@ -427,13 +428,13 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
         <!-- INVENTORY -->
         <div class="page" id="page-inventory">
           <div class="filter-row">
-            <input type="text" id="search-input" placeholder="Rechercher…" oninput="renderInventory()">
+            <input type="text" id="search-input" placeholder="Rechercher…" oninput="debouncedRenderInventory()">
             <select id="filter-type" onchange="renderInventory()">
               <option value="">Toutes categories</option>
               <optgroup label="Corde"><option>Cordes SAE</option><option>Cordes statiques</option><option>Cordes falaise</option><option>Cordes a double</option></optgroup>
               <optgroup label="Baudriers"><option>Baudriers</option></optgroup>
               <optgroup label="Casques"><option>Casques</option></optgroup>
-              <optgroup label="Degaines"><option value="Sangles deg">Sangles</option><option>Mousquetons droits</option><option>Mousquetons coudes</option></optgroup>
+              <optgroup label="Degaines"><option value="Sangles deg">Sangles</option><option>Mousquetons droits</option><option>Mousquetons coudes</option></optgroup><optgroup label="Mousquetons"><option>Mousquetons a vis</option><option>Mousquetons automatiques</option></optgroup>
               <optgroup label="Systemes assurage"><option>Tubes</option><option>Autobloquants</option></optgroup>
               <optgroup label="Longes"><option>Longes</option></optgroup>
               <optgroup label="Sangles"><option>Sangles</option></optgroup>
@@ -542,7 +543,7 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
           <optgroup label="Corde"><option>Cordes SAE</option><option>Cordes statiques</option><option>Cordes falaise</option><option>Cordes a double</option></optgroup>
           <optgroup label="Baudriers"><option>Baudriers</option></optgroup>
           <optgroup label="Casques"><option>Casques</option></optgroup>
-          <optgroup label="Degaines"><option value="Sangles deg">Sangles</option><option>Mousquetons droits</option><option>Mousquetons coudes</option></optgroup>
+          <optgroup label="Degaines"><option value="Sangles deg">Sangles</option><option>Mousquetons droits</option><option>Mousquetons coudes</option></optgroup><optgroup label="Mousquetons"><option>Mousquetons a vis</option><option>Mousquetons automatiques</option></optgroup>
           <optgroup label="Systemes assurage"><option>Tubes</option><option>Autobloquants</option></optgroup>
           <optgroup label="Longes"><option>Longes</option></optgroup>
           <optgroup label="Sangles"><option>Sangles</option></optgroup>
@@ -712,7 +713,7 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
           <optgroup label="Corde"><option>Cordes SAE</option><option>Cordes statiques</option><option>Cordes falaise</option><option>Cordes a double</option></optgroup>
           <optgroup label="Baudriers"><option>Baudriers</option></optgroup>
           <optgroup label="Casques"><option>Casques</option></optgroup>
-          <optgroup label="Degaines"><option value="Sangles deg">Sangles</option><option>Mousquetons droits</option><option>Mousquetons coudes</option></optgroup>
+          <optgroup label="Degaines"><option value="Sangles deg">Sangles</option><option>Mousquetons droits</option><option>Mousquetons coudes</option></optgroup><optgroup label="Mousquetons"><option>Mousquetons a vis</option><option>Mousquetons automatiques</option></optgroup>
           <optgroup label="Systemes assurage"><option>Tubes</option><option>Autobloquants</option></optgroup>
           <optgroup label="Longes"><option>Longes</option></optgroup>
           <optgroup label="Sangles"><option>Sangles</option></optgroup>
@@ -901,7 +902,7 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
           <optgroup label="Corde"><option>Cordes SAE</option><option>Cordes statiques</option><option>Cordes falaise</option><option>Cordes a double</option></optgroup>
           <optgroup label="Baudriers"><option>Baudriers</option></optgroup>
           <optgroup label="Casques"><option>Casques</option></optgroup>
-          <optgroup label="Degaines"><option value="Sangles deg">Sangles</option><option>Mousquetons droits</option><option>Mousquetons coudes</option></optgroup>
+          <optgroup label="Degaines"><option value="Sangles deg">Sangles</option><option>Mousquetons droits</option><option>Mousquetons coudes</option></optgroup><optgroup label="Mousquetons"><option>Mousquetons a vis</option><option>Mousquetons automatiques</option></optgroup>
           <optgroup label="Systemes assurage"><option>Tubes</option><option>Autobloquants</option></optgroup>
           <optgroup label="Longes"><option>Longes</option></optgroup>
           <optgroup label="Sangles"><option>Sangles</option></optgroup>
@@ -1035,6 +1036,10 @@ var EPI_CATEGORIES = {
     icon: '&#128279;',
     subs: ['Sangles','Mousquetons droits','Mousquetons coudes']
   },
+  'Mousquetons': {
+    icon: '&#128272;',
+    subs: ['Mousquetons a vis','Mousquetons automatiques']
+  },
   'Systemes assurage': {
     icon: '&#127897;',
     subs: ['Tubes','Autobloquants']
@@ -1074,6 +1079,8 @@ var EPI_CONFIG = {  'Cordes SAE':        { lifeMax:10, lifeUse:5,  ctrlMonths:12
   'Sangles deg':       { lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN566',   cat:'Degaines' },
   'Mousquetons droits':{ lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN12275', cat:'Degaines' },
   'Mousquetons coudes':{ lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN12275', cat:'Degaines' },
+  'Mousquetons a vis':       { lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN12275', cat:'Mousquetons' },
+  'Mousquetons automatiques':{ lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN12275', cat:'Mousquetons' },
   'Tubes':             { lifeMax:10, lifeUse:5,  ctrlMonths:12, norm:'EN15151', cat:'Systemes assurage' },
   'Autobloquants':     { lifeMax:10, lifeUse:5,  ctrlMonths:12, norm:'EN15151', cat:'Systemes assurage' },
   'Longes':            { lifeMax:10, lifeUse:5,  ctrlMonths:12, norm:'EN354',   cat:'Longes' },
@@ -1094,6 +1101,7 @@ function getCatStyle(type){
     'Baudriers':         {cls:'cat-baudriers',icon:'🧗', border:'#7c3aed', lightBg:'#ede9fe', darkBg:'#c4b5fd'},
     'Casques':           {cls:'cat-casques',  icon:'⛑️', border:'#059669', lightBg:'#d1fae5', darkBg:'#6ee7b7'},
     'Degaines':          {cls:'cat-degaines', icon:'🔗', border:'#d97706', lightBg:'#fef3c7', darkBg:'#fcd34d'},
+    'Mousquetons':       {cls:'cat-mousquetons', icon:'🔒', border:'#0d9488', lightBg:'#ccfbf1', darkBg:'#5eead4'},
     'Systemes assurage': {cls:'cat-assurage', icon:'🎯', border:'#ea580c', lightBg:'#ffedd5', darkBg:'#fdba74'},
     'Longes':            {cls:'cat-longes',   icon:'🔁', border:'#db2777', lightBg:'#fce7f3', darkBg:'#f9a8d4'},
     'Sangles':           {cls:'cat-sangles',  icon:'🟣', border:'#9333ea', lightBg:'#fdf4ff', darkBg:'#e879f9'},
@@ -1112,7 +1120,6 @@ var ROLE_PERMS = {
   member:  ['view_epi','view_loans']
 };
 
-// TYPE_KEYS removed - using EPI_CATEGORIES instead
 
 var EPI_CHECKS = {
   'Cordes SAE': {
@@ -1351,7 +1358,7 @@ function stripPhotos(obj){
 }
 function loadAllData(){
   showLoading('Connexion a Supabase...');
-  return Promise.all([dbSelect('epis'),dbSelect('controls','order=created_at.desc'),dbSelect('loans'),dbSelect('batches'),dbSelect('members')])
+  return Promise.all([dbSelect('epis'),dbSelect('controls','order=created_at.desc&limit=1000'),dbSelect('loans'),dbSelect('batches'),dbSelect('members')])
   .then(function(results){
     epis=results[0].map(function(r){return Object.assign({},stripPhotos(r.data),{ref:r.ref});});
     controls=results[1].map(function(r){return Object.assign({},r.data,{id:r.ctrl_id});});
@@ -1502,6 +1509,11 @@ function updateAlertBadge(){var n=epis.filter(function(e){return getStatus(e)===
 function updateBatchBadge(){var b=document.getElementById('batch-badge');if(b){b.textContent=batches.length;b.classList.toggle('hidden',batches.length===0);}}
 
 // ==================== INVENTORY ====================
+var _invSearchTimer=null;
+function debouncedRenderInventory(){
+  clearTimeout(_invSearchTimer);
+  _invSearchTimer=setTimeout(renderInventory,150);
+}
 function renderInventory(){
   var q=((document.getElementById('search-input')||{}).value||'').toLowerCase();
   var ft=((document.getElementById('filter-type')||{}).value||'');
