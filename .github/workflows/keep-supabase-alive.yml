@@ -1,0 +1,21 @@
+name: Keep Supabase Alive
+
+# Empêche Supabase de mettre le projet en pause après 7 jours d'inactivité.
+# S'exécute automatiquement tous les 3 jours, sans intervention manuelle.
+
+on:
+  schedule:
+    - cron: '0 8 */3 * *'   # tous les 3 jours à 8h00 UTC
+  workflow_dispatch:         # permet aussi de le lancer manuellement depuis GitHub
+
+jobs:
+  ping-supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase pour eviter la mise en pause
+        run: |
+          curl -s -o /dev/null -w "%{http_code}" \
+            "https://founyfgimwzyqpvffcmf.supabase.co/rest/v1/epis?select=ref&limit=1" \
+            -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvdW55ZmdpbXd6eXFwdmZmY21mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyOTQwNDUsImV4cCI6MjA5MTg3MDA0NX0.NS4lpsOIgDZGJu1w6sRUi0eRxge235RWOZGzNvpigOc" \
+            -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvdW55ZmdpbXd6eXFwdmZmY21mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyOTQwNDUsImV4cCI6MjA5MTg3MDA0NX0.NS4lpsOIgDZGJu1w6sRUi0eRxge235RWOZGzNvpigOc"
+          echo "Ping envoye a Supabase"
