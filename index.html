@@ -434,11 +434,11 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
               <optgroup label="Corde"><option>Cordes SAE</option><option>Cordes statiques</option><option>Cordes falaise</option><option>Cordes a double</option></optgroup>
               <optgroup label="Baudriers"><option>Baudriers</option></optgroup>
               <optgroup label="Casques"><option>Casques</option></optgroup>
-              <optgroup label="Degaines"><option value="Sangles deg">Sangles</option><option>Mousquetons droits</option><option>Mousquetons coudes</option></optgroup><optgroup label="Mousquetons"><option>Mousquetons a vis</option><option>Mousquetons automatiques</option></optgroup>
-              <optgroup label="Systemes assurage"><option>Tubes</option><option>Autobloquants</option></optgroup>
+              <optgroup label="Degaines"><option value="Sangles deg">Sangles</option><option>Mousquetons droits</option><option>Mousquetons coudes</option><option>Coinceurs</option></optgroup><optgroup label="Mousquetons"><option>Mousquetons a vis</option><option>Mousquetons automatiques</option></optgroup>
+              <optgroup label="Systemes assurage"><option>Tubes</option><option>Autobloquants</option><option>Bloqueurs</option></optgroup>
               <optgroup label="Longes"><option>Longes</option></optgroup>
               <optgroup label="Sangles"><option>Sangles</option></optgroup>
-              <optgroup label="Bloqueurs"><option>Bloqueurs</option></optgroup>
+              
               <optgroup label="Canyoning"><option>Canyoning</option></optgroup>
               <optgroup label="Via Ferrata"><option>Via Ferrata</option></optgroup>
               <optgroup label="Dry Tooling"><option>Dry Tooling</option></optgroup>
@@ -484,6 +484,27 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
         <div class="page" id="page-loans">
           <div class="filter-row">
             <button class="btn btn-primary" onclick="openModal('loan')">+ Nouveau prêt</button>
+            <input type="text" id="loan-search" placeholder="Rechercher adhérent ou EPI…" oninput="renderLoans()" style="min-width:180px">
+            <select id="loan-filter-type" onchange="renderLoans()">
+              <option value="">Tous les types</option>
+              <optgroup label="Corde"><option>Cordes SAE</option><option>Cordes statiques</option><option>Cordes falaise</option><option>Cordes a double</option></optgroup>
+              <optgroup label="Baudriers"><option>Baudriers</option></optgroup>
+              <optgroup label="Casques"><option>Casques</option></optgroup>
+              <optgroup label="Degaines"><option>Sangles</option><option>Mousquetons droits</option><option>Mousquetons coudes</option><option>Coinceurs</option></optgroup>
+              <optgroup label="Mousquetons"><option>Mousquetons a vis</option><option>Mousquetons automatiques</option></optgroup>
+              <optgroup label="Systemes assurage"><option>Tubes</option><option>Autobloquants</option><option>Bloqueurs</option></optgroup>
+              <optgroup label="Longes"><option>Longes</option></optgroup>
+              <optgroup label="Sangles"><option>Sangles</option></optgroup>
+              <optgroup label="Canyoning"><option>Canyoning</option></optgroup>
+              <optgroup label="Via Ferrata"><option>Via Ferrata</option></optgroup>
+              <optgroup label="Dry Tooling"><option>Dry Tooling</option></optgroup>
+            </select>
+            <select id="loan-filter-status" onchange="renderLoans()">
+              <option value="">Tous les statuts</option>
+              <option value="active">En cours</option>
+              <option value="late">En retard</option>
+              <option value="returned">Rendu</option>
+            </select>
           </div>
           <div class="table-wrap">
             <table>
@@ -543,11 +564,11 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
           <optgroup label="Corde"><option>Cordes SAE</option><option>Cordes statiques</option><option>Cordes falaise</option><option>Cordes a double</option></optgroup>
           <optgroup label="Baudriers"><option>Baudriers</option></optgroup>
           <optgroup label="Casques"><option>Casques</option></optgroup>
-          <optgroup label="Degaines"><option value="Sangles deg">Sangles</option><option>Mousquetons droits</option><option>Mousquetons coudes</option></optgroup><optgroup label="Mousquetons"><option>Mousquetons a vis</option><option>Mousquetons automatiques</option></optgroup>
-          <optgroup label="Systemes assurage"><option>Tubes</option><option>Autobloquants</option></optgroup>
+          <optgroup label="Degaines"><option value="Sangles deg">Sangles</option><option>Mousquetons droits</option><option>Mousquetons coudes</option><option>Coinceurs</option></optgroup><optgroup label="Mousquetons"><option>Mousquetons a vis</option><option>Mousquetons automatiques</option></optgroup>
+          <optgroup label="Systemes assurage"><option>Tubes</option><option>Autobloquants</option><option>Bloqueurs</option></optgroup>
           <optgroup label="Longes"><option>Longes</option></optgroup>
           <optgroup label="Sangles"><option>Sangles</option></optgroup>
-          <optgroup label="Bloqueurs"><option>Bloqueurs</option></optgroup>
+          
           <optgroup label="Canyoning"><option>Canyoning</option></optgroup>
           <optgroup label="Via Ferrata"><option>Via Ferrata</option></optgroup>
           <optgroup label="Dry Tooling"><option>Dry Tooling</option></optgroup>
@@ -713,11 +734,11 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
           <optgroup label="Corde"><option>Cordes SAE</option><option>Cordes statiques</option><option>Cordes falaise</option><option>Cordes a double</option></optgroup>
           <optgroup label="Baudriers"><option>Baudriers</option></optgroup>
           <optgroup label="Casques"><option>Casques</option></optgroup>
-          <optgroup label="Degaines"><option value="Sangles deg">Sangles</option><option>Mousquetons droits</option><option>Mousquetons coudes</option></optgroup><optgroup label="Mousquetons"><option>Mousquetons a vis</option><option>Mousquetons automatiques</option></optgroup>
-          <optgroup label="Systemes assurage"><option>Tubes</option><option>Autobloquants</option></optgroup>
+          <optgroup label="Degaines"><option value="Sangles deg">Sangles</option><option>Mousquetons droits</option><option>Mousquetons coudes</option><option>Coinceurs</option></optgroup><optgroup label="Mousquetons"><option>Mousquetons a vis</option><option>Mousquetons automatiques</option></optgroup>
+          <optgroup label="Systemes assurage"><option>Tubes</option><option>Autobloquants</option><option>Bloqueurs</option></optgroup>
           <optgroup label="Longes"><option>Longes</option></optgroup>
           <optgroup label="Sangles"><option>Sangles</option></optgroup>
-          <optgroup label="Bloqueurs"><option>Bloqueurs</option></optgroup>
+          
           <optgroup label="Canyoning"><option>Canyoning</option></optgroup>
           <optgroup label="Via Ferrata"><option>Via Ferrata</option></optgroup>
           <optgroup label="Dry Tooling"><option>Dry Tooling</option></optgroup>
@@ -902,11 +923,11 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); c
           <optgroup label="Corde"><option>Cordes SAE</option><option>Cordes statiques</option><option>Cordes falaise</option><option>Cordes a double</option></optgroup>
           <optgroup label="Baudriers"><option>Baudriers</option></optgroup>
           <optgroup label="Casques"><option>Casques</option></optgroup>
-          <optgroup label="Degaines"><option value="Sangles deg">Sangles</option><option>Mousquetons droits</option><option>Mousquetons coudes</option></optgroup><optgroup label="Mousquetons"><option>Mousquetons a vis</option><option>Mousquetons automatiques</option></optgroup>
-          <optgroup label="Systemes assurage"><option>Tubes</option><option>Autobloquants</option></optgroup>
+          <optgroup label="Degaines"><option value="Sangles deg">Sangles</option><option>Mousquetons droits</option><option>Mousquetons coudes</option><option>Coinceurs</option></optgroup><optgroup label="Mousquetons"><option>Mousquetons a vis</option><option>Mousquetons automatiques</option></optgroup>
+          <optgroup label="Systemes assurage"><option>Tubes</option><option>Autobloquants</option><option>Bloqueurs</option></optgroup>
           <optgroup label="Longes"><option>Longes</option></optgroup>
           <optgroup label="Sangles"><option>Sangles</option></optgroup>
-          <optgroup label="Bloqueurs"><option>Bloqueurs</option></optgroup>
+          
           <optgroup label="Canyoning"><option>Canyoning</option></optgroup>
           <optgroup label="Via Ferrata"><option>Via Ferrata</option></optgroup>
           <optgroup label="Dry Tooling"><option>Dry Tooling</option></optgroup>
@@ -1034,7 +1055,7 @@ var EPI_CATEGORIES = {
   },
   'Degaines': {
     icon: '&#128279;',
-    subs: ['Sangles','Mousquetons droits','Mousquetons coudes']
+    subs: ['Sangles','Mousquetons droits','Mousquetons coudes','Coinceurs']
   },
   'Mousquetons': {
     icon: '&#128272;',
@@ -1042,7 +1063,7 @@ var EPI_CATEGORIES = {
   },
   'Systemes assurage': {
     icon: '&#127897;',
-    subs: ['Tubes','Autobloquants']
+    subs: ['Tubes','Autobloquants','Bloqueurs']
   },
   'Longes': {
     icon: '&#129525;',
@@ -1050,10 +1071,6 @@ var EPI_CATEGORIES = {
   },
   'Sangles': {
     icon: '&#128308;',
-    subs: []
-  },
-  'Bloqueurs': {
-    icon: '&#128200;',
     subs: []
   },
   'Canyoning': {
@@ -1079,13 +1096,14 @@ var EPI_CONFIG = {  'Cordes SAE':        { lifeMax:10, lifeUse:5,  ctrlMonths:12
   'Sangles deg':       { lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN566',   cat:'Degaines' },
   'Mousquetons droits':{ lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN12275', cat:'Degaines' },
   'Mousquetons coudes':{ lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN12275', cat:'Degaines' },
+  'Coinceurs':         { lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN12275', cat:'Degaines' },
   'Mousquetons a vis':       { lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN12275', cat:'Mousquetons' },
   'Mousquetons automatiques':{ lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN12275', cat:'Mousquetons' },
   'Tubes':             { lifeMax:10, lifeUse:5,  ctrlMonths:12, norm:'EN15151', cat:'Systemes assurage' },
   'Autobloquants':     { lifeMax:10, lifeUse:5,  ctrlMonths:12, norm:'EN15151', cat:'Systemes assurage' },
   'Longes':            { lifeMax:10, lifeUse:5,  ctrlMonths:12, norm:'EN354',   cat:'Longes' },
   'Sangles':           { lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN566',   cat:'Sangles' },
-  'Bloqueurs':         { lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN567',   cat:'Bloqueurs' },
+  'Bloqueurs':         { lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN567',   cat:'Systemes assurage' },
   'Canyoning':         { lifeMax:10, lifeUse:5,  ctrlMonths:6,  norm:'Fabricant', cat:'Canyoning' },
   'Via Ferrata':       { lifeMax:5,  lifeUse:3,  ctrlMonths:6,  norm:'EN958',   cat:'Via Ferrata' },
   'Dry Tooling':       { lifeMax:10, lifeUse:10, ctrlMonths:12, norm:'EN13089', cat:'Dry Tooling' }
@@ -1597,9 +1615,54 @@ function renderControls(){
 // ==================== LOANS ====================
 function renderLoans(){
   var epiMap={};epis.forEach(function(e){epiMap[e.ref]=e.type;});
-  var slbl={active:'En cours',returned:'Rendu',late:'En retard'};var scls={active:'badge-warn',returned:'badge-ok',late:'badge-danger'};
+  var slbl={active:'En cours',returned:'Rendu',late:'En retard'};
+  var scls={active:'badge-warn',returned:'badge-ok',late:'badge-danger'};
   var canManage=hasPerm('manage_loans');
-  document.getElementById('loans-table').innerHTML=loans.map(function(l){return '<tr><td style="font-size:13px">'+l.date+'</td><td>'+l.member+'</td><td><strong>'+l.ref+'</strong></td><td class="muted">'+(epiMap[l.ref]||'&mdash;')+'</td><td style="font-size:13px">'+l.returnDate+'</td><td><span class="badge '+(scls[l.status]||'')+'">'+slbl[l.status]+'</span></td><td>'+(canManage&&l.status!=='returned'?'<button class="btn btn-sm" onclick="returnLoan(\''+l.id+'\')">Rendu</button>':'')+'</td></tr>';}).join('');
+  var q=((document.getElementById('loan-search')||{}).value||'').toLowerCase();
+  var ft=((document.getElementById('loan-filter-type')||{}).value||'');
+  var fs=((document.getElementById('loan-filter-status')||{}).value||'');
+  var filtered=loans.filter(function(l){
+    if(ft&&(epiMap[l.ref]||'')!==ft)return false;
+    if(fs&&l.status!==fs)return false;
+    if(q&&[l.member,l.ref,(epiMap[l.ref]||'')].join(' ').toLowerCase().indexOf(q)===-1)return false;
+    return true;
+  });
+  // Sort by date desc, then member
+  filtered.sort(function(a,b){
+    if(b.date!==a.date)return b.date.localeCompare(a.date);
+    return a.member.localeCompare(b.member);
+  });
+  // Group by member+date
+  var groups=[],seen={};
+  filtered.forEach(function(l){
+    var key=l.date+'__'+l.member;
+    if(!seen[key]){seen[key]=true;groups.push({key:key,date:l.date,member:l.member,items:[]});}
+    groups[groups.length-1].items.push(l);
+  });
+  if(!groups.length){
+    document.getElementById('loans-table').innerHTML='<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text2)">Aucun prêt trouvé</td></tr>';
+    return;
+  }
+  document.getElementById('loans-table').innerHTML=groups.map(function(g){
+    var headerBg=g.items.some(function(l){return l.status==='late';})?'#fef3c7':g.items.every(function(l){return l.status==='returned';})?'#f0fdf4':'#eff6ff';
+    var rows=g.items.map(function(l){
+      return '<tr>'
+        +'<td style="font-size:13px;padding-left:28px;color:var(--text2)">'+l.date+'</td>'
+        +'<td></td>'
+        +'<td><strong>'+l.ref+'</strong></td>'
+        +'<td class="muted">'+(epiMap[l.ref]||'&mdash;')+'</td>'
+        +'<td style="font-size:13px">'+l.returnDate+'</td>'
+        +'<td><span class="badge '+(scls[l.status]||'')+'">'+slbl[l.status]+'</span></td>'
+        +'<td>'+(canManage&&l.status!=='returned'?'<button class="btn btn-sm" onclick="returnLoan(\''+l.id+'\')">Rendu</button>':'')+'</td>'
+        +'</tr>';
+    }).join('');
+    return '<tr style="background:'+headerBg+';border-top:2px solid var(--border)">'
+      +'<td style="font-weight:600;color:#111;font-size:13px">'+g.date+'</td>'
+      +'<td style="font-weight:600;color:#111;font-size:13px" colspan="2">👤 '+g.member+'</td>'
+      +'<td colspan="3" style="color:var(--text2);font-size:12px">'+g.items.length+' EPI emprunté'+(g.items.length>1?'s':'')+'</td>'
+      +'<td></td>'
+      +'</tr>'+rows;
+  }).join('');
 }
 function returnLoan(loanId){var loan=null;for(var i=0;i<loans.length;i++)if(loans[i].id===loanId){loan=loans[i];break;}if(!loan)return;loan.status='returned';fsUpdate('loans',loanId,{status:'returned'}).catch(function(){});renderLoans();updateAlertBadge();showToast('Pret marque comme rendu');}
 
@@ -2499,7 +2562,7 @@ function importPhotos(input,target){
 }
 function renderPhotoPreview(containerId,photos){
   var el=document.getElementById(containerId); if(!el) return;
-  var target=containerId.indexOf('f-')===0?'epi':'batch';
+  var target=containerId==='f-photos-preview'?'epi':containerId==='ee-photos-preview'?'epi-edit':containerId==='be-photos-preview'?'batch-edit':'batch';
   el.innerHTML=photos.map(function(p,i){
     return '<div style="position:relative;display:inline-block">'
       +'<img src="'+p+'" class="photo-thumb">'
@@ -2509,6 +2572,8 @@ function renderPhotoPreview(containerId,photos){
 }
 function removePhoto(idx,target){
   if(target==='epi'){pendingEpiPhotos.splice(idx,1);renderPhotoPreview('f-photos-preview',pendingEpiPhotos);}
+  else if(target==='epi-edit'){pendingEpiEditPhotos.splice(idx,1);renderPhotoPreview('ee-photos-preview',pendingEpiEditPhotos);}
+  else if(target==='batch-edit'){pendingBatchEditPhotos.splice(idx,1);renderPhotoPreview('be-photos-preview',pendingBatchEditPhotos);}
   else{pendingBatchPhotos.splice(idx,1);renderPhotoPreview('b-photos-preview',pendingBatchPhotos);}
 }
 
