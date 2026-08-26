@@ -1571,7 +1571,7 @@ function renderInventory(){
       var b=row.batch; var st=getCatStyle(row.epi.type);
       var photoSrc=(row.epi.photos&&row.epi.photos.length)?row.epi.photos[0]:((b.photos&&b.photos.length)?b.photos[0]:null);
       var lotPhoto=photoSrc
-        ?'<img src="'+photoSrc+'" onclick="openLightbox(\''+photoSrc+'\')" style="width:26px;height:26px;border-radius:5px;object-fit:cover;border:1.5px solid rgba(0,0,0,0.2);vertical-align:middle;margin-right:8px;cursor:zoom-in">'
+        ?'<img src="'+photoSrc+'" onclick="openLightbox(\''+photoSrc+'\')" loading="lazy" style="width:26px;height:26px;border-radius:5px;object-fit:cover;border:1.5px solid rgba(0,0,0,0.2);vertical-align:middle;margin-right:8px;cursor:zoom-in">'
         :'';
       return '<tr class="lot-header-row"><td colspan="9" style="background:'+st.darkBg+';border-left:4px solid '+st.border+';color:#111;font-size:12px">'
         +'<span style="display:inline-flex;align-items:center">'+lotPhoto+st.icon+' &nbsp;<strong>'+row.batchId+'</strong>'+(b.name?' — '+b.name:'')+(b.brand?' · '+b.brand+' '+b.model:'')+'</span>'
@@ -1811,7 +1811,7 @@ function _renderEPIDetail(epi){
     var b=batches.find(function(x){return x.id===epi.batchId;});
     return(b&&b.photos&&b.photos.length)?b.photos:[];
   })();
-  var photosHtml=displayPhotos.length?'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">'+displayPhotos.map(function(p){return '<img src="'+p+'" onclick="openLightbox(\''+p+'\')" style="width:90px;height:90px;border-radius:10px;object-fit:cover;border:1.5px solid var(--border2);cursor:zoom-in">';}).join('')+'</div>':'';
+  var photosHtml=displayPhotos.length?'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">'+displayPhotos.map(function(p){return '<img src="'+p+'" onclick="openLightbox(\''+p+'\')" loading="lazy" style="width:90px;height:90px;border-radius:10px;object-fit:cover;border:1.5px solid var(--border2);cursor:zoom-in">';}).join('')+'</div>':'';
   var lifeStr='—';
   if(epi.endYear){var dl=diffDays(epi.endYear+'-12-31',todayStr);lifeStr='31/12/'+epi.endYear+(dl>0?' ('+Math.floor(dl/365)+'a '+Math.floor((dl%365)/30)+'m)':' <span style="color:var(--danger);font-weight:700">EXPIRÉ</span>')+(epi.stockNote?' — '+epi.stockNote:'');}
   else if(epi.lifeYears&&epi.buy){var endYr=parseInt(epi.buy.split('-')[0])+epi.lifeYears;var dl2=diffDays(endYr+'-12-31',todayStr);lifeStr=epi.lifeYears+'a — Fin: 31/12/'+endYr+(dl2>0?' ('+Math.floor(dl2/365)+'a restants)':' EXPIRÉ')+(epi.stockNote?' — '+epi.stockNote:'');}
@@ -2377,7 +2377,7 @@ function renderBatches(){
     var lifeInfo='';
     if(b.endYear){var dl=diffDays(b.endYear+'-12-31',todayStr);lifeInfo=' \u2014 Fin vie: 31/12/'+b.endYear+(dl>0?' ('+Math.floor(dl/365)+'a restants)':' (expiré)');}
     else if(cfg){lifeInfo=' \u2014 max '+cfg.lifeMax+'a';}
-    var photosHtml=b.photos&&b.photos.length?'<div class="photo-grid" style="padding:0 20px 10px">'+b.photos.map(function(p){return '<img src="'+p+'" class="photo-thumb">';}).join('')+'</div>':'';
+    var photosHtml=b.photos&&b.photos.length?'<div class="photo-grid" style="padding:0 20px 10px">'+b.photos.map(function(p){return '<img src="'+p+'" class="photo-thumb" loading="lazy">';}).join('')+'</div>':'';
     var itemsHtml=bEpis.map(function(e){
       var s=getStatus(e),next=getNextCtrl(e),isRetired=e.status==='retired';
       var ctrlBtn=hasPerm('add_epi')&&!isRetired?'<button class="btn btn-sm btn-danger" onclick="detachFromBatch(\''+e.ref+'\')">&#8599; Sortir</button>':'';
@@ -2424,7 +2424,7 @@ function toggleBatch(id){
           // Update photo grid in place without re-rendering the whole list
           var grid=b.querySelector('.batch-photo-grid');
           if(grid){
-            grid.innerHTML=batch.photos.map(function(p){return '<img src="'+p+'" class="photo-thumb" onclick="openLightbox(\''+p+'\')">';}).join('');
+            grid.innerHTML=batch.photos.map(function(p){return '<img src="'+p+'" class="photo-thumb" loading="lazy" onclick="openLightbox(\''+p+'\')">';}).join('');
           }
         }
       }).catch(function(){});
@@ -2571,7 +2571,7 @@ function renderPhotoPreview(containerId,photos){
   var target=containerId==='f-photos-preview'?'epi':containerId==='ee-photos-preview'?'epi-edit':containerId==='be-photos-preview'?'batch-edit':'batch';
   el.innerHTML=photos.map(function(p,i){
     return '<div style="position:relative;display:inline-block">'
-      +'<img src="'+p+'" class="photo-thumb">'
+      +'<img src="'+p+'" class="photo-thumb" loading="lazy">'
       +'<button onclick="removePhoto('+i+',\''+target+'\')" style="position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--danger);color:#fff;border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center">&times;</button>'
       +'</div>';
   }).join('');
@@ -2608,7 +2608,7 @@ function openHistory(type,id){
     document.getElementById('hist-title').textContent=epi.ref+' \u2014 Historique';
     document.getElementById('hist-subtitle').textContent=epi.type+' '+epi.brand+' '+epi.model+' \u2014 Mise en service: '+epi.buy;
     var photos=epi.photos||[];
-    document.getElementById('hist-photos').innerHTML=photos.length?'<div style="margin-bottom:14px"><div class="photo-grid">'+photos.map(function(p){return '<img src="'+p+'" class="photo-thumb">';}).join('')+'</div></div>':'';
+    document.getElementById('hist-photos').innerHTML=photos.length?'<div style="margin-bottom:14px"><div class="photo-grid">'+photos.map(function(p){return '<img src="'+p+'" class="photo-thumb" loading="lazy">';}).join('')+'</div></div>':'';
     var epiCtrl=controls.filter(function(c){return c.ref===id;}).slice().sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
     document.getElementById('hist-years').innerHTML=epiCtrl.length?yearBlock(epiCtrl):'<div style="text-align:center;padding:32px;color:var(--text2)">Aucun controle enregistre.</div>';
   } else {
@@ -2617,7 +2617,7 @@ function openHistory(type,id){
     document.getElementById('hist-title').textContent='Lot '+batch.name+' \u2014 Historique';
     document.getElementById('hist-subtitle').textContent=batch.type+' '+batch.brand+' '+batch.model+' \u2014 '+batch.id;
     var bPhotos=batch.photos||[];
-    document.getElementById('hist-photos').innerHTML=bPhotos.length?'<div style="margin-bottom:14px"><div class="photo-grid">'+bPhotos.map(function(p){return '<img src="'+p+'" class="photo-thumb">';}).join('')+'</div></div>':'';
+    document.getElementById('hist-photos').innerHTML=bPhotos.length?'<div style="margin-bottom:14px"><div class="photo-grid">'+bPhotos.map(function(p){return '<img src="'+p+'" class="photo-thumb" loading="lazy">';}).join('')+'</div></div>':'';
     var bRefs=epis.filter(function(e){return e.batchId===id;}).map(function(e){return e.ref;});
     var bCtrl=controls.filter(function(c){return bRefs.indexOf(c.ref)!==-1;}).slice().sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
     document.getElementById('hist-years').innerHTML=bCtrl.length?yearBlock(bCtrl):'<div style="text-align:center;padding:32px;color:var(--text2)">Aucun controle pour ce lot.</div>';
@@ -2945,6 +2945,17 @@ window.addEventListener('load', function() {
 });
 </script>
 
+<style>
+#lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;align-items:center;justify-content:center;cursor:pointer;}
+#lightbox.open{display:flex;}
+#lightbox img{max-width:92vw;max-height:92vh;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.5);}
+</style>
+<div id="lightbox" onclick="closeLightbox()"><img id="lightbox-img" src=""></div>
+<script>
+function openLightbox(src){document.getElementById('lightbox-img').src=src;document.getElementById('lightbox').classList.add('open');}
+function closeLightbox(){document.getElementById('lightbox').classList.remove('open');document.getElementById('lightbox-img').src='';}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeLightbox();});
+</script>
 
 </body>
 </html>
